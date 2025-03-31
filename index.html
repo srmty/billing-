@@ -3,959 +3,1020 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Billing Dashboard</title>
-
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-
-  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.min.js"></script>
-
+  <title>Simple Billing Dashboard</title>
   <style>
+    /* Basic styling */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    }
+    
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      background-color: #f5f5f5;
+      color: #333;
+      line-height: 1.6;
+      padding: 20px;
     }
-
-    /* Simple shadcn-like components */
-    .card {
-      background: white;
-      border-radius: 0.5rem;
-      border: 1px solid #e2e8f0;
-      overflow: hidden;
-    }
-
-    .card-header {
-      padding: 1.5rem 1.5rem 0 1.5rem;
-    }
-
-    .card-content {
-      padding: 1.5rem;
-    }
-
-    .card-title {
-      font-size: 1.25rem;
-      font-weight: 600;
-      margin-bottom: 0.25rem;
-    }
-
-    .card-description {
-      color: #64748b;
-      font-size: 0.875rem;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-      font-weight: 500;
-      line-height: 1;
-      padding: 0.25rem 0.5rem;
-    }
-
-    .badge-default {
-      background-color: #3b82f6;
-      color: white;
-    }
-
-    .badge-secondary {
-      background-color: #6b7280;
-      color: white;
-    }
-
-    .badge-destructive {
-      background-color: #ef4444;
-      color: white;
-    }
-
-    .btn {
-      align-items: center;
-      border-radius: 0.375rem;
-      display: inline-flex;
-      font-size: 0.875rem;
-      font-weight: 500;
-      justify-content: center;
-      line-height: 1;
-      padding: 0.5rem 1rem;
-      transition-duration: 150ms;
-      transition-property: background-color, border-color, color;
-      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-      cursor: pointer; /* Ensure buttons look clickable */
-    }
-    .btn:disabled {
-        cursor: not-allowed;
-        opacity: 0.7;
-    }
-
-    .btn-primary {
-      background-color: #3b82f6;
-      color: white;
-    }
-
-    .btn-primary:hover:not(:disabled) {
-      background-color: #2563eb;
-    }
-
-    .btn-destructive {
-      background-color: #ef4444;
-      color: white;
-    }
-
-    .btn-destructive:hover:not(:disabled) {
-      background-color: #dc2626;
-    }
-
-    .btn-sm {
-      font-size: 0.75rem;
-      padding: 0.25rem 0.5rem;
-      height: auto; /* Adjust for smaller buttons if needed */
-    }
-
-    .btn-icon {
-      padding: 0.25rem;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .btn-outline {
-      background-color: transparent;
-      border: 1px solid #e2e8f0;
-      color: #0f172a;
-    }
-     .btn-outline:hover:not(:disabled) {
-        background-color: #f1f5f9; /* Slight background on hover */
-    }
-
-    .input {
-      border-radius: 0.375rem;
-      border: 1px solid #e2e8f0;
-      font-size: 0.875rem;
-      line-height: 1.25rem;
-      padding: 0.5rem;
-      width: 100%;
-    }
-
-    .input:focus {
-      border-color: #3b82f6;
-      outline: none;
-       box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); /* Ring effect */
-    }
-     .input:disabled {
-        cursor: not-allowed;
-        background-color: #f8fafc;
-        opacity: 0.7;
-    }
-
-    .dialog-backdrop {
-      background-color: rgba(0, 0, 0, 0.5);
-      inset: 0;
-      position: fixed;
-      z-index: 50;
-    }
-
-    .dialog-content {
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
       background-color: white;
-      border-radius: 0.5rem;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-      left: 50%;
-      max-width: 28rem;
-      padding: 1.5rem;
-      position: fixed;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      width: calc(100% - 2rem);
-      z-index: 51;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
     }
-
-    .dialog-header {
-      margin-bottom: 1rem;
+    
+    header {
+      margin-bottom: 20px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 15px;
     }
-
-    .dialog-title {
-      font-size: 1.25rem;
-      font-weight: 600;
+    
+    h1 {
+      font-size: 24px;
+      margin-bottom: 5px;
     }
-
+    
+    /* Tabs */
     .tabs {
       display: flex;
-      flex-direction: column;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ddd;
     }
-
-    .tabs-list {
-      display: flex;
-      border-bottom: 1px solid #e2e8f0;
-      margin-bottom: 1rem;
-    }
-
-    .tabs-trigger {
-      align-items: center;
-      border-bottom: 2px solid transparent;
-      color: #64748b;
+    
+    .tab {
+      padding: 10px 20px;
       cursor: pointer;
-      display: inline-flex;
-      font-size: 0.875rem;
       font-weight: 500;
-      padding: 0.5rem 1rem;
-      transition: border-color 0.15s, color 0.15s;
-      margin-bottom: -1px; /* Overlap border */
+      position: relative;
     }
-
-    .tabs-trigger-active {
-      border-bottom-color: #3b82f6;
+    
+    .tab.active {
       color: #3b82f6;
+      border-bottom: 2px solid #3b82f6;
     }
-
-    .tabs-content {
+    
+    .tab-content {
       display: none;
     }
-
-    .tabs-content-active {
+    
+    .tab-content.active {
       display: block;
     }
-
-    .select {
+    
+    /* Cards and grids */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    
+    @media (min-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    
+    .card {
+      background: white;
+      border-radius: 8px;
       border: 1px solid #e2e8f0;
-      border-radius: 0.375rem;
-      font-size: 0.875rem;
-      height: 2.5rem;
-      padding: 0 0.75rem;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    
+    .card-header {
+      padding: 15px;
+      border-bottom: 1px solid #e2e8f0;
+      background-color: #f8fafc;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .card-body {
+      padding: 15px;
+    }
+    
+    /* Forms and inputs */
+    input, select, button {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    button {
+      background-color: #3b82f6;
+      color: white;
+      cursor: pointer;
+      border: none;
+      transition: background-color 0.2s;
+    }
+    
+    button:hover {
+      background-color: #2563eb;
+    }
+    
+    button.secondary {
+      background-color: #6b7280;
+    }
+    
+    button.danger {
+      background-color: #ef4444;
+    }
+    
+    button.danger:hover {
+      background-color: #dc2626;
+    }
+    
+    button.outline {
+      background-color: transparent;
+      border: 1px solid #ddd;
+      color: #333;
+    }
+    
+    button.outline:hover {
+      background-color: #f5f5f5;
+    }
+    
+    button.sm {
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+    
+    /* Tables */
+    table {
       width: 100%;
-      background-color: white; /* Ensure background for select */
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+    
+    th {
+      background-color: #f8fafc;
+      text-align: left;
+      font-weight: 600;
+    }
+    
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    tr:hover {
+      background-color: #f1f5f9;
+    }
+    
+    /* Utilities */
+    .text-right {
+      text-align: right;
+    }
+    
+    .text-center {
+      text-align: center;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 500;
+      color: white;
+    }
+    
+    .badge-blue {
+      background-color: #3b82f6;
+    }
+    
+    .badge-gray {
+      background-color: #6b7280;
+    }
+    
+    .badge-red {
+      background-color: #ef4444;
+    }
+    
+    .mb-10 {
+      margin-bottom: 10px;
+    }
+    
+    .flex {
+      display: flex;
+    }
+    
+    .justify-between {
+      justify-content: space-between;
+    }
+    
+    .w-full {
+      width: 100%;
+    }
+    
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+    
+    .modal-content {
+      background-color: white;
+      margin: 10% auto;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 500px;
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .modal-body {
+      margin-bottom: 15px;
+    }
+    
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
       cursor: pointer;
     }
-    .select:focus {
-       border-color: #3b82f6;
-       outline: none;
-       box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); /* Ring effect */
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    
+    .text-danger {
+      color: #ef4444;
+    }
+    
+    /* Customer panel */
+    .customer-panel {
+      background-color: #f8fafc;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 15px;
     }
   </style>
 </head>
-<body class="bg-gray-100 p-4">
-  <div id="root"></div>
-
-  <script type="text/babel">
-    // Create simplified versions of the shadcn components
-    const Card = ({ children, className = "" }) => (
-      <div className={`card ${className}`}>{children}</div>
-    );
-
-    const CardHeader = ({ children, className = "" }) => (
-      <div className={`card-header ${className}`}>{children}</div>
-    );
-
-    const CardContent = ({ children, className = "" }) => (
-      <div className={`card-content ${className}`}>{children}</div>
-    );
-
-    const CardTitle = ({ children, className = "" }) => (
-      <h3 className={`card-title ${className}`}>{children}</h3>
-    );
-
-    const CardDescription = ({ children, className = "" }) => (
-      <p className={`card-description ${className}`}>{children}</p>
-    );
-
-    const Badge = ({ children, variant = "default", className = "" }) => (
-      <span className={`badge badge-${variant} ${className}`}>{children}</span>
-    );
-
-    const Button = ({
-      children,
-      variant = "primary",
-      size = "default",
-      className = "",
-      onClick,
-      disabled = false
-    }) => (
-      <button
-        className={`btn btn-${variant} ${size === "sm" ? "btn-sm" : ""} ${size === "icon" ? "btn-icon" : ""} ${className}`}
-        onClick={onClick}
-        disabled={disabled}
-      >
-        {children}
-      </button>
-    );
-
-    const Input = ({
-      type = "text",
-      value,
-      onChange,
-      placeholder,
-      className = "",
-      id,
-      min,
-      max,
-      defaultValue,
-      disabled = false
-    }) => (
-      <input
-        type={type}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className={`input ${className}`}
-        id={id}
-        min={min}
-        max={max}
-        defaultValue={defaultValue}
-        disabled={disabled}
-        step={type === 'number' ? ((placeholder && placeholder.toLowerCase().includes('price')) || (placeholder && placeholder.toLowerCase().includes('limit')) ? '0.01' : '1') : undefined}
-      />
-    );
-
-    const Dialog = ({ children, open, onOpenChange }) => {
-      if (!open) return null;
-
-      return (
-        <React.Fragment>
-          <div className="dialog-backdrop" onClick={() => onOpenChange(false)} />
-          <div className="dialog-content">
-            {children}
+<body>
+  <div class="container">
+    <header>
+      <h1>Billing Dashboard</h1>
+      <p>Manage inventory, customers, and transactions</p>
+    </header>
+    
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active" data-tab="billing">Billing</div>
+      <div class="tab" data-tab="customers">Customers</div>
+      <div class="tab" data-tab="history">Transaction History</div>
+    </div>
+    
+    <!-- Billing Tab -->
+    <div class="tab-content active" id="billing">
+      <div class="grid">
+        <!-- Inventory Card -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3>Inventory</h3>
+              <p>Available items for sale</p>
+            </div>
+            <button id="addItemBtn">Add Item</button>
           </div>
-        </React.Fragment>
-      );
-    };
-
-    const DialogTrigger = ({ children, onClick }) => {
-        const child = React.Children.only(children);
-        return React.cloneElement(child, {
-            onClick: () => {
-                if (onClick) onClick();
-            }
-        });
-    };
-
-    const DialogContent = ({ children }) => (
-      <div>{children}</div>
-    );
-
-    const DialogHeader = ({ children }) => (
-      <div className="dialog-header">{children}</div>
-    );
-
-    const DialogTitle = ({ children }) => (
-      <h2 className="dialog-title">{children}</h2>
-    );
-
-    const Tabs = ({ children, defaultValue }) => {
-      const [activeTab, setActiveTab] = React.useState(defaultValue);
-
-      return (
-        <div className="tabs">
-          {React.Children.map(children, child => {
-            if (React.isValidElement(child) && child.type) {
-                 if (child.type === TabsList || child.type === TabsContent) {
-                    return React.cloneElement(child, { activeTab, setActiveTab });
-                 }
-            }
-            return child;
-          })}
+          <div class="card-body">
+            <input type="text" id="searchItem" placeholder="Search items..." class="w-full mb-10">
+            <table id="inventoryTable">
+              <thead>
+                <tr>
+                  <th width="40%">Name</th>
+                  <th>Price</th>
+                  <th>Tax</th>
+                  <th>Stock</th>
+                  <th class="text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="inventoryBody">
+                <!-- Inventory items will be added here -->
+              </tbody>
+            </table>
+          </div>
         </div>
+        
+        <!-- Cart Card -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Customer Cart</h3>
+          </div>
+          <div class="card-body">
+            <div class="flex justify-between mb-10">
+              <div style="width: 48%;">
+                <label for="customerSelect">Select Customer</label>
+                <select id="customerSelect" class="w-full">
+                  <option value="">Select a customer...</option>
+                  <!-- Customers will be added here -->
+                </select>
+              </div>
+              <div style="width: 48%;">
+                <label>&nbsp;</label>
+                <button id="addCustomerBtn" class="w-full outline">Add New Customer</button>
+              </div>
+            </div>
+            
+            <div id="customerInfo" class="customer-panel" style="display: none;">
+              <!-- Selected customer info will be shown here -->
+            </div>
+            
+            <div class="form-group">
+              <label for="paymentMode">Payment Mode</label>
+              <select id="paymentMode" class="w-full">
+                <option value="paid">Pay Now</option>
+                <option value="credit">Credit Account</option>
+              </select>
+            </div>
+            
+            <table id="cartTable">
+              <thead>
+                <tr>
+                  <th width="30%">Item</th>
+                  <th>Price</th>
+                  <th>Qty</th>
+                  <th>Tax</th>
+                  <th>Subtotal</th>
+                  <th class="text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="cartBody">
+                <!-- Cart items will be added here -->
+              </tbody>
+            </table>
+            
+            <div id="emptyCart" class="text-center" style="padding: 20px; color: #777;">
+              Cart is empty. Add items from inventory.
+            </div>
+            
+            <div class="flex justify-between mb-10">
+              <span>Subtotal:</span>
+              <span id="subtotal">$0.00</span>
+            </div>
+            <div class="flex justify-between mb-10">
+              <span>Tax:</span>
+              <span id="tax">$0.00</span>
+            </div>
+            <div class="flex justify-between mb-10" style="border-top: 1px solid #eee; padding-top: 10px; font-weight: bold;">
+              <span>Total:</span>
+              <span id="total">$0.00</span>
+            </div>
+            
+            <button id="completePurchase" class="w-full" disabled>Complete Purchase</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Customers Tab -->
+    <div class="tab-content" id="customers">
+      <div class="card">
+        <div class="card-header">
+          <h3>Customer Management</h3>
+        </div>
+        <div class="card-body">
+          <table id="customersTable">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Credit Limit</th>
+                <th>Credit Used</th>
+                <th>Available Credit</th>
+              </tr>
+            </thead>
+            <tbody id="customersBody">
+              <!-- Customers will be added here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Transaction History Tab -->
+    <div class="tab-content" id="history">
+      <div class="card">
+        <div class="card-header">
+          <h3>Transaction History</h3>
+        </div>
+        <div class="card-body">
+          <table id="historyTable">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Items</th>
+                <th>Tax</th>
+                <th>Total</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="historyBody">
+              <!-- Transactions will be added here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Add Item Modal -->
+    <div id="addItemModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Add New Inventory Item</h3>
+          <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="itemName">Item Name</label>
+            <input type="text" id="itemName" class="w-full" placeholder="e.g., Widget Pro">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+              <label for="itemPrice">Price ($)</label>
+              <input type="number" id="itemPrice" class="w-full" placeholder="0.00" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+              <label for="itemQuantity">Quantity</label>
+              <input type="number" id="itemQuantity" class="w-full" placeholder="0" min="0">
+            </div>
+            <div class="form-group">
+              <label for="itemTaxRate">Tax (%)</label>
+              <input type="number" id="itemTaxRate" class="w-full" placeholder="0" min="0" step="0.1">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="outline" id="cancelAddItem">Cancel</button>
+          <button id="saveAddItem">Add to Inventory</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Add Customer Modal -->
+    <div id="addCustomerModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Add New Customer</h3>
+          <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="customerName">Full Name</label>
+            <input type="text" id="customerName" class="w-full" placeholder="John Doe">
+          </div>
+          <div class="form-group">
+            <label for="customerPhone">Phone Number</label>
+            <input type="text" id="customerPhone" class="w-full" placeholder="555-1234">
+          </div>
+          <div class="form-group">
+            <label for="customerCreditLimit">Credit Limit ($)</label>
+            <input type="number" id="customerCreditLimit" class="w-full" placeholder="1000.00" min="0" step="0.01">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="outline" id="cancelAddCustomer">Cancel</button>
+          <button id="saveAddCustomer">Add Customer</button>
+        </div>
+      </div>
+    </div>
+
+  <script>
+    // Initial Data
+    let items = [
+      { id: 1, name: "Item A", price: 100, quantity: 10, taxRate: 10 },
+      { id: 2, name: "Item B", price: 200, quantity: 5, taxRate: 5 },
+      { id: 3, name: "Item C", price: 150, quantity: 8, taxRate: 8 },
+      { id: 4, name: "Low Stock D", price: 50, quantity: 2, taxRate: 15 },
+    ];
+    
+    let customers = [
+      { id: 1, name: "John Doe", phone: "555-1234", creditLimit: 1000, creditUsed: 200 },
+      { id: 2, name: "Jane Smith", phone: "555-5678", creditLimit: 2000, creditUsed: 500 },
+    ];
+    
+    let transactions = [
+      { id: 1, customerId: 1, items: [{ id: 1, name: "Item A", price: 100, quantity: 2, taxRate: 10 }], total: 220, tax: 20, paymentMode: "paid", date: "2025-03-28" },
+      { id: 2, customerId: 2, items: [{ id: 2, name: "Item B", price: 200, quantity: 1, taxRate: 5 }], total: 210, tax: 10, paymentMode: "credit", date: "2025-03-29" },
+      { id: 3, customerId: 1, items: [{ id: 3, name: "Item C", price: 150, quantity: 3, taxRate: 8 }], total: 486, tax: 36, paymentMode: "credit", date: "2025-03-30" },
+    ];
+    
+    let cart = [];
+    let selectedCustomer = null;
+    let paymentMode = "paid";
+    
+    // DOM Elements
+    const tabs = document.querySelectorAll('.tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+    const inventoryBody = document.getElementById('inventoryBody');
+    const cartBody = document.getElementById('cartBody');
+    const customersBody = document.getElementById('customersBody');
+    const historyBody = document.getElementById('historyBody');
+    const customerSelect = document.getElementById('customerSelect');
+    const customerInfo = document.getElementById('customerInfo');
+    const emptyCart = document.getElementById('emptyCart');
+    const subtotalEl = document.getElementById('subtotal');
+    const taxEl = document.getElementById('tax');
+    const totalEl = document.getElementById('total');
+    const completePurchaseBtn = document.getElementById('completePurchase');
+    const paymentModeSelect = document.getElementById('paymentMode');
+    const searchItemInput = document.getElementById('searchItem');
+    
+    // Modal Elements
+    const addItemModal = document.getElementById('addItemModal');
+    const addCustomerModal = document.getElementById('addCustomerModal');
+    const addItemBtn = document.getElementById('addItemBtn');
+    const addCustomerBtn = document.getElementById('addCustomerBtn');
+    const closeButtons = document.querySelectorAll('.close');
+    const cancelAddItemBtn = document.getElementById('cancelAddItem');
+    const saveAddItemBtn = document.getElementById('saveAddItem');
+    const cancelAddCustomerBtn = document.getElementById('cancelAddCustomer');
+    const saveAddCustomerBtn = document.getElementById('saveAddCustomer');
+    
+    // Tab Switching
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        const tabId = tab.getAttribute('data-tab');
+        tabContents.forEach(content => {
+          content.classList.remove('active');
+          if (content.id === tabId) {
+            content.classList.add('active');
+          }
+        });
+      });
+    });
+    
+    // Render Functions
+    function renderInventory() {
+      inventoryBody.innerHTML = '';
+      
+      const searchTerm = searchItemInput.value.toLowerCase();
+      const filteredItems = items.filter(item => 
+        item.name.toLowerCase().includes(searchTerm)
       );
-    };
-
-    const TabsList = ({ children, activeTab, setActiveTab }) => (
-      <div className="tabs-list">
-        {React.Children.map(children, child => {
-           if (React.isValidElement(child) && child.type === TabsTrigger) {
-             return React.cloneElement(child, { activeTab, setActiveTab });
-           }
-           return child;
-        })}
-      </div>
-    );
-
-    const TabsTrigger = ({ children, value, activeTab, setActiveTab }) => (
-      <div
-        className={`tabs-trigger ${activeTab === value ? 'tabs-trigger-active' : ''}`}
-        onClick={() => setActiveTab(value)}
-        role="tab"
-        aria-selected={activeTab === value}
-        tabIndex={0}
-        onKeyPress={(e) => { if (e.key === 'Enter' || e.key === ' ') setActiveTab(value); }}
-      >
-        {React.Children.map(children, child => {
-             if (React.isValidElement(child) && child.props && typeof child.props.className === 'string' && child.props.className.includes('lucide')) {
-                 return React.cloneElement(child, { size: 16, className: `${child.props.className} mr-2` });
-             }
-             return child;
-        })}
-      </div>
-    );
-
-    const TabsContent = ({ children, value, activeTab }) => (
-      <div
-        className={`tabs-content ${activeTab === value ? 'tabs-content-active' : ''}`}
-        role="tabpanel"
-        aria-labelledby={`tab-${value}`}
-      >
-        {children}
-      </div>
-    );
-
-    const Select = ({ children, value, onValueChange, className = "" }) => (
-      <select
-        className={`select ${className}`}
-        value={value}
-        onChange={(e) => onValueChange(e.target.value)}
-      >
-        {children}
-      </select>
-    );
-
-    const SelectValue = ({ placeholder }) => (
-      <option value="" disabled hidden>{placeholder}</option>
-    );
-
-    const SelectItem = ({ children, value }) => (
-      <option value={value}>{children}</option>
-    );
-
-    // Main component
-    const BillingDashboard = () => {
-      // Destructuring Lucide icons
-       const { Trash: TrashIcon, Plus: PlusIcon, Minus: MinusIcon, Package: PackageIcon, Users2: Users2Icon, History: HistoryIcon, Percent: PercentIcon } = lucide;
-
-      const initialItems = [
-        { id: 1, name: "Item A", price: 100, quantity: 10, taxRate: 10 },
-        { id: 2, name: "Item B", price: 200, quantity: 5, taxRate: 5 },
-        { id: 3, name: "Item C", price: 150, quantity: 8, taxRate: 8 },
-        { id: 4, name: "Low Stock D", price: 50, quantity: 2, taxRate: 15 },
-      ];
-
-      const initialCustomers = [
-        { id: 1, name: "John Doe", phone: "555-1234", creditLimit: 1000, creditUsed: 200 },
-        { id: 2, name: "Jane Smith", phone: "555-5678", creditLimit: 2000, creditUsed: 500 },
-      ];
-
-      const initialTransactions = [
-        { id: 1, customerId: 1, items: [{ id: 1, name: "Item A", price: 100, quantity: 2, taxRate: 10 }], total: 220, tax: 20, paymentMode: "paid", date: "2025-03-28" },
-        { id: 2, customerId: 2, items: [{ id: 2, name: "Item B", price: 200, quantity: 1, taxRate: 5 }], total: 210, tax: 10, paymentMode: "credit", date: "2025-03-29" },
-        { id: 3, customerId: 1, items: [{ id: 3, name: "Item C", price: 150, quantity: 3, taxRate: 8 }], total: 486, tax: 36, paymentMode: "credit", date: "2025-03-30" },
-      ];
-
-      const [items, setItems] = React.useState(initialItems);
-      const [cart, setCart] = React.useState([]);
-      const [newItem, setNewItem] = React.useState({ name: "", price: "", quantity: "", taxRate: "" });
-      const [searchTerm, setSearchTerm] = React.useState("");
-      const [customers, setCustomers] = React.useState(initialCustomers);
-      const [transactions, setTransactions] = React.useState(initialTransactions);
-      const [selectedCustomer, setSelectedCustomer] = React.useState(null);
-      const [newCustomer, setNewCustomer] = React.useState({ name: "", phone: "", creditLimit: "" });
-      const [paymentMode, setPaymentMode] = React.useState("paid");
-      const [addItemDialogOpen, setAddItemDialogOpen] = React.useState(false);
-      const [addCustomerDialogOpen, setAddCustomerDialogOpen] = React.useState(false);
-
-      const [itemQuantities, setItemQuantities] = React.useState({});
-
-      React.useEffect(() => {
-        const initialQuantities = items.reduce((acc, item) => {
-          acc[item.id] = 1;
-          return acc;
-        }, {});
-        setItemQuantities(initialQuantities);
-      }, [items]);
-
-      const handleItemQuantityChange = (itemId, value) => {
-         const rawValue = value;
-         const quantity = parseInt(value);
-         setItemQuantities(prev => ({
-             ...prev,
-             [itemId]: isNaN(quantity) ? (rawValue === '' ? '' : 1) : Math.max(1, quantity)
-         }));
-     };
-
-      const addToCart = (item) => {
-         const quantityStr = itemQuantities[item.id]?.toString() ?? '1';
-         const quantity = parseInt(quantityStr);
-
-         if (isNaN(quantity) || quantity < 1 || quantityStr === '') {
-             alert("Please enter a valid quantity (must be 1 or more)!");
-             setItemQuantities(prev => ({ ...prev, [item.id]: 1 }));
-             return;
-         }
-
-         const currentItemDetails = items.find(i => i.id === item.id);
-         if (!currentItemDetails) {
-             console.error("Item not found in inventory:", item.id);
-             return;
-         }
-
-         if (quantity > currentItemDetails.quantity) {
-           alert("Not enough stock available!");
-           return;
-         }
-
-         setItems(prevItems => prevItems.map(i =>
-           i.id === item.id ? { ...i, quantity: i.quantity - quantity } : i
-         ));
-
-         const existingItem = cart.find((c) => c.id === item.id);
-         if (existingItem) {
-           setCart(prevCart => prevCart.map((c) =>
-             c.id === item.id ? { ...c, quantity: c.quantity + quantity } : c
-           ));
-         } else {
-           setCart(prevCart => [...prevCart, {
-               id: item.id,
-               name: item.name,
-               price: item.price,
-               taxRate: item.taxRate,
-               quantity: quantity
-            }]);
-         }
-         setItemQuantities(prev => ({ ...prev, [item.id]: 1 }));
-       };
-
-      const removeFromCart = (itemId) => {
-        const itemToRemove = cart.find(item => item.id === itemId);
-        if (!itemToRemove) return;
-
-        setItems(prevItems => prevItems.map(item =>
-          item.id === itemId
-            ? { ...item, quantity: item.quantity + itemToRemove.quantity }
-            : item
-        ));
-        setCart(prevCart => prevCart.filter(item => item.id !== itemId));
-      };
-
-      const adjustQuantity = (itemId, amount) => {
-        const itemInCart = cart.find(item => item.id === itemId);
-        if (!itemInCart) return;
-
-         const itemInStock = items.find(item => item.id === itemId);
-         if (!itemInStock) {
-             console.error("Adjusting quantity for item not in stock:", itemId);
-             return;
-         }
-
-        if (amount > 0 && itemInStock.quantity < 1) {
-          alert("No more stock available to increase quantity!");
-          return;
-        }
-
-        const newCartQuantity = itemInCart.quantity + amount;
-
-        if (newCartQuantity < 1) {
-          removeFromCart(itemId);
-          return;
-        }
-
-        setItems(prevItems => prevItems.map(item =>
-          item.id === itemId
-            ? { ...item, quantity: item.quantity - amount }
-            : item
-        ));
-        setCart(prevCart => prevCart.map(item =>
-          item.id === itemId
-            ? { ...item, quantity: newCartQuantity }
-            : item
-        ));
-      };
-
-      const handleAddNewItem = () => {
-        if (!newItem.name || !newItem.price || !newItem.quantity || !newItem.taxRate) {
-          alert("Please fill all fields for the new item.");
-          return;
-        }
-         const price = parseFloat(newItem.price);
-         const quantity = parseInt(newItem.quantity);
-         const taxRate = parseFloat(newItem.taxRate);
-
-         if (isNaN(price) || price < 0 || isNaN(quantity) || quantity < 0 || isNaN(taxRate) || taxRate < 0) {
-             alert("Please enter valid positive numbers for price, quantity, and tax rate.");
-             return;
-         }
-
-        const newItemWithId = {
-          id: (items.length ? Math.max(...items.map(item => item.id)) : 0) + 1,
-          name: newItem.name.trim(),
-          price: price,
-          quantity: quantity,
-          taxRate: taxRate
-        };
-
-        setItems([...items, newItemWithId]);
-        setNewItem({ name: "", price: "", quantity: "", taxRate: "" });
-        setAddItemDialogOpen(false);
-      };
-
-      const handleAddNewCustomer = () => {
-        if (!newCustomer.name || !newCustomer.phone || !newCustomer.creditLimit) {
-          alert("Please fill all customer fields.");
-          return;
-        }
-         const creditLimit = parseFloat(newCustomer.creditLimit);
-          if (isNaN(creditLimit) || creditLimit < 0) {
-             alert("Please enter a valid positive number for the credit limit.");
-             return;
-         }
-
-        const newCustomerWithId = {
-           id: (customers.length ? Math.max(...customers.map(c => c.id)) : 0) + 1,
-           name: newCustomer.name.trim(),
-           phone: newCustomer.phone.trim(),
-           creditLimit: creditLimit,
-           creditUsed: 0
-        };
-
-        setCustomers([...customers, newCustomerWithId]);
-        setNewCustomer({ name: "", phone: "", creditLimit: "" });
-        setAddCustomerDialogOpen(false);
-      };
-
-      const calculateSubtotal = () => {
-        return cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
-      };
-      const calculateTax = () => {
-        return cart.reduce((acc, item) => acc + (item.price * item.quantity) * (item.taxRate / 100), 0);
-      };
-      const calculateTotal = () => calculateSubtotal() + calculateTax();
-
-      const completePurchase = () => {
-        if (!selectedCustomer) {
-          alert("Please select a customer before completing the purchase.");
-          return;
-        }
-        if (cart.length === 0) {
-          alert("Cart is empty. Add items to proceed.");
-          return;
-        }
-        const total = calculateTotal();
-        if (paymentMode === "credit") {
-          const newCreditUsed = selectedCustomer.creditUsed + total;
-          if (newCreditUsed > selectedCustomer.creditLimit) {
-            alert(`Purchase exceeds the customer's available credit limit ($${(selectedCustomer.creditLimit - selectedCustomer.creditUsed).toFixed(2)} available).`);
+      
+      if (filteredItems.length === 0) {
+        inventoryBody.innerHTML = `
+          <tr>
+            <td colspan="5" class="text-center" style="padding: 20px; color: #777;">
+              No items match your search.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      filteredItems.forEach(item => {
+        const row = document.createElement('tr');
+        
+        const badgeClass = item.quantity > 3 ? 'badge-blue' : (item.quantity > 0 ? 'badge-gray' : 'badge-red');
+        
+        row.innerHTML = `
+          <td>${item.name}</td>
+          <td>$${item.price.toFixed(2)}</td>
+          <td>${item.taxRate}%</td>
+          <td><span class="badge ${badgeClass}">${item.quantity}</span></td>
+          <td class="text-right">
+            <input type="number" id="qty-${item.id}" value="1" min="1" max="${item.quantity}" class="sm" style="width: 50px;" ${item.quantity < 1 ? 'disabled' : ''}>
+            <button class="sm" data-id="${item.id}" ${item.quantity < 1 ? 'disabled' : ''}>Add</button>
+          </td>
+        `;
+        
+        inventoryBody.appendChild(row);
+        
+        // Add event listener to the Add button
+        const addButton = row.querySelector('button');
+        addButton.addEventListener('click', () => {
+          const qtyInput = document.getElementById(`qty-${item.id}`);
+          const quantity = parseInt(qtyInput.value);
+          
+          if (isNaN(quantity) || quantity < 1) {
+            alert("Please enter a valid quantity (must be 1 or more)!");
+            qtyInput.value = 1;
             return;
           }
-          setCustomers(prevCustomers => prevCustomers.map(customer =>
-            customer.id === selectedCustomer.id
-              ? { ...customer, creditUsed: newCreditUsed }
-              : customer
-          ));
-          setSelectedCustomer(prev => prev ? { ...prev, creditUsed: newCreditUsed } : null);
-        }
-        const newTransaction = {
-          id: (transactions.length ? Math.max(...transactions.map(t => t.id)) : 0) + 1,
-          customerId: selectedCustomer.id,
-          items: [...cart],
-          total: total,
-          tax: calculateTax(),
-          paymentMode: paymentMode,
-          date: new Date().toISOString().split('T')[0]
-        };
-        setTransactions([...transactions, newTransaction]);
-        setCart([]);
-        alert(`Purchase completed successfully! Total: $${total.toFixed(2)} for ${selectedCustomer.name}.`);
-      };
-
-      const filteredItems = items.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
-      const getCustomerById = (id) => customers.find(c => c.id === id);
-
-      return (
-        <div className="p-4 max-w-7xl mx-auto">
-          <header className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-800">Billing Dashboard</h1>
-            <p className="text-gray-600">Manage inventory, customer orders, and credit accounts.</p>
-          </header>
-
-          <Tabs defaultValue="billing">
-            <TabsList>
-              <TabsTrigger value="billing"><PackageIcon />Billing</TabsTrigger>
-              <TabsTrigger value="customers"><Users2Icon />Customers</TabsTrigger>
-              <TabsTrigger value="history"><HistoryIcon />Transaction History</TabsTrigger>
-            </TabsList>
-
-            {/* Billing Tab */}
-            <TabsContent value="billing">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Inventory Section */}
-                <Card>
-                  <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b">
-                    <div>
-                      <CardTitle>Inventory</CardTitle>
-                      <CardDescription>Available items for sale</CardDescription>
-                    </div>
-                     <Dialog open={addItemDialogOpen} onOpenChange={setAddItemDialogOpen}>
-                         <DialogTrigger onClick={() => setAddItemDialogOpen(true)}>
-                            <Button size="sm" className="mt-2 sm:mt-0"><PlusIcon className="h-4 w-4 mr-1"/> Add Item</Button>
-                         </DialogTrigger>
-                         <DialogContent>
-                           <DialogHeader><DialogTitle>Add New Inventory Item</DialogTitle></DialogHeader>
-                           <div className="space-y-3 mt-4">
-                             <div className="space-y-1">
-                               <label htmlFor="itemName" className="text-sm font-medium text-gray-700">Item Name</label>
-                               <Input id="itemName" placeholder="e.g., Widget Pro" value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} />
-                             </div>
-                             <div className="grid grid-cols-3 gap-3">
-                                <div className="space-y-1">
-                                 <label htmlFor="itemPrice" className="text-sm font-medium text-gray-700">Price ($)</label>
-                                 <Input id="itemPrice" type="number" placeholder="0.00" value={newItem.price} onChange={(e) => setNewItem({...newItem, price: e.target.value})} />
-                                </div>
-                                <div className="space-y-1">
-                                     <label htmlFor="itemQuantity" className="text-sm font-medium text-gray-700">Quantity</label>
-                                     <Input id="itemQuantity" type="number" placeholder="0" value={newItem.quantity} onChange={(e) => setNewItem({...newItem, quantity: e.target.value})} />
-                                 </div>
-                                <div className="space-y-1">
-                                    <label htmlFor="itemTaxRate" className="text-sm font-medium text-gray-700">Tax (%)</label>
-                                    <Input id="itemTaxRate" type="number" placeholder="0.0" value={newItem.taxRate} onChange={(e) => setNewItem({...newItem, taxRate: e.target.value})} />
-                                </div>
-                            </div>
-                             <div className="flex justify-end space-x-2 pt-4">
-                                 <Button variant="outline" onClick={() => setAddItemDialogOpen(false)}>Cancel</Button>
-                                 <Button onClick={handleAddNewItem}>Add to Inventory</Button>
-                             </div>
-                           </div>
-                         </DialogContent>
-                     </Dialog>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="mb-4"><Input placeholder="Search items by name..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
-                    <div className="overflow-x-auto">
-                      <div className="w-full border rounded-md text-sm">
-                         <div className="grid grid-cols-6 bg-gray-50 p-2 font-semibold border-b text-gray-600">
-                           <div className="col-span-2">Name</div><div className="text-right">Price</div><div className="text-center">Tax</div><div className="text-center">Stock</div><div className="text-right">Action</div>
-                         </div>
-                         <div className="divide-y max-h-96 overflow-y-auto">
-                           {filteredItems.length > 0 ? filteredItems.map((item) => (
-                             <div key={item.id} className="grid grid-cols-6 p-2 items-center hover:bg-gray-50 transition-colors">
-                               <div className="col-span-2 font-medium">{item.name}</div><div className="text-right">${item.price.toFixed(2)}</div><div className="text-center">{item.taxRate}%</div>
-                               <div className="text-center"><Badge variant={item.quantity > 3 ? "default" : (item.quantity > 0 ? "secondary" : "destructive")}>{item.quantity}</Badge></div>
-                               <div className="flex justify-end items-center space-x-2">
-                                     <Input type="number" min="1" max={item.quantity > 0 ? item.quantity : undefined} value={itemQuantities[item.id] || '1'} onChange={(e) => handleItemQuantityChange(item.id, e.target.value)} id={`qty-${item.id}`} className="w-14 h-8 text-sm p-1 text-center" disabled={item.quantity < 1} />
-                                     <Button size="sm" variant="primary" className="h-8 w-14" disabled={item.quantity < 1 || !itemQuantities[item.id] || parseInt(itemQuantities[item.id] || '0') < 1 } onClick={() => addToCart(item)}>Add</Button>
-                               </div>
-                             </div>
-                           )) : <div className="p-4 text-center text-gray-500 col-span-6">No items match your search.</div>}
-                         </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Cart Section */}
-                <Card>
-                  <CardHeader className="border-b pb-4">
-                    <CardTitle>Customer Cart</CardTitle>
-                     <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label htmlFor="customerSelect" className="text-sm font-medium text-gray-700 block mb-1">Select Customer</label>
-                          <Select 
-                            value={selectedCustomer ? selectedCustomer.id.toString() : ""}
-                            onValueChange={(value) => setSelectedCustomer(customers.find(c => c.id === parseInt(value)))}
-                            className="w-full"
-                          >
-                            <SelectValue placeholder="Select a customer..." />
-                            {customers.map((customer) => (
-                              <SelectItem key={customer.id} value={customer.id.toString()}>
-                                {customer.name}
-                              </SelectItem>
-                            ))}
-                          </Select>
-                        </div>
-                        <div>
-                          <Dialog open={addCustomerDialogOpen} onOpenChange={setAddCustomerDialogOpen}>
-                            <DialogTrigger onClick={() => setAddCustomerDialogOpen(true)}>
-                              <Button variant="outline" className="w-full"><PlusIcon className="h-4 w-4 mr-1"/> Add New Customer</Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader><DialogTitle>Add New Customer</DialogTitle></DialogHeader>
-                              <div className="space-y-3 mt-4">
-                                <div className="space-y-1">
-                                  <label htmlFor="customerName" className="text-sm font-medium text-gray-700">Full Name</label>
-                                  <Input id="customerName" placeholder="John Doe" value={newCustomer.name} onChange={(e) => setNewCustomer({...newCustomer, name: e.target.value})} />
-                                </div>
-                                <div className="space-y-1">
-                                  <label htmlFor="customerPhone" className="text-sm font-medium text-gray-700">Phone Number</label>
-                                  <Input id="customerPhone" placeholder="555-1234" value={newCustomer.phone} onChange={(e) => setNewCustomer({...newCustomer, phone: e.target.value})} />
-                                </div>
-                                <div className="space-y-1">
-                                  <label htmlFor="customerCreditLimit" className="text-sm font-medium text-gray-700">Credit Limit ($)</label>
-                                  <Input id="customerCreditLimit" type="number" placeholder="1000.00" value={newCustomer.creditLimit} onChange={(e) => setNewCustomer({...newCustomer, creditLimit: e.target.value})} />
-                                </div>
-                                <div className="flex justify-end space-x-2 pt-4">
-                                  <Button variant="outline" onClick={() => setAddCustomerDialogOpen(false)}>Cancel</Button>
-                                  <Button onClick={handleAddNewCustomer}>Add Customer</Button>
-                                </div>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                        </div>
-                      </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div>
-                      {selectedCustomer && (
-                        <div className="bg-gray-50 p-3 rounded-md mb-4 flex justify-between items-center">
-                          <div>
-                            <span className="font-semibold">{selectedCustomer.name}</span>
-                            <p className="text-sm text-gray-500">{selectedCustomer.phone}</p>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-sm text-gray-500">Credit Limit: ${selectedCustomer.creditLimit.toFixed(2)}</div>
-                            <div className="text-sm">Available: ${(selectedCustomer.creditLimit - selectedCustomer.creditUsed).toFixed(2)}</div>
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="space-y-1 mb-4">
-                        <label htmlFor="paymentMode" className="text-sm font-medium text-gray-700">Payment Mode</label>
-                        <Select value={paymentMode} onValueChange={setPaymentMode} className="w-full">
-                          <SelectItem value="paid">Pay Now</SelectItem>
-                          <SelectItem value="credit">Credit Account</SelectItem>
-                        </Select>
-                      </div>
-
-                      <div className="border rounded-md mb-4">
-                        <div className="grid grid-cols-7 bg-gray-50 p-2 text-sm font-semibold border-b text-gray-600">
-                          <div className="col-span-2">Item</div>
-                          <div className="text-right">Price</div>
-                          <div className="text-center">Qty</div>
-                          <div className="text-center">Tax</div>
-                          <div className="text-right">Subtotal</div>
-                          <div className="text-right">Action</div>
-                        </div>
-                        <div className="divide-y max-h-60 overflow-y-auto">
-                          {cart.length > 0 ? cart.map((item) => (
-                            <div key={item.id} className="grid grid-cols-7 p-2 items-center text-sm">
-                              <div className="col-span-2 font-medium">{item.name}</div>
-                              <div className="text-right">${item.price.toFixed(2)}</div>
-                              <div className="flex items-center justify-center gap-1">
-                                <Button size="sm" variant="outline" className="h-6 w-6 p-0" onClick={() => adjustQuantity(item.id, -1)}><MinusIcon className="h-3 w-3" /></Button>
-                                <span className="w-6 text-center">{item.quantity}</span>
-                                <Button size="sm" variant="outline" className="h-6 w-6 p-0" onClick={() => adjustQuantity(item.id, 1)}><PlusIcon className="h-3 w-3" /></Button>
-                              </div>
-                              <div className="text-center">{item.taxRate}%</div>
-                              <div className="text-right">${(item.price * item.quantity).toFixed(2)}</div>
-                              <div className="text-right">
-                                <Button size="sm" variant="destructive" className="h-7 p-1" onClick={() => removeFromCart(item.id)}><TrashIcon className="h-4 w-4" /></Button>
-                              </div>
-                            </div>
-                          )) : (
-                            <div className="p-4 text-center text-gray-500 col-span-7">Cart is empty. Add items from inventory.</div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="space-y-2 mt-4">
-                        <div className="flex justify-between text-sm">
-                          <span>Subtotal:</span>
-                          <span>${calculateSubtotal().toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span>Tax:</span>
-                          <span>${calculateTax().toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between font-semibold pt-2 border-t">
-                          <span>Total:</span>
-                          <span>${calculateTotal().toFixed(2)}</span>
-                        </div>
-                        <Button className="w-full mt-4" onClick={completePurchase} disabled={!selectedCustomer || cart.length === 0}>
-                          Complete {paymentMode === "credit" ? "Credit Purchase" : "Payment"}
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-
-            {/* Customers Tab */}
-            <TabsContent value="customers">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Customer Management</CardTitle>
-                  <CardDescription>View and manage customer accounts and credit balances.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="bg-gray-50 text-left">
-                          <th className="p-3 border-b">Name</th>
-                          <th className="p-3 border-b">Phone</th>
-                          <th className="p-3 border-b">Credit Limit</th>
-                          <th className="p-3 border-b">Credit Used</th>
-                          <th className="p-3 border-b">Available Credit</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {customers.map((customer) => (
-                          <tr key={customer.id} className="hover:bg-gray-50">
-                            <td className="p-3 border-b font-medium">{customer.name}</td>
-                            <td className="p-3 border-b">{customer.phone}</td>
-                            <td className="p-3 border-b">${customer.creditLimit.toFixed(2)}</td>
-                            <td className="p-3 border-b">${customer.creditUsed.toFixed(2)}</td>
-                            <td className="p-3 border-b">
-                              <Badge variant={customer.creditLimit - customer.creditUsed > 0.2 * customer.creditLimit ? "default" : "destructive"}>
-                                ${(customer.creditLimit - customer.creditUsed).toFixed(2)}
-                              </Badge>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Transaction History Tab */}
-            <TabsContent value="history">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Transaction History</CardTitle>
-                  <CardDescription>View all past transactions and billing records.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="bg-gray-50 text-left">
-                          <th className="p-3 border-b">Date</th>
-                          <th className="p-3 border-b">Customer</th>
-                          <th className="p-3 border-b">Items</th>
-                          <th className="p-3 border-b">Tax</th>
-                          <th className="p-3 border-b">Total</th>
-                          <th className="p-3 border-b">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {transactions.map((transaction) => {
-                          const customer = getCustomerById(transaction.customerId);
-                          return (
-                            <tr key={transaction.id} className="hover:bg-gray-50">
-                              <td className="p-3 border-b">{transaction.date}</td>
-                              <td className="p-3 border-b font-medium">{customer ? customer.name : "Unknown"}</td>
-                              <td className="p-3 border-b">{transaction.items.length} items</td>
-                              <td className="p-3 border-b">${transaction.tax.toFixed(2)}</td>
-                              <td className="p-3 border-b font-semibold">${transaction.total.toFixed(2)}</td>
-                              <td className="p-3 border-b">
-                                <Badge variant={transaction.paymentMode === "paid" ? "default" : "secondary"}>
-                                  {transaction.paymentMode === "paid" ? "Paid" : "On Credit"}
-                                </Badge>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+          
+          if (quantity > item.quantity) {
+            alert("Not enough stock available!");
+            return;
+          }
+          
+          addToCart(item, quantity);
+        });
+      });
+    }
+    
+    function renderCart() {
+      if (cart.length === 0) {
+        cartBody.innerHTML = '';
+        emptyCart.style.display = 'block';
+        updateTotals();
+        return;
+      }
+      
+      emptyCart.style.display = 'none';
+      cartBody.innerHTML = '';
+      
+      cart.forEach(item => {
+        const row = document.createElement('tr');
+        
+        row.innerHTML = `
+          <td>${item.name}</td>
+          <td>$${item.price.toFixed(2)}</td>
+          <td>
+            <button class="sm outline" data-id="${item.id}" data-action="decrease">-</button>
+            <span style="margin: 0 5px;">${item.quantity}</span>
+            <button class="sm outline" data-id="${item.id}" data-action="increase">+</button>
+          </td>
+          <td>${item.taxRate}%</td>
+          <td>$${(item.price * item.quantity).toFixed(2)}</td>
+          <td class="text-right">
+            <button class="sm danger" data-id="${item.id}" data-action="remove">×</button>
+          </td>
+        `;
+        
+        cartBody.appendChild(row);
+        
+        // Add event listeners for the buttons
+        const decreaseBtn = row.querySelector('[data-action="decrease"]');
+        const increaseBtn = row.querySelector('[data-action="increase"]');
+        const removeBtn = row.querySelector('[data-action="remove"]');
+        
+        decreaseBtn.addEventListener('click', () => adjustQuantity(item.id, -1));
+        increaseBtn.addEventListener('click', () => adjustQuantity(item.id, 1));
+        removeBtn.addEventListener('click', () => removeFromCart(item.id));
+      });
+      
+      updateTotals();
+    }
+    
+    function renderCustomers() {
+      // For dropdown
+      customerSelect.innerHTML = '<option value="">Select a customer...</option>';
+      customers.forEach(customer => {
+        const option = document.createElement('option');
+        option.value = customer.id;
+        option.textContent = customer.name;
+        customerSelect.appendChild(option);
+      });
+      
+      // For customers tab
+      customersBody.innerHTML = '';
+      customers.forEach(customer => {
+        const availableCredit = customer.creditLimit - customer.creditUsed;
+        const badgeClass = availableCredit > 0.2 * customer.creditLimit ? 'badge-blue' : 'badge-red';
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${customer.name}</td>
+          <td>${customer.phone}</td>
+          <td>$${customer.creditLimit.toFixed(2)}</td>
+          <td>$${customer.creditUsed.toFixed(2)}</td>
+          <td><span class="badge ${badgeClass}">$${availableCredit.toFixed(2)}</span></td>
+        `;
+        
+        customersBody.appendChild(row);
+      });
+    }
+    
+    function renderTransactions() {
+      historyBody.innerHTML = '';
+      transactions.forEach(transaction => {
+        const customer = customers.find(c => c.id === transaction.customerId);
+        const row = document.createElement('tr');
+        
+        row.innerHTML = `
+          <td>${transaction.date}</td>
+          <td>${customer ? customer.name : 'Unknown'}</td>
+          <td>${transaction.items.length} items</td>
+          <td>$${transaction.tax.toFixed(2)}</td>
+          <td>$${transaction.total.toFixed(2)}</td>
+          <td>
+            <span class="badge ${transaction.paymentMode === 'paid' ? 'badge-blue' : 'badge-gray'}">
+              ${transaction.paymentMode === 'paid' ? 'Paid' : 'On Credit'}
+            </span>
+          </td>
+        `;
+        
+        historyBody.appendChild(row);
+      });
+    }
+    
+    function updateCustomerInfo() {
+      if (!selectedCustomer) {
+        customerInfo.style.display = 'none';
+        return;
+      }
+      
+      customerInfo.style.display = 'flex';
+      customerInfo.innerHTML = `
+        <div style="flex: 1;">
+          <span style="font-weight: 600;">${selectedCustomer.name}</span>
+          <p style="color: #777; font-size: 14px;">${selectedCustomer.phone}</p>
         </div>
-      );
-    };
-
-    // Render the app
-    const root = ReactDOM.createRoot(document.getElementById("root"));
-    root.render(<BillingDashboard />);
+        <div style="text-align: right;">
+          <div style="font-size: 14px; color: #777;">Credit Limit: $${selectedCustomer.creditLimit.toFixed(2)}</div>
+          <div style="font-size: 14px;">Available: $${(selectedCustomer.creditLimit - selectedCustomer.creditUsed).toFixed(2)}</div>
+        </div>
+      `;
+    }
+    
+    function updateTotals() {
+      const subtotal = calculateSubtotal();
+      const tax = calculateTax();
+      const total = subtotal + tax;
+      
+      subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
+      taxEl.textContent = `$${tax.toFixed(2)}`;
+      totalEl.textContent = `$${total.toFixed(2)}`;
+      
+      completePurchaseBtn.disabled = cart.length === 0 || !selectedCustomer;
+    }
+    
+    // Cart Functions
+    function addToCart(item, quantity) {
+      // Update inventory
+      const inventoryItem = items.find(i => i.id === item.id);
+      if (!inventoryItem) return;
+      
+      inventoryItem.quantity -= quantity;
+      
+      // Update cart
+      const existingCartItem = cart.find(c => c.id === item.id);
+      
+      if (existingCartItem) {
+        existingCartItem.quantity += quantity;
+      } else {
+        cart.push({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          taxRate: item.taxRate,
+          quantity: quantity
+        });
+      }
+      
+      renderInventory();
+      renderCart();
+    }
+    
+    function removeFromCart(itemId) {
+      const cartItem = cart.find(item => item.id === itemId);
+      if (!cartItem) return;
+      
+      // Update inventory
+      const inventoryItem = items.find(item => item.id === itemId);
+      if (inventoryItem) {
+        inventoryItem.quantity += cartItem.quantity;
+      }
+      
+      // Remove from cart
+      cart = cart.filter(item => item.id !== itemId);
+      
+      renderInventory();
+      renderCart();
+    }
+    
+    function adjustQuantity(itemId, change) {
+      const cartItem = cart.find(item => item.id === itemId);
+      if (!cartItem) return;
+      
+      const inventoryItem = items.find(item => item.id === itemId);
+      if (!inventoryItem) return;
+      
+      if (change > 0 && inventoryItem.quantity < 1) {
+        alert("No more stock available!");
+        return;
+      }
+      
+      const newQuantity = cartItem.quantity + change;
+      
+      if (newQuantity < 1) {
+        removeFromCart(itemId);
+        return;
+      }
+      
+      cartItem.quantity = newQuantity;
+      inventoryItem.quantity -= change;
+      
+      renderInventory();
+      renderCart();
+    }
+    
+    // Calculations
+    function calculateSubtotal() {
+      return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+    }
+    
+    function calculateTax() {
+      return cart.reduce((total, item) => total + ((item.price * item.quantity) * (item.taxRate / 100)), 0);
+    }
+    
+    // Purchase Completion
+    function completePurchase() {
+      if (!selectedCustomer) {
+        alert("Please select a customer before completing the purchase.");
+        return;
+      }
+      
+      if (cart.length === 0) {
+        alert("Cart is empty. Add items to proceed.");
+        return;
+      }
+      
+      const total = calculateSubtotal() + calculateTax();
+      
+      if (paymentMode === "credit") {
+        const newCreditUsed = selectedCustomer.creditUsed + total;
+        
+        if (newCreditUsed > selectedCustomer.creditLimit) {
+          alert(`Purchase exceeds the customer's available credit limit ($${(selectedCustomer.creditLimit - selectedCustomer.creditUsed).toFixed(2)} available).`);
+          return;
+        }
+        
+        // Update customer credit
+        selectedCustomer.creditUsed = newCreditUsed;
+        customers = customers.map(c => c.id === selectedCustomer.id ? {...c, creditUsed: newCreditUsed} : c);
+      }
+      
+      // Create transaction
+      const newTransaction = {
+        id: transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1,
+        customerId: selectedCustomer.id,
+        items: [...cart],
+        total: total,
+        tax: calculateTax(),
+        paymentMode: paymentMode,
+        date: new Date().toISOString().split('T')[0]
+      };
+      
+      transactions.push(newTransaction);
+      
+      // Reset cart and selections
+      cart = [];
+      selectedCustomer = null;
+      customerSelect.value = "";
+      
+      // Update UI
+      renderInventory();
+      renderCart();
+      renderCustomers();
+      renderTransactions();
+      updateCustomerInfo();
+      
+      alert("Purchase completed successfully!");
+    }
+    
+    // Event Listeners
+    customerSelect.addEventListener('change', () => {
+      const customerId = parseInt(customerSelect.value);
+      selectedCustomer = customers.find(c => c.id === customerId) || null;
+      updateCustomerInfo();
+      updateTotals();
+    });
+    
+    paymentModeSelect.addEventListener('change', () => {
+      paymentMode = paymentModeSelect.value;
+    });
+    
+    completePurchaseBtn.addEventListener('click', completePurchase);
+    
+    searchItemInput.addEventListener('input', renderInventory);
+    
+    // Modal Event Listeners
+    addItemBtn.addEventListener('click', () => {
+      addItemModal.style.display = 'block';
+    });
+    
+    addCustomerBtn.addEventListener('click', () => {
+      addCustomerModal.style.display = 'block';
+    });
+    
+    closeButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        addItemModal.style.display = 'none';
+        addCustomerModal.style.display = 'none';
+      });
+    });
+    
+    cancelAddItemBtn.addEventListener('click', () => {
+      addItemModal.style.display = 'none';
+    });
+    
+    cancelAddCustomerBtn.addEventListener('click', () => {
+      addCustomerModal.style.display = 'none';
+    });
+    
+    saveAddItemBtn.addEventListener('click', () => {
+      const name = document.getElementById('itemName').value;
+      const price = parseFloat(document.getElementById('itemPrice').value);
+      const quantity = parseInt(document.getElementById('itemQuantity').value);
+      const taxRate = parseFloat(document.getElementById('itemTaxRate').value);
+      
+      if (!name || isNaN(price) || isNaN(quantity) || isNaN(taxRate)) {
+        alert("Please fill out all fields with valid values!");
+        return;
+      }
+      
+      const newItem = {
+        id: items.length > 0 ? Math.max(...items.map(i => i.id)) + 1 : 1,
+        name: name,
+        price: price,
+        quantity: quantity,
+        taxRate: taxRate
+      };
+      
+      items.push(newItem);
+      renderInventory();
+      
+      // Reset form and close modal
+      document.getElementById('itemName').value = '';
+      document.getElementById('itemPrice').value = '';
+      document.getElementById('itemQuantity').value = '';
+      document.getElementById('itemTaxRate').value = '';
+      addItemModal.style.display = 'none';
+    });
+    
+    saveAddCustomerBtn.addEventListener('click', () => {
+      const name = document.getElementById('customerName').value;
+      const phone = document.getElementById('customerPhone').value;
+      const creditLimit = parseFloat(document.getElementById('customerCreditLimit').value);
+      
+      if (!name || !phone || isNaN(creditLimit)) {
+        alert("Please fill out all fields with valid values!");
+        return;
+      }
+      
+      const newCustomer = {
+        id: customers.length > 0 ? Math.max(...customers.map(c => c.id)) + 1 : 1,
+        name: name,
+        phone: phone,
+        creditLimit: creditLimit,
+        creditUsed: 0
+      };
+      
+      customers.push(newCustomer);
+      renderCustomers();
+      
+      // Reset form and close modal
+      document.getElementById('customerName').value = '';
+      document.getElementById('customerPhone').value = '';
+      document.getElementById('customerCreditLimit').value = '';
+      addCustomerModal.style.display = 'none';
+    });
+    
+    // Window Events
+    window.addEventListener('click', (event) => {
+      if (event.target === addItemModal) {
+        addItemModal.style.display = 'none';
+      }
+      if (event.target === addCustomerModal) {
+        addCustomerModal.style.display = 'none';
+      }
+    });
+    
+    // Initialize
+    renderInventory();
+    renderCart();
+    renderCustomers();
+    renderTransactions();
   </script>
 </body>
 </html>
