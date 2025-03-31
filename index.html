@@ -1188,7 +1188,12 @@
     let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
     let currentCart = [];
     let categories = ['Electronics', 'Clothing', 'Groceries', 'Office Supplies'];
-    let currentTab = 'dashboard';
+    let currentPage = {
+      inventory: 1,
+      customers: 1,
+      transactions: 1
+    };
+    const itemsPerPage = 5;
 
     // DOM Elements
     const tabContents = document.querySelectorAll('.tab-content');
@@ -1233,28 +1238,52 @@
       // Tab Navigation
       tabs.forEach(tab => {
         tab.addEventListener('click', () => {
-          currentTab = tab.dataset.tab;
+          const targetTab = tab.dataset.tab;
           tabContents.forEach(content => content.classList.remove('active'));
           tabs.forEach(t => t.classList.remove('active'));
-          document.getElementById(currentTab).classList.add('active');
+          document.getElementById(targetTab).classList.add('active');
           tab.classList.add('active');
         });
       });
 
+      // Modal Handling
+      document.querySelectorAll('.modal .close, .modal .secondary').forEach(btn => {
+        btn.addEventListener('click', () => {
+          btn.closest('.modal').style.display = 'none';
+        });
+      });
+
+      window.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal')) {
+          e.target.style.display = 'none';
+        }
+      });
+
       // Item Management
-      document.getElementById('addItemBtn').addEventListener('click', showItemModal);
+      document.getElementById('addItemBtn').addEventListener('click', () => showModal('itemModal'));
+      document.getElementById('addNewInventoryBtn').addEventListener('click', () => showModal('itemModal'));
       document.getElementById('saveItem').addEventListener('click', saveItem);
-      document.getElementById('inventoryBody').addEventListener('click', handleInventoryActions);
 
       // Customer Management
-      document.getElementById('addCustomerBtn').addEventListener('click', showCustomerModal);
+      document.getElementById('addCustomerBtn').addEventListener('click', () => showModal('customerModal'));
+      document.getElementById('addNewCustomerBtn').addEventListener('click', () => showModal('customerModal'));
       document.getElementById('saveCustomer').addEventListener('click', saveCustomer);
 
       // Cart Management
       document.getElementById('customerSelect').addEventListener('change', updateCustomerInfo);
       document.getElementById('cartBody').addEventListener('click', handleCartActions);
       document.getElementById('discountAmount').addEventListener('input', updateTotals);
+      document.getElementById('discountType').addEventListener('change', updateTotals);
       document.getElementById('completePurchase').addEventListener('click', completePurchase);
+
+      // Inventory Pagination
+      document.getElementById('inventoryPagination').addEventListener('click', handlePagination);
+    }
+
+    function showModal(modalId) {
+      const modal = document.getElementById(modalId);
+      modal.style.display = 'block';
+      if (modalId === 'itemModal') populateCategories();
     }
 
     function saveItem(e) {
@@ -1296,15 +1325,12 @@
       customerForm.reset();
     }
 
-    function handleInventoryActions(e) {
-      if (e.target.classList.contains('add-to-cart')) {
+    function handleCartActions(e) {
+      if (e.target.classList.contains('remove-item')) {
         const itemId = parseInt(e.target.dataset.itemId);
-        const item = inventory.find(i => i.id === itemId);
-        if (item.stock > 0) {
-          addToCart(item);
-          renderCart();
-          updateTotals();
-        }
+        removeFromCart(itemId);
+        renderCart();
+        updateTotals();
       }
     }
 
@@ -1317,15 +1343,6 @@
       }
       item.stock--;
       saveData();
-    }
-
-    function handleCartActions(e) {
-      if (e.target.classList.contains('remove-item')) {
-        const itemId = parseInt(e.target.dataset.itemId);
-        removeFromCart(itemId);
-        renderCart();
-        updateTotals();
-      }
     }
 
     function removeFromCart(itemId) {
@@ -1409,6 +1426,9 @@
           </td>
         </tr>
       `).join('');
+      
+      updateCategoryFilter();
+      renderPagination('inventoryPagination', inventory.length);
     }
 
     function renderCustomers() {
@@ -1461,16 +1481,12 @@
         `$${customers.reduce((sum, c) => sum + c.creditUsed, 0).toFixed(2)}`;
     }
 
+    // Helper functions
     function calculateTodaySales() {
       const today = new Date().toDateString();
       return transactions
         .filter(t => new Date(t.date).toDateString() === today)
         .reduce((sum, t) => sum + t.total, 0);
-    }
-
-    function showModal(modalId) {
-      document.getElementById(modalId).style.display = 'block';
-      if (modalId === 'itemModal') populateCategories();
     }
 
     function closeModal(modalId) {
@@ -1500,5 +1516,7 @@
     }
   });
   </script>
+</body>
+</html>
 </body>
 </html>
