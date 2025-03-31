@@ -280,7 +280,7 @@
       </button>
     );
 
-const Input = ({
+    const Input = ({
       type = "text",
       value,
       onChange,
@@ -303,7 +303,6 @@ const Input = ({
         max={max}
         defaultValue={defaultValue}
         disabled={disabled}
-        // *** CORRECTED LINE: Replaced ?. with explicit checks ***
         step={type === 'number' ? ((placeholder && placeholder.toLowerCase().includes('price')) || (placeholder && placeholder.toLowerCase().includes('limit')) ? '0.01' : '1') : undefined}
       />
     );
@@ -312,30 +311,26 @@ const Input = ({
       if (!open) return null;
 
       return (
-        <>
+        <React.Fragment>
           <div className="dialog-backdrop" onClick={() => onOpenChange(false)} />
           <div className="dialog-content">
             {children}
           </div>
-        </>
+        </React.Fragment>
       );
     };
 
-    // DialogTrigger needs to correctly handle the onClick to open the dialog
-    // The state management for 'open' is handled outside, so trigger just calls the passed handler
-     const DialogTrigger = ({ children, onClick }) => {
-        // We clone the child (usually a button) and add the onClick handler to it.
-        // Ensure only one child element is passed.
+    const DialogTrigger = ({ children, onClick }) => {
         const child = React.Children.only(children);
         return React.cloneElement(child, {
             onClick: () => {
-                if (onClick) onClick(); // Call the passed onClick (e.g., setOpen(true))
+                if (onClick) onClick();
             }
         });
     };
 
     const DialogContent = ({ children }) => (
-      <div>{children}</div> // This div is conceptual; styling is handled by .dialog-content
+      <div>{children}</div>
     );
 
     const DialogHeader = ({ children }) => (
@@ -352,14 +347,12 @@ const Input = ({
       return (
         <div className="tabs">
           {React.Children.map(children, child => {
-            // Check if child is a valid React element and has a type
             if (React.isValidElement(child) && child.type) {
-                 // Pass activeTab and setActiveTab only to TabsList and TabsContent
                  if (child.type === TabsList || child.type === TabsContent) {
                     return React.cloneElement(child, { activeTab, setActiveTab });
                  }
             }
-            return child; // Return other children as is
+            return child;
           })}
         </div>
       );
@@ -380,16 +373,14 @@ const Input = ({
       <div
         className={`tabs-trigger ${activeTab === value ? 'tabs-trigger-active' : ''}`}
         onClick={() => setActiveTab(value)}
-        role="tab" // Accessibility
-        aria-selected={activeTab === value} // Accessibility
-        tabIndex={0} // Make focusable
-        onKeyPress={(e) => { if (e.key === 'Enter' || e.key === ' ') setActiveTab(value); }} // Keyboard activation
+        role="tab"
+        aria-selected={activeTab === value}
+        tabIndex={0}
+        onKeyPress={(e) => { if (e.key === 'Enter' || e.key === ' ') setActiveTab(value); }}
       >
-        {/* Render Lucide icons if passed as children */}
         {React.Children.map(children, child => {
-            // A simple check if the child looks like a Lucide icon component
-             if (React.isValidElement(child) && child.props && child.props.className?.includes('lucide')) {
-                 return React.cloneElement(child, { size: 16, className: `${child.props.className || ''} mr-2` }); // Adjust size and margin
+             if (React.isValidElement(child) && child.props && typeof child.props.className === 'string' && child.props.className.includes('lucide')) {
+                 return React.cloneElement(child, { size: 16, className: `${child.props.className} mr-2` });
              }
              return child;
         })}
@@ -399,14 +390,13 @@ const Input = ({
     const TabsContent = ({ children, value, activeTab }) => (
       <div
         className={`tabs-content ${activeTab === value ? 'tabs-content-active' : ''}`}
-        role="tabpanel" // Accessibility
-        aria-labelledby={`tab-${value}`} // Link to trigger (assuming trigger has id=`tab-${value}`)
+        role="tabpanel"
+        aria-labelledby={`tab-${value}`}
       >
         {children}
       </div>
     );
 
-    // Simplified Select using native <select>
     const Select = ({ children, value, onValueChange, className = "" }) => (
       <select
         className={`select ${className}`}
@@ -417,13 +407,10 @@ const Input = ({
       </select>
     );
 
-    // Placeholder option for Select
     const SelectValue = ({ placeholder }) => (
-      // The disabled/hidden option acts as a non-selectable placeholder label
       <option value="" disabled hidden>{placeholder}</option>
     );
 
-    // SelectItem maps directly to <option>
     const SelectItem = ({ children, value }) => (
       <option value={value}>{children}</option>
     );
@@ -431,7 +418,6 @@ const Input = ({
     // Main component
     const BillingDashboard = () => {
       // Destructuring Lucide icons
-      // Make sure lucide is available globally
        const { Trash: TrashIcon, Plus: PlusIcon, Minus: MinusIcon, Package: PackageIcon, Users2: Users2Icon, History: HistoryIcon, Percent: PercentIcon } = lucide;
 
       const initialItems = [
@@ -458,54 +444,45 @@ const Input = ({
       const [searchTerm, setSearchTerm] = React.useState("");
       const [customers, setCustomers] = React.useState(initialCustomers);
       const [transactions, setTransactions] = React.useState(initialTransactions);
-      const [selectedCustomer, setSelectedCustomer] = React.useState(null); // Store the whole customer object
+      const [selectedCustomer, setSelectedCustomer] = React.useState(null);
       const [newCustomer, setNewCustomer] = React.useState({ name: "", phone: "", creditLimit: "" });
       const [paymentMode, setPaymentMode] = React.useState("paid");
       const [addItemDialogOpen, setAddItemDialogOpen] = React.useState(false);
-      const [addCustomerDialogOpen, setAddCustomerDialogOpen] = React.useState(false); // State for customer dialog
+      const [addCustomerDialogOpen, setAddCustomerDialogOpen] = React.useState(false);
 
-      // *** CORRECTION 1: State for inventory item quantities ***
       const [itemQuantities, setItemQuantities] = React.useState({});
 
-      // Initialize/reset item quantities when items list changes or component mounts
       React.useEffect(() => {
         const initialQuantities = items.reduce((acc, item) => {
-          acc[item.id] = 1; // Default quantity to 1
+          acc[item.id] = 1;
           return acc;
         }, {});
         setItemQuantities(initialQuantities);
-      }, [items]); // Rerun if the items array reference changes
+      }, [items]);
 
-      // Handler to update the quantity state for a specific item
       const handleItemQuantityChange = (itemId, value) => {
-         // Allow empty input temporarily, but treat as 0 or 1 for logic
          const rawValue = value;
          const quantity = parseInt(value);
          setItemQuantities(prev => ({
              ...prev,
-             [itemId]: isNaN(quantity) ? (rawValue === '' ? '' : 1) : Math.max(1, quantity) // Store raw or parsed, ensure >= 1 if not empty
+             [itemId]: isNaN(quantity) ? (rawValue === '' ? '' : 1) : Math.max(1, quantity)
          }));
      };
 
-
-      // *** CORRECTION 1 (continued): Modified addToCart ***
       const addToCart = (item) => {
-         const quantityStr = itemQuantities[item.id]?.toString() ?? '1'; // Get from state as string
+         const quantityStr = itemQuantities[item.id]?.toString() ?? '1';
          const quantity = parseInt(quantityStr);
 
-        // Basic validation on the state value
          if (isNaN(quantity) || quantity < 1 || quantityStr === '') {
              alert("Please enter a valid quantity (must be 1 or more)!");
-             // Optionally reset the input state if invalid
              setItemQuantities(prev => ({ ...prev, [item.id]: 1 }));
              return;
          }
 
-         // Find the full item details from the main items list to get current stock
          const currentItemDetails = items.find(i => i.id === item.id);
          if (!currentItemDetails) {
              console.error("Item not found in inventory:", item.id);
-             return; // Should not happen
+             return;
          }
 
          if (quantity > currentItemDetails.quantity) {
@@ -513,19 +490,16 @@ const Input = ({
            return;
          }
 
-         // Update items stock (decrease)
          setItems(prevItems => prevItems.map(i =>
            i.id === item.id ? { ...i, quantity: i.quantity - quantity } : i
          ));
 
-         // Update cart
          const existingItem = cart.find((c) => c.id === item.id);
          if (existingItem) {
            setCart(prevCart => prevCart.map((c) =>
              c.id === item.id ? { ...c, quantity: c.quantity + quantity } : c
            ));
          } else {
-           // Add essential details to cart item, not the whole inventory item object
            setCart(prevCart => [...prevCart, {
                id: item.id,
                name: item.name,
@@ -534,38 +508,28 @@ const Input = ({
                quantity: quantity
             }]);
          }
-
-         // Reset the quantity input state for this item back to 1
          setItemQuantities(prev => ({ ...prev, [item.id]: 1 }));
        };
 
-
-      // Remove item from cart
       const removeFromCart = (itemId) => {
         const itemToRemove = cart.find(item => item.id === itemId);
         if (!itemToRemove) return;
 
-        // Return quantity to stock
         setItems(prevItems => prevItems.map(item =>
           item.id === itemId
             ? { ...item, quantity: item.quantity + itemToRemove.quantity }
             : item
         ));
-
-        // Remove from cart
         setCart(prevCart => prevCart.filter(item => item.id !== itemId));
       };
 
-      // Adjust quantity in cart
       const adjustQuantity = (itemId, amount) => {
         const itemInCart = cart.find(item => item.id === itemId);
-        if (!itemInCart) return; // Item not in cart
+        if (!itemInCart) return;
 
-         // Find current stock details
          const itemInStock = items.find(item => item.id === itemId);
          if (!itemInStock) {
              console.error("Adjusting quantity for item not in stock:", itemId);
-             // Decide how to handle this - maybe remove from cart? For now, do nothing.
              return;
          }
 
@@ -577,18 +541,15 @@ const Input = ({
         const newCartQuantity = itemInCart.quantity + amount;
 
         if (newCartQuantity < 1) {
-          removeFromCart(itemId); // Remove if quantity drops below 1
+          removeFromCart(itemId);
           return;
         }
 
-        // Update stock (decrease if amount > 0, increase if amount < 0)
         setItems(prevItems => prevItems.map(item =>
           item.id === itemId
             ? { ...item, quantity: item.quantity - amount }
             : item
         ));
-
-        // Update cart quantity
         setCart(prevCart => prevCart.map(item =>
           item.id === itemId
             ? { ...item, quantity: newCartQuantity }
@@ -596,7 +557,6 @@ const Input = ({
         ));
       };
 
-      // Add new inventory item
       const handleAddNewItem = () => {
         if (!newItem.name || !newItem.price || !newItem.quantity || !newItem.taxRate) {
           alert("Please fill all fields for the new item.");
@@ -612,7 +572,7 @@ const Input = ({
          }
 
         const newItemWithId = {
-          id: (items.length ? Math.max(...items.map(item => item.id)) : 0) + 1, // Safer ID generation
+          id: (items.length ? Math.max(...items.map(item => item.id)) : 0) + 1,
           name: newItem.name.trim(),
           price: price,
           quantity: quantity,
@@ -620,11 +580,10 @@ const Input = ({
         };
 
         setItems([...items, newItemWithId]);
-        setNewItem({ name: "", price: "", quantity: "", taxRate: "" }); // Reset form
-        setAddItemDialogOpen(false); // Close dialog
+        setNewItem({ name: "", price: "", quantity: "", taxRate: "" });
+        setAddItemDialogOpen(false);
       };
 
-      // Add new customer
       const handleAddNewCustomer = () => {
         if (!newCustomer.name || !newCustomer.phone || !newCustomer.creditLimit) {
           alert("Please fill all customer fields.");
@@ -637,100 +596,68 @@ const Input = ({
          }
 
         const newCustomerWithId = {
-           id: (customers.length ? Math.max(...customers.map(c => c.id)) : 0) + 1, // Safer ID generation
+           id: (customers.length ? Math.max(...customers.map(c => c.id)) : 0) + 1,
            name: newCustomer.name.trim(),
            phone: newCustomer.phone.trim(),
            creditLimit: creditLimit,
-           creditUsed: 0 // New customers start with 0 credit used
+           creditUsed: 0
         };
 
         setCustomers([...customers, newCustomerWithId]);
-        setNewCustomer({ name: "", phone: "", creditLimit: "" }); // Reset form
-        setAddCustomerDialogOpen(false); // Close dialog
+        setNewCustomer({ name: "", phone: "", creditLimit: "" });
+        setAddCustomerDialogOpen(false);
       };
 
-      // Calculate subtotal before tax
       const calculateSubtotal = () => {
         return cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
       };
-
-      // Calculate tax
       const calculateTax = () => {
-        return cart.reduce((acc, item) => {
-          const itemTax = (item.price * item.quantity) * (item.taxRate / 100);
-          return acc + itemTax;
-        }, 0);
+        return cart.reduce((acc, item) => acc + (item.price * item.quantity) * (item.taxRate / 100), 0);
       };
+      const calculateTotal = () => calculateSubtotal() + calculateTax();
 
-      // Calculate total with tax
-      const calculateTotal = () => {
-        return calculateSubtotal() + calculateTax();
-      };
-
-      // Complete purchase
       const completePurchase = () => {
         if (!selectedCustomer) {
           alert("Please select a customer before completing the purchase.");
           return;
         }
-
         if (cart.length === 0) {
           alert("Cart is empty. Add items to proceed.");
           return;
         }
-
         const total = calculateTotal();
-
-        // For credit payment, check credit limit
         if (paymentMode === "credit") {
           const newCreditUsed = selectedCustomer.creditUsed + total;
           if (newCreditUsed > selectedCustomer.creditLimit) {
             alert(`Purchase exceeds the customer's available credit limit ($${(selectedCustomer.creditLimit - selectedCustomer.creditUsed).toFixed(2)} available).`);
             return;
           }
-
-          // Update customer's credit used state
           setCustomers(prevCustomers => prevCustomers.map(customer =>
             customer.id === selectedCustomer.id
               ? { ...customer, creditUsed: newCreditUsed }
               : customer
           ));
-           // Update the selectedCustomer state as well to reflect the change immediately in the UI
-             setSelectedCustomer(prev => prev ? { ...prev, creditUsed: newCreditUsed } : null);
+          setSelectedCustomer(prev => prev ? { ...prev, creditUsed: newCreditUsed } : null);
         }
-
-        // Create new transaction record
         const newTransaction = {
-          id: (transactions.length ? Math.max(...transactions.map(t => t.id)) : 0) + 1, // Safer ID generation
+          id: (transactions.length ? Math.max(...transactions.map(t => t.id)) : 0) + 1,
           customerId: selectedCustomer.id,
-          items: [...cart], // Store a snapshot of the cart items
+          items: [...cart],
           total: total,
           tax: calculateTax(),
           paymentMode: paymentMode,
-          date: new Date().toISOString().split('T')[0] // Get YYYY-MM-DD date
+          date: new Date().toISOString().split('T')[0]
         };
-
         setTransactions([...transactions, newTransaction]);
-
-        // Reset cart and potentially selection
         setCart([]);
-        // Keep customer selected? Maybe reset payment mode to 'paid'? Your choice.
-        // setPaymentMode("paid");
-
         alert(`Purchase completed successfully! Total: $${total.toFixed(2)} for ${selectedCustomer.name}.`);
       };
 
-      // Filter items based on search term (case-insensitive)
-      const filteredItems = items.filter(item =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-
-      // Get customer by ID (helper function)
-       const getCustomerById = (id) => customers.find(c => c.id === id);
-
+      const filteredItems = items.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
+      const getCustomerById = (id) => customers.find(c => c.id === id);
 
       return (
-        <div className="p-4 max-w-7xl mx-auto"> {/* Increased max-width */}
+        <div className="p-4 max-w-7xl mx-auto">
           <header className="mb-6">
             <h1 className="text-3xl font-bold text-gray-800">Billing Dashboard</h1>
             <p className="text-gray-600">Manage inventory, customer orders, and credit accounts.</p>
@@ -748,60 +675,34 @@ const Input = ({
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Inventory Section */}
                 <Card>
-                  <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b"> {/* Added border */}
+                  <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b">
                     <div>
                       <CardTitle>Inventory</CardTitle>
                       <CardDescription>Available items for sale</CardDescription>
                     </div>
-                    {/* Dialog for Adding New Item */}
                      <Dialog open={addItemDialogOpen} onOpenChange={setAddItemDialogOpen}>
                          <DialogTrigger onClick={() => setAddItemDialogOpen(true)}>
                             <Button size="sm" className="mt-2 sm:mt-0"><PlusIcon className="h-4 w-4 mr-1"/> Add Item</Button>
                          </DialogTrigger>
                          <DialogContent>
-                           <DialogHeader>
-                             <DialogTitle>Add New Inventory Item</DialogTitle>
-                           </DialogHeader>
+                           <DialogHeader><DialogTitle>Add New Inventory Item</DialogTitle></DialogHeader>
                            <div className="space-y-3 mt-4">
                              <div className="space-y-1">
                                <label htmlFor="itemName" className="text-sm font-medium text-gray-700">Item Name</label>
-                               <Input
-                                 id="itemName"
-                                 placeholder="e.g., Widget Pro"
-                                 value={newItem.name}
-                                 onChange={(e) => setNewItem({...newItem, name: e.target.value})}
-                               />
+                               <Input id="itemName" placeholder="e.g., Widget Pro" value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} />
                              </div>
                              <div className="grid grid-cols-3 gap-3">
                                 <div className="space-y-1">
                                  <label htmlFor="itemPrice" className="text-sm font-medium text-gray-700">Price ($)</label>
-                                 <Input
-                                    id="itemPrice"
-                                    type="number"
-                                    placeholder="0.00"
-                                    value={newItem.price}
-                                    onChange={(e) => setNewItem({...newItem, price: e.target.value})}
-                                 />
+                                 <Input id="itemPrice" type="number" placeholder="0.00" value={newItem.price} onChange={(e) => setNewItem({...newItem, price: e.target.value})} />
                                 </div>
                                 <div className="space-y-1">
                                      <label htmlFor="itemQuantity" className="text-sm font-medium text-gray-700">Quantity</label>
-                                     <Input
-                                         id="itemQuantity"
-                                         type="number"
-                                         placeholder="0"
-                                         value={newItem.quantity}
-                                         onChange={(e) => setNewItem({...newItem, quantity: e.target.value})}
-                                     />
+                                     <Input id="itemQuantity" type="number" placeholder="0" value={newItem.quantity} onChange={(e) => setNewItem({...newItem, quantity: e.target.value})} />
                                  </div>
                                 <div className="space-y-1">
                                     <label htmlFor="itemTaxRate" className="text-sm font-medium text-gray-700">Tax (%)</label>
-                                    <Input
-                                        id="itemTaxRate"
-                                        type="number"
-                                        placeholder="0.0"
-                                        value={newItem.taxRate}
-                                        onChange={(e) => setNewItem({...newItem, taxRate: e.target.value})}
-                                    />
+                                    <Input id="itemTaxRate" type="number" placeholder="0.0" value={newItem.taxRate} onChange={(e) => setNewItem({...newItem, taxRate: e.target.value})} />
                                 </div>
                             </div>
                              <div className="flex justify-end space-x-2 pt-4">
@@ -813,64 +714,23 @@ const Input = ({
                      </Dialog>
                   </CardHeader>
                   <CardContent>
-                    <div className="mb-4">
-                      <Input
-                        placeholder="Search items by name..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                    </div>
-                     {/* Custom Table Implementation */}
+                    <div className="mb-4"><Input placeholder="Search items by name..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
                     <div className="overflow-x-auto">
-                      <div className="w-full border rounded-md text-sm"> {/* Reduced text size */}
-                         {/* Table Header */}
-                         <div className="grid grid-cols-6 bg-gray-50 p-2 font-semibold border-b text-gray-600"> {/* Adjusted padding and colors */}
-                           <div className="col-span-2">Name</div> {/* Wider name column */}
-                           <div className="text-right">Price</div>
-                           <div className="text-center">Tax</div>
-                           <div className="text-center">Stock</div>
-                           <div className="text-right">Action</div> {/* Combined Qty/Action */}
+                      <div className="w-full border rounded-md text-sm">
+                         <div className="grid grid-cols-6 bg-gray-50 p-2 font-semibold border-b text-gray-600">
+                           <div className="col-span-2">Name</div><div className="text-right">Price</div><div className="text-center">Tax</div><div className="text-center">Stock</div><div className="text-right">Action</div>
                          </div>
-
-                         {/* Table Body */}
-                         <div className="divide-y max-h-96 overflow-y-auto"> {/* Added max-height and scroll */}
+                         <div className="divide-y max-h-96 overflow-y-auto">
                            {filteredItems.length > 0 ? filteredItems.map((item) => (
                              <div key={item.id} className="grid grid-cols-6 p-2 items-center hover:bg-gray-50 transition-colors">
-                               <div className="col-span-2 font-medium">{item.name}</div>
-                               <div className="text-right">${item.price.toFixed(2)}</div>
-                               <div className="text-center">{item.taxRate}%</div>
-                               <div className="text-center">
-                                 <Badge variant={item.quantity > 3 ? "default" : (item.quantity > 0 ? "secondary" : "destructive")}>
-                                   {item.quantity}
-                                 </Badge>
-                               </div>
-                               <div className="flex justify-end items-center space-x-2"> {/* Combined column */}
-                                    {/* *** CORRECTION 1 (continued): Controlled Input *** */}
-                                     <Input
-                                         type="number"
-                                         min="1"
-                                         max={item.quantity > 0 ? item.quantity : undefined} // Allow typing higher but validation handles it
-                                         value={itemQuantities[item.id] || '1'}
-                                         onChange={(e) => handleItemQuantityChange(item.id, e.target.value)}
-                                         id={`qty-${item.id}`}
-                                         className="w-14 h-8 text-sm p-1 text-center" // Smaller input
-                                         disabled={item.quantity < 1}
-                                     />
-                                    {/* *** CORRECTION 1 (continued): Modified Button *** */}
-                                     <Button
-                                         size="sm"
-                                         variant="primary"
-                                         className="h-8 w-14" // Fixed size button
-                                         disabled={item.quantity < 1 || !itemQuantities[item.id] || parseInt(itemQuantities[item.id] || '0') < 1 }
-                                         onClick={() => addToCart(item)} // Pass the item object
-                                     >
-                                        Add
-                                     </Button>
+                               <div className="col-span-2 font-medium">{item.name}</div><div className="text-right">${item.price.toFixed(2)}</div><div className="text-center">{item.taxRate}%</div>
+                               <div className="text-center"><Badge variant={item.quantity > 3 ? "default" : (item.quantity > 0 ? "secondary" : "destructive")}>{item.quantity}</Badge></div>
+                               <div className="flex justify-end items-center space-x-2">
+                                     <Input type="number" min="1" max={item.quantity > 0 ? item.quantity : undefined} value={itemQuantities[item.id] || '1'} onChange={(e) => handleItemQuantityChange(item.id, e.target.value)} id={`qty-${item.id}`} className="w-14 h-8 text-sm p-1 text-center" disabled={item.quantity < 1} />
+                                     <Button size="sm" variant="primary" className="h-8 w-14" disabled={item.quantity < 1 || !itemQuantities[item.id] || parseInt(itemQuantities[item.id] || '0') < 1 } onClick={() => addToCart(item)}>Add</Button>
                                </div>
                              </div>
-                           )) : (
-                                <div className="p-4 text-center text-gray-500 col-span-6">No items match your search.</div>
-                           )}
+                           )) : <div className="p-4 text-center text-gray-500 col-span-6">No items match your search.</div>}
                          </div>
                       </div>
                     </div>
@@ -882,146 +742,123 @@ const Input = ({
                   <CardHeader className="border-b pb-4">
                     <CardTitle>Customer Cart</CardTitle>
                      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                            <label htmlFor="customerSelect" className="text-sm font-medium text-gray-700">Select Customer</label>
-                             <Select
-                                id="customerSelect"
-                                value={selectedCustomer ? selectedCustomer.id.toString() : ""} // Use customer ID as value
-                                onValueChange={(value) => {
-                                  const customerId = parseInt(value);
-                                  const customer = getCustomerById(customerId);
-                                  setSelectedCustomer(customer);
-                                }}
-                             >
-                                 {/* Use SelectValue for the actual placeholder text */}
-                                 <SelectValue placeholder="-- Select Customer --" />
-                                 {customers.map(customer => (
-                                     <SelectItem key={customer.id} value={customer.id.toString()}>
-                                        {customer.name} ({customer.phone})
-                                     </SelectItem>
-                                 ))}
-                            </Select>
+                        <div>
+                          <label htmlFor="customerSelect" className="text-sm font-medium text-gray-700 block mb-1">Select Customer</label>
+                          <Select 
+                            value={selectedCustomer ? selectedCustomer.id.toString() : ""}
+                            onValueChange={(value) => setSelectedCustomer(customers.find(c => c.id === parseInt(value)))}
+                            className="w-full"
+                          >
+                            <SelectValue placeholder="Select a customer..." />
+                            {customers.map((customer) => (
+                              <SelectItem key={customer.id} value={customer.id.toString()}>
+                                {customer.name}
+                              </SelectItem>
+                            ))}
+                          </Select>
                         </div>
-
-                        <div className="space-y-1">
-                             <label htmlFor="paymentModeSelect" className="text-sm font-medium text-gray-700">Payment Mode</label>
-                             <Select id="paymentModeSelect" value={paymentMode} onValueChange={setPaymentMode}>
-                                 {/* <SelectValue placeholder="Payment mode" /> Placeholder not needed if there's a default */}
-                                 <SelectItem value="paid">Paid</SelectItem>
-                                 <SelectItem value="credit">Credit</SelectItem>
-                            </Select>
+                        <div>
+                          <Dialog open={addCustomerDialogOpen} onOpenChange={setAddCustomerDialogOpen}>
+                            <DialogTrigger onClick={() => setAddCustomerDialogOpen(true)}>
+                              <Button variant="outline" className="w-full"><PlusIcon className="h-4 w-4 mr-1"/> Add New Customer</Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader><DialogTitle>Add New Customer</DialogTitle></DialogHeader>
+                              <div className="space-y-3 mt-4">
+                                <div className="space-y-1">
+                                  <label htmlFor="customerName" className="text-sm font-medium text-gray-700">Full Name</label>
+                                  <Input id="customerName" placeholder="John Doe" value={newCustomer.name} onChange={(e) => setNewCustomer({...newCustomer, name: e.target.value})} />
+                                </div>
+                                <div className="space-y-1">
+                                  <label htmlFor="customerPhone" className="text-sm font-medium text-gray-700">Phone Number</label>
+                                  <Input id="customerPhone" placeholder="555-1234" value={newCustomer.phone} onChange={(e) => setNewCustomer({...newCustomer, phone: e.target.value})} />
+                                </div>
+                                <div className="space-y-1">
+                                  <label htmlFor="customerCreditLimit" className="text-sm font-medium text-gray-700">Credit Limit ($)</label>
+                                  <Input id="customerCreditLimit" type="number" placeholder="1000.00" value={newCustomer.creditLimit} onChange={(e) => setNewCustomer({...newCustomer, creditLimit: e.target.value})} />
+                                </div>
+                                <div className="flex justify-end space-x-2 pt-4">
+                                  <Button variant="outline" onClick={() => setAddCustomerDialogOpen(false)}>Cancel</Button>
+                                  <Button onClick={handleAddNewCustomer}>Add Customer</Button>
+                                </div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
                         </div>
-                     </div>
+                      </div>
                   </CardHeader>
                   <CardContent>
-                    {selectedCustomer && paymentMode === "credit" && (
-                      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Credit Limit:</span>
-                          <span>${selectedCustomer.creditLimit.toFixed(2)}</span>
+                    <div>
+                      {selectedCustomer && (
+                        <div className="bg-gray-50 p-3 rounded-md mb-4 flex justify-between items-center">
+                          <div>
+                            <span className="font-semibold">{selectedCustomer.name}</span>
+                            <p className="text-sm text-gray-500">{selectedCustomer.phone}</p>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm text-gray-500">Credit Limit: ${selectedCustomer.creditLimit.toFixed(2)}</div>
+                            <div className="text-sm">Available: ${(selectedCustomer.creditLimit - selectedCustomer.creditUsed).toFixed(2)}</div>
+                          </div>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Credit Used:</span>
-                          <span>${selectedCustomer.creditUsed.toFixed(2)}</span>
+                      )}
+
+                      <div className="space-y-1 mb-4">
+                        <label htmlFor="paymentMode" className="text-sm font-medium text-gray-700">Payment Mode</label>
+                        <Select value={paymentMode} onValueChange={setPaymentMode} className="w-full">
+                          <SelectItem value="paid">Pay Now</SelectItem>
+                          <SelectItem value="credit">Credit Account</SelectItem>
+                        </Select>
+                      </div>
+
+                      <div className="border rounded-md mb-4">
+                        <div className="grid grid-cols-7 bg-gray-50 p-2 text-sm font-semibold border-b text-gray-600">
+                          <div className="col-span-2">Item</div>
+                          <div className="text-right">Price</div>
+                          <div className="text-center">Qty</div>
+                          <div className="text-center">Tax</div>
+                          <div className="text-right">Subtotal</div>
+                          <div className="text-right">Action</div>
                         </div>
-                        <div className="flex justify-between font-semibold mt-1 pt-1 border-t border-blue-200">
-                          <span>Available Credit:</span>
-                           <span className={selectedCustomer.creditLimit - selectedCustomer.creditUsed < 0 ? 'text-red-600' : 'text-green-600'}>
-                             ${(selectedCustomer.creditLimit - selectedCustomer.creditUsed).toFixed(2)}
-                          </span>
+                        <div className="divide-y max-h-60 overflow-y-auto">
+                          {cart.length > 0 ? cart.map((item) => (
+                            <div key={item.id} className="grid grid-cols-7 p-2 items-center text-sm">
+                              <div className="col-span-2 font-medium">{item.name}</div>
+                              <div className="text-right">${item.price.toFixed(2)}</div>
+                              <div className="flex items-center justify-center gap-1">
+                                <Button size="sm" variant="outline" className="h-6 w-6 p-0" onClick={() => adjustQuantity(item.id, -1)}><MinusIcon className="h-3 w-3" /></Button>
+                                <span className="w-6 text-center">{item.quantity}</span>
+                                <Button size="sm" variant="outline" className="h-6 w-6 p-0" onClick={() => adjustQuantity(item.id, 1)}><PlusIcon className="h-3 w-3" /></Button>
+                              </div>
+                              <div className="text-center">{item.taxRate}%</div>
+                              <div className="text-right">${(item.price * item.quantity).toFixed(2)}</div>
+                              <div className="text-right">
+                                <Button size="sm" variant="destructive" className="h-7 p-1" onClick={() => removeFromCart(item.id)}><TrashIcon className="h-4 w-4" /></Button>
+                              </div>
+                            </div>
+                          )) : (
+                            <div className="p-4 text-center text-gray-500 col-span-7">Cart is empty. Add items from inventory.</div>
+                          )}
                         </div>
                       </div>
-                    )}
 
-                    {cart.length > 0 ? (
-                       <div className="overflow-x-auto">
-                         {/* Custom Cart Table */}
-                         <div className="w-full border rounded-md text-sm">
-                             {/* Header */}
-                             <div className="grid grid-cols-6 bg-gray-50 p-2 font-semibold border-b text-gray-600">
-                               <div className="col-span-2">Item</div>
-                               <div className="text-right">Price</div>
-                               <div className="text-center">Qty</div>
-                               <div className="text-right">Subtotal</div>
-                               <div className="text-center">Action</div>
-                             </div>
-
-                             {/* Body */}
-                             <div className="divide-y max-h-60 overflow-y-auto"> {/* Scrollable cart */}
-                               {cart.map((item) => (
-                                 <div key={item.id} className="grid grid-cols-6 p-2 items-center hover:bg-gray-50 transition-colors">
-                                   <div className="col-span-2 font-medium">{item.name}</div>
-                                   <div className="text-right">${item.price.toFixed(2)}</div>
-                                   <div className="text-center">
-                                     <div className="flex items-center justify-center space-x-1">
-                                       <Button
-                                          variant="outline"
-                                          size="icon"
-                                          className="h-6 w-6 border"
-                                          onClick={() => adjustQuantity(item.id, -1)}
-                                        >
-                                          <MinusIcon className="h-3 w-3" />
-                                        </Button>
-                                       <span className="w-6 text-center">{item.quantity}</span>
-                                       <Button
-                                          variant="outline"
-                                          size="icon"
-                                          className="h-6 w-6 border"
-                                          onClick={() => adjustQuantity(item.id, 1)}
-                                           // Disable '+' if no more stock available in inventory
-                                          disabled={(items.find(i => i.id === item.id)?.quantity ?? 0) < 1}
-                                        >
-                                          <PlusIcon className="h-3 w-3" />
-                                        </Button>
-                                     </div>
-                                   </div>
-                                   <div className="text-right">${(item.price * item.quantity).toFixed(2)}</div>
-                                   <div className="text-center">
-                                     <Button
-                                       variant="destructive"
-                                       size="icon"
-                                       className="h-7 w-7"
-                                       onClick={() => removeFromCart(item.id)}
-                                     >
-                                       <TrashIcon className="h-4 w-4" />
-                                     </Button>
-                                   </div>
-                                 </div>
-                               ))}
-                             </div>
-                         </div>
-                       </div>
-                    ) : (
-                      <div className="text-center py-8 text-gray-500">
-                        Cart is empty. Select a customer and add items from inventory.
-                      </div>
-                    )}
-
-                    {cart.length > 0 && (
-                      <div className="mt-4 space-y-2 border-t pt-4">
-                        <div className="flex justify-between p-2 bg-gray-50 rounded text-sm">
+                      <div className="space-y-2 mt-4">
+                        <div className="flex justify-between text-sm">
                           <span>Subtotal:</span>
                           <span>${calculateSubtotal().toFixed(2)}</span>
                         </div>
-                        <div className="flex justify-between p-2 bg-gray-50 rounded text-sm">
-                          <span className="flex items-center">
-                            Tax <PercentIcon className="h-3 w-3 ml-1" />:
-                          </span>
+                        <div className="flex justify-between text-sm">
+                          <span>Tax:</span>
                           <span>${calculateTax().toFixed(2)}</span>
                         </div>
-                        <div className="flex justify-between p-3 bg-gray-100 rounded font-bold text-base">
+                        <div className="flex justify-between font-semibold pt-2 border-t">
                           <span>Total:</span>
                           <span>${calculateTotal().toFixed(2)}</span>
                         </div>
-                        <Button
-                          className="w-full mt-4 text-base py-2.5" // Larger button
-                          onClick={completePurchase}
-                          disabled={!selectedCustomer || cart.length === 0}
-                        >
-                          Complete Purchase
+                        <Button className="w-full mt-4" onClick={completePurchase} disabled={!selectedCustomer || cart.length === 0}>
+                          Complete {paymentMode === "credit" ? "Credit Purchase" : "Payment"}
                         </Button>
                       </div>
-                    )}
+                    </div>
                   </CardContent>
                 </Card>
               </div>
@@ -1029,160 +866,96 @@ const Input = ({
 
             {/* Customers Tab */}
             <TabsContent value="customers">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Existing Customers List */}
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between pb-4 border-b">
-                    <div>
-                        <CardTitle>Customer Accounts</CardTitle>
-                        <CardDescription>View and manage customer details and credit</CardDescription>
-                    </div>
-                    {/* Add Customer Button triggers dialog */}
-                     <Dialog open={addCustomerDialogOpen} onOpenChange={setAddCustomerDialogOpen}>
-                         <DialogTrigger onClick={() => setAddCustomerDialogOpen(true)}>
-                             <Button size="sm"><PlusIcon className="h-4 w-4 mr-1"/> Add Customer</Button>
-                         </DialogTrigger>
-                         <DialogContent>
-                             <DialogHeader>
-                                 <DialogTitle>Add New Customer</DialogTitle>
-                             </DialogHeader>
-                             <div className="space-y-3 mt-4">
-                                 <div className="space-y-1">
-                                     <label htmlFor="custName" className="text-sm font-medium text-gray-700">Name</label>
-                                     <Input id="custName" placeholder="Full Name" value={newCustomer.name} onChange={(e) => setNewCustomer({...newCustomer, name: e.target.value})} />
-                                 </div>
-                                 <div className="space-y-1">
-                                     <label htmlFor="custPhone" className="text-sm font-medium text-gray-700">Phone</label>
-                                     <Input id="custPhone" placeholder="e.g., 555-123-4567" value={newCustomer.phone} onChange={(e) => setNewCustomer({...newCustomer, phone: e.target.value})} />
-                                 </div>
-                                 <div className="space-y-1">
-                                     <label htmlFor="custCredit" className="text-sm font-medium text-gray-700">Credit Limit ($)</label>
-                                     <Input id="custCredit" type="number" placeholder="0.00" value={newCustomer.creditLimit} onChange={(e) => setNewCustomer({...newCustomer, creditLimit: e.target.value})} />
-                                 </div>
-                                 <div className="flex justify-end space-x-2 pt-4">
-                                     <Button variant="outline" onClick={() => setAddCustomerDialogOpen(false)}>Cancel</Button>
-                                     <Button onClick={handleAddNewCustomer}>Add Customer</Button>
-                                 </div>
-                             </div>
-                         </DialogContent>
-                     </Dialog>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="overflow-x-auto">
-                      <div className="w-full border rounded-md text-sm">
-                         {/* Header */}
-                         <div className="grid grid-cols-4 bg-gray-50 p-2 font-semibold border-b text-gray-600">
-                           <div>Name</div>
-                           <div>Phone</div>
-                           <div className="text-right">Credit Limit</div>
-                           <div className="text-right">Credit Available</div>
-                         </div>
-                         {/* Body */}
-                         <div className="divide-y max-h-96 overflow-y-auto">
-                            {customers.length > 0 ? customers.map((customer) => (
-                                <div key={customer.id} className="grid grid-cols-4 p-2 items-center hover:bg-gray-50 transition-colors">
-                                     <div className="font-medium">{customer.name}</div>
-                                     <div>{customer.phone}</div>
-                                     <div className="text-right">${customer.creditLimit.toFixed(2)}</div>
-                                     <div className={`text-right font-medium ${customer.creditLimit - customer.creditUsed >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                         ${(customer.creditLimit - customer.creditUsed).toFixed(2)}
-                                     </div>
-                                </div>
-                           )) : (
-                                <div className="p-4 text-center text-gray-500 col-span-4">No customers found.</div>
-                           )}
-                         </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Maybe add another card here later, e.g., for customer-specific transaction history or credit adjustments */}
-                <Card className="bg-gray-50">
-                     <CardHeader>
-                         <CardTitle>Customer Overview</CardTitle>
-                         <CardDescription>Summary of customer accounts.</CardDescription>
-                     </CardHeader>
-                     <CardContent>
-                         <p>Total Customers: {customers.length}</p>
-                         {/* Add more summary stats if needed */}
-                     </CardContent>
-                 </Card>
-              </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Customer Management</CardTitle>
+                  <CardDescription>View and manage customer accounts and credit balances.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-gray-50 text-left">
+                          <th className="p-3 border-b">Name</th>
+                          <th className="p-3 border-b">Phone</th>
+                          <th className="p-3 border-b">Credit Limit</th>
+                          <th className="p-3 border-b">Credit Used</th>
+                          <th className="p-3 border-b">Available Credit</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {customers.map((customer) => (
+                          <tr key={customer.id} className="hover:bg-gray-50">
+                            <td className="p-3 border-b font-medium">{customer.name}</td>
+                            <td className="p-3 border-b">{customer.phone}</td>
+                            <td className="p-3 border-b">${customer.creditLimit.toFixed(2)}</td>
+                            <td className="p-3 border-b">${customer.creditUsed.toFixed(2)}</td>
+                            <td className="p-3 border-b">
+                              <Badge variant={customer.creditLimit - customer.creditUsed > 0.2 * customer.creditLimit ? "default" : "destructive"}>
+                                ${(customer.creditLimit - customer.creditUsed).toFixed(2)}
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
-            {/* *** CORRECTION 2: Transaction History Tab *** */}
+            {/* Transaction History Tab */}
             <TabsContent value="history">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Transaction History</CardTitle>
-                        <CardDescription>Review past completed purchases.</CardDescription>
-                         {/* Optional: Add filtering controls here later (e.g., by date, customer, payment mode) */}
-                    </CardHeader>
-                    <CardContent>
-                        {transactions.length > 0 ? (
-                            <div className="overflow-x-auto">
-                                <div className="w-full border rounded-md text-sm">
-                                    {/* Header */}
-                                    <div className="grid grid-cols-10 bg-gray-50 p-2 font-semibold border-b text-gray-600"> {/* Adjusted columns */}
-                                        <div className="col-span-2">Date</div>
-                                        <div className="col-span-2">Customer</div>
-                                        <div className="col-span-3">Items Summary</div> {/* Wider items */}
-                                        <div className="col-span-1 text-center">Mode</div>
-                                        <div className="col-span-1 text-right">Tax</div>
-                                        <div className="col-span-1 text-right">Total</div>
-                                    </div>
-                                    {/* Body */}
-                                    <div className="divide-y max-h-[60vh] overflow-y-auto"> {/* Generous scroll height */}
-                                        {/* Sort transactions by date, newest first */}
-                                        {transactions.sort((a, b) => new Date(b.date) - new Date(a.date)).map(tx => {
-                                            const customer = getCustomerById(tx.customerId);
-                                            const customerName = customer ? customer.name : <span className="text-gray-500 italic">Unknown</span>;
-
-                                            return (
-                                                <div key={tx.id} className="grid grid-cols-10 p-2 items-start hover:bg-gray-50 transition-colors"> {/* items-start */}
-                                                    <div className="col-span-2">{tx.date}</div>
-                                                    <div className="col-span-2 font-medium">{customerName}</div>
-                                                    <div className="col-span-3">
-                                                        {/* Simple item summary */}
-                                                        {tx.items.map(item => (
-                                                            <span key={item.id} className="block text-xs text-gray-700 leading-tight">
-                                                                {item.quantity} x {item.name} (@ ${item.price.toFixed(2)})
-                                                            </span>
-                                                        ))}
-                                                        {tx.items.length === 0 && <span className="text-xs text-gray-500 italic">No items recorded</span>}
-                                                    </div>
-                                                    <div className="col-span-1 text-center">
-                                                        <Badge variant={tx.paymentMode === 'paid' ? 'default' : 'secondary'}>
-                                                            {tx.paymentMode}
-                                                        </Badge>
-                                                    </div>
-                                                    <div className="col-span-1 text-right text-gray-600">${tx.tax.toFixed(2)}</div>
-                                                    <div className="col-span-1 text-right font-semibold">${tx.total.toFixed(2)}</div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="text-center py-12 text-gray-500">
-                                No transactions recorded yet.
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Transaction History</CardTitle>
+                  <CardDescription>View all past transactions and billing records.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-gray-50 text-left">
+                          <th className="p-3 border-b">Date</th>
+                          <th className="p-3 border-b">Customer</th>
+                          <th className="p-3 border-b">Items</th>
+                          <th className="p-3 border-b">Tax</th>
+                          <th className="p-3 border-b">Total</th>
+                          <th className="p-3 border-b">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {transactions.map((transaction) => {
+                          const customer = getCustomerById(transaction.customerId);
+                          return (
+                            <tr key={transaction.id} className="hover:bg-gray-50">
+                              <td className="p-3 border-b">{transaction.date}</td>
+                              <td className="p-3 border-b font-medium">{customer ? customer.name : "Unknown"}</td>
+                              <td className="p-3 border-b">{transaction.items.length} items</td>
+                              <td className="p-3 border-b">${transaction.tax.toFixed(2)}</td>
+                              <td className="p-3 border-b font-semibold">${transaction.total.toFixed(2)}</td>
+                              <td className="p-3 border-b">
+                                <Badge variant={transaction.paymentMode === "paid" ? "default" : "secondary"}>
+                                  {transaction.paymentMode === "paid" ? "Paid" : "On Credit"}
+                                </Badge>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
-
           </Tabs>
         </div>
       );
     };
 
-    // Render the main component into the root div
-    const root = ReactDOM.createRoot(document.getElementById('root'));
+    // Render the app
+    const root = ReactDOM.createRoot(document.getElementById("root"));
     root.render(<BillingDashboard />);
-
   </script>
 </body>
 </html>
