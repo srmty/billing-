@@ -1143,34 +1143,354 @@
     </div>
   </div>
 
-  <!-- Add similar modals for Customer, Settings, etc -->
+<script>
+  // Initialize data stores
+  let inventory = JSON.parse(localStorage.getItem('inventory')) || [];
+  let customers = JSON.parse(localStorage.getItem('customers')) || [];
+  let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+  let currentCart = [];
+  let categories = ['Electronics', 'Clothing', 'Groceries', 'Office Supplies'];
 
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
-  <script>
-    // Initialize sample data
-    let inventory = [];
-    let customers = [];
-    let transactions = [];
-    let currentCart = [];
-    
-    // Tab functionality
-    document.querySelectorAll('.tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.tab, .tab-content').forEach(el => el.classList.remove('active'));
-        tab.classList.add('active');
-        document.getElementById(tab.dataset.tab).classList.add('active');
+  // DOM Elements
+  const itemModal = document.getElementById('itemModal');
+  const customerModal = document.getElementById('customerModal');
+  const closeModals = document.querySelectorAll('.close');
+  const itemForm = document.getElementById('itemForm');
+  const customerForm = document.getElementById('customerForm');
+
+  // Initialize Charts
+  let salesChart, salesTrendChart, inventoryPieChart, customerChart;
+
+  // Tab Functionality
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab, .tab-content').forEach(el => el.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.tab).classList.add('active');
+      refreshData();
+    });
+  });
+
+  // Modal Handling
+  document.querySelectorAll('[data-modal]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const modalId = btn.dataset.modal;
+      document.getElementById(modalId).style.display = 'block';
+    });
+  });
+
+  closeModals.forEach(close => {
+    close.addEventListener('click', () => {
+      close.closest('.modal').style.display = 'none';
+    });
+  });
+
+  window.onclick = (e) => {
+    if (e.target.classList.contains('modal')) {
+      e.target.style.display = 'none';
+    }
+  };
+
+  // Inventory Management
+  document.getElementById('addItemBtn').addEventListener('click', () => showItemModal());
+  document.getElementById('addNewInventoryBtn').addEventListener('click', () => showItemModal());
+
+  function showItemModal() {
+    populateCategories();
+    itemModal.style.display = 'block';
+  }
+
+  itemForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const newItem = {
+      id: Date.now(),
+      name: document.getElementById('itemName').value,
+      price: parseFloat(document.getElementById('itemPrice').value),
+      cost: parseFloat(document.getElementById('itemCost').value),
+      tax: parseFloat(document.getElementById('itemTax').value),
+      stock: parseInt(document.getElementById('itemStock').value),
+      category: document.getElementById('itemCategory').value,
+      createdAt: new Date()
+    };
+    inventory.push(newItem);
+    saveData();
+    renderInventory();
+    itemModal.style.display = 'none';
+    itemForm.reset();
+  });
+
+  // Customer Management
+  document.getElementById('addCustomerBtn').addEventListener('click', () => showCustomerModal());
+  document.getElementById('addNewCustomerBtn').addEventListener('click', () => showCustomerModal());
+
+  function showCustomerModal() {
+    customerModal.style.display = 'block';
+  }
+
+  customerForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const newCustomer = {
+      id: Date.now(),
+      name: document.getElementById('customerName').value,
+      email: document.getElementById('customerEmail').value,
+      phone: document.getElementById('customerPhone').value,
+      creditLimit: parseFloat(document.getElementById('creditLimit').value),
+      creditUsed: 0,
+      purchases: []
+    };
+    customers.push(newCustomer);
+    saveData();
+    renderCustomers();
+    customerModal.style.display = 'none';
+    customerForm.reset();
+  });
+
+  // Cart Functionality
+  document.getElementById('inventoryBody').addEventListener('click', (e) => {
+    if (e.target.classList.contains('add-to-cart')) {
+      const itemId = parseInt(e.target.dataset.itemId);
+      const item = inventory.find(i => i.id === itemId);
+      if (item.stock > 0) {
+        addToCart(item);
+        renderCart();
+        updateTotals();
+      }
+    }
+  });
+
+  function addToCart(item) {
+    const existing = currentCart.find(i => i.id === item.id);
+    if (existing) {
+      existing.quantity++;
+    } else {
+      currentCart.push({
+        ...item,
+        quantity: 1,
+        taxAmount: 0
       });
-    });
+    }
+    item.stock--;
+    saveData();
+  }
 
-    // Inventory management
-    document.getElementById('addItemBtn').addEventListener('click', () => {
-      document.getElementById('itemModal').style.display = 'block';
-    });
+  document.getElementById('cartBody').addEventListener('click', (e) => {
+    if (e.target.classList.contains('remove-item')) {
+      const itemId = parseInt(e.target.dataset.itemId);
+      removeFromCart(itemId);
+      renderCart();
+      updateTotals();
+    }
+  });
 
-    // Chart initialization
-    const salesChart = new Chart(document.getElementById('salesChart'), {
+  function removeFromCart(itemId) {
+    const itemIndex = currentCart.findIndex(i => i.id === itemId);
+    if (itemIndex > -1) {
+      const item = currentCart[itemIndex];
+      inventory.find(i => i.id === itemId).stock += item.quantity;
+      currentCart.splice(itemIndex, 1);
+      saveData();
+    }
+  }
+
+  function updateTotals() {
+    const subtotal = currentCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const discountType = document.getElementById('discountType').value;
+    const discountValue = parseFloat(document.getElementById('discountAmount').value) || 0;
+    const discount = discountType === 'percentage' ? 
+      subtotal * (discountValue / 100) : discountValue;
+    const tax = currentCart.reduce((sum, item) => 
+      sum + (item.price * item.quantity * (item.tax / 100)), 0);
+    const total = subtotal - discount + tax;
+
+    document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
+    document.getElementById('discount').textContent = `-$${discount.toFixed(2)}`;
+    document.getElementById('tax').textContent = `$${tax.toFixed(2)}`;
+    document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+    document.getElementById('completePurchase').disabled = currentCart.length === 0;
+  }
+
+  // Transaction Processing
+  document.getElementById('completePurchase').addEventListener('click', () => {
+    const customer = document.getElementById('customerSelect').value;
+    const paymentMode = document.getElementById('paymentMode').value;
+    const total = parseFloat(document.getElementById('total').textContent.replace('$', ''));
+    
+    const transaction = {
+      id: Date.now(),
+      date: new Date(),
+      items: currentCart,
+      total,
+      customer,
+      paymentMode,
+      status: paymentMode === 'credit' ? 'Pending' : 'Completed'
+    };
+
+    transactions.push(transaction);
+    
+    if (paymentMode === 'credit') {
+      const customerObj = customers.find(c => c.id === customer);
+      if (customerObj) {
+        customerObj.creditUsed += total;
+      }
+    }
+
+    currentCart = [];
+    saveData();
+    renderCart();
+    updateTotals();
+    renderTransactions();
+    showToast('Transaction completed successfully!', 'success');
+  });
+
+  // Data Handling
+  function saveData() {
+    localStorage.setItem('inventory', JSON.stringify(inventory));
+    localStorage.setItem('customers', JSON.stringify(customers));
+    localStorage.setItem('transactions', JSON.stringify(transactions));
+    refreshData();
+  }
+
+  function refreshData() {
+    renderInventory();
+    renderCustomers();
+    renderCart();
+    renderTransactions();
+    updateDashboard();
+  }
+
+  // Rendering Functions
+  function renderInventory() {
+    const tbody = document.getElementById('inventoryBody');
+    tbody.innerHTML = inventory.map(item => `
+      <tr>
+        <td>${item.name}</td>
+        <td>$${item.price.toFixed(2)}</td>
+        <td>${item.tax}%</td>
+        <td>${item.stock}</td>
+        <td class="text-right">
+          <button class="btn sm outline add-to-cart" data-item-id="${item.id}">
+            Add to Cart
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function renderCustomers() {
+    const select = document.getElementById('customerSelect');
+    select.innerHTML = '<option value="">Select customer...</option>' + 
+      customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  }
+
+  function renderCart() {
+    const tbody = document.getElementById('cartBody');
+    tbody.innerHTML = currentCart.map(item => `
+      <tr>
+        <td>${item.name}</td>
+        <td>$${item.price.toFixed(2)}</td>
+        <td>${item.quantity}</td>
+        <td>$${(item.price * item.quantity * (item.tax / 100)).toFixed(2)}</td>
+        <td>$${(item.price * item.quantity).toFixed(2)}</td>
+        <td class="text-right">
+          <button class="btn sm danger remove-item" data-item-id="${item.id}">
+            Remove
+          </button>
+        </td>
+      </tr>
+    `).join('');
+    document.getElementById('emptyCart').style.display = currentCart.length ? 'none' : 'block';
+  }
+
+  function renderTransactions() {
+    const tbody = document.getElementById('transactionsBody');
+    tbody.innerHTML = transactions.map(t => `
+      <tr>
+        <td>${new Date(t.date).toLocaleDateString()}</td>
+        <td>${t.paymentMode}</td>
+        <td>${customers.find(c => c.id === t.customer)?.name || 'Walk-in'}</td>
+        <td>${t.items.length} items</td>
+        <td>$${t.total.toFixed(2)}</td>
+        <td><span class="badge ${t.status === 'Completed' ? 'badge-green' : 'badge-yellow'}">
+          ${t.status}
+        </span></td>
+        <td>
+          <button class="btn sm outline" onclick="viewTransaction(${t.id})">
+            View
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // Helper Functions
+  function populateCategories() {
+    const select = document.getElementById('itemCategory');
+    select.innerHTML = categories.map(c => `<option>${c}</option>`).join('');
+  }
+
+  function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+      ${message}
+      <span class="toast-close" onclick="this.parentElement.remove()">&times;</span>
+    `;
+    document.querySelector('.toast-container').appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+  }
+
+  function updateDashboard() {
+    document.getElementById('todaySales').textContent = `$${calculateTodaySales()}`;
+    document.getElementById('activeCustomers').textContent = customers.length;
+    document.getElementById('lowStockItems').textContent = inventory.filter(i => i.stock < 5).length;
+    document.getElementById('outstandingCredit').textContent = 
+      `$${customers.reduce((sum, c) => sum + c.creditUsed, 0).toFixed(2)}`;
+  }
+
+  function calculateTodaySales() {
+    const today = new Date().toDateString();
+    return transactions
+      .filter(t => new Date(t.date).toDateString() === today)
+      .reduce((sum, t) => sum + t.total, 0)
+      .toFixed(2);
+  }
+
+  // Initialization
+  function init() {
+    if (inventory.length === 0) {
+      inventory.push({
+        id: 1,
+        name: 'Sample Item',
+        price: 19.99,
+        cost: 10.00,
+        tax: 8.25,
+        stock: 50,
+        category: 'Electronics',
+        createdAt: new Date()
+      });
+    }
+
+    if (customers.length === 0) {
+      customers.push({
+        id: 1,
+        name: 'Sample Customer',
+        email: 'customer@example.com',
+        phone: '555-1234',
+        creditLimit: 1000,
+        creditUsed: 0,
+        purchases: []
+      });
+    }
+
+    saveData();
+    renderInventory();
+    renderCustomers();
+    updateDashboard();
+    initCharts();
+  }
+
+  function initCharts() {
+    salesChart = new Chart(document.getElementById('salesChart'), {
       type: 'line',
       data: {
         labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
@@ -1182,9 +1502,10 @@
         }]
       }
     });
+  }
 
-    // Add all other necessary event listeners and functions
-    // (Cart management, customer CRUD, transaction processing, etc.)
-  </script>
+  // Start the application
+  init();
+</script>
 </body>
 </html>
