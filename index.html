@@ -562,201 +562,226 @@
   </div>
 
   <script>
-    // Local Storage Keys
-    const ITEMS_KEY = 'billing_dashboard_items';
-    const CUSTOMERS_KEY = 'billing_dashboard_customers';
-    const TRANSACTIONS_KEY = 'billing_dashboard_transactions';
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+  // Local Storage Keys
+  const ITEMS_KEY = 'billing_dashboard_items';
+  const CUSTOMERS_KEY = 'billing_dashboard_customers';
+  const TRANSACTIONS_KEY = 'billing_dashboard_transactions';
+  
+  // Initial Data (will be used if no data in local storage)
+  const initialItems = [
+    { id: 1, name: "Item A", price: 100, quantity: 10, taxRate: 10 },
+    { id: 2, name: "Item B", price: 200, quantity: 5, taxRate: 5 },
+    { id: 3, name: "Item C", price: 150, quantity: 8, taxRate: 8 },
+    { id: 4, name: "Low Stock D", price: 50, quantity: 2, taxRate: 15 },
+  ];
+  
+  const initialCustomers = [
+    { id: 1, name: "John Doe", phone: "555-1234", creditLimit: 1000, creditUsed: 200 },
+    { id: 2, name: "Jane Smith", phone: "555-5678", creditLimit: 2000, creditUsed: 500 },
+  ];
+  
+  const initialTransactions = [
+    { id: 1, customerId: 1, items: [{ id: 1, name: "Item A", price: 100, quantity: 2, taxRate: 10 }], subtotal: 200, tax: 20, total: 220, paymentMode: "paid", date: "2025-03-28" },
+    { id: 2, customerId: 2, items: [{ id: 2, name: "Item B", price: 200, quantity: 1, taxRate: 5 }], subtotal: 200, tax: 10, total: 210, paymentMode: "credit", date: "2025-03-29" },
+    { id: 3, customerId: 1, items: [{ id: 3, name: "Item C", price: 150, quantity: 3, taxRate: 8 }], subtotal: 450, tax: 36, total: 486, paymentMode: "credit", date: "2025-03-30" },
+  ];
+  
+  // Load data from local storage or use initial data
+  let items = JSON.parse(localStorage.getItem(ITEMS_KEY)) || initialItems;
+  let customers = JSON.parse(localStorage.getItem(CUSTOMERS_KEY)) || initialCustomers;
+  let transactions = JSON.parse(localStorage.getItem(TRANSACTIONS_KEY)) || initialTransactions;
+  
+  let cart = [];
+  let selectedCustomer = null;
+  let paymentMode = "paid";
+  let latestTransaction = null; // Store the latest transaction for the bill
+  
+  // DOM Elements - Verify all exist
+  const tabs = document.querySelectorAll('.tab');
+  const tabContents = document.querySelectorAll('.tab-content');
+  const inventoryBody = document.getElementById('inventoryBody');
+  const cartBody = document.getElementById('cartBody');
+  const customersBody = document.getElementById('customersBody');
+  const historyBody = document.getElementById('historyBody');
+  const customerSelect = document.getElementById('customerSelect');
+  const customerInfo = document.getElementById('customerInfo');
+  const emptyCart = document.getElementById('emptyCart');
+  const subtotalEl = document.getElementById('subtotal');
+  const taxEl = document.getElementById('tax');
+  const totalEl = document.getElementById('total');
+  const completePurchaseBtn = document.getElementById('completePurchase');
+  const paymentModeSelect = document.getElementById('paymentMode');
+  const searchItemInput = document.getElementById('searchItem');
+  
+  // Modal Elements
+  const addItemModal = document.getElementById('addItemModal');
+  const addCustomerModal = document.getElementById('addCustomerModal');
+  const billModal = document.getElementById('billModal');
+  const billContent = document.getElementById('billContent');
+  const printBillBtn = document.getElementById('printBillBtn');
+  const closeBillModalBtn = document.getElementById('closeBillModal');
+  const addItemBtn = document.getElementById('addItemBtn');
+  const addCustomerBtn = document.getElementById('addCustomerBtn');
+  const closeButtons = document.querySelectorAll('.modal-close');
+  const cancelAddItemBtn = document.getElementById('cancelAddItem');
+  const saveAddItemBtn = document.getElementById('saveAddItem');
+  const cancelAddCustomerBtn = document.getElementById('cancelAddCustomer');
+  const saveAddCustomerBtn = document.getElementById('saveAddCustomer');
+  
+  // Function to save data to local storage
+  function saveData() {
+    localStorage.setItem(ITEMS_KEY, JSON.stringify(items));
+    localStorage.setItem(CUSTOMERS_KEY, JSON.stringify(customers));
+    localStorage.setItem(TRANSACTIONS_KEY, JSON.stringify(transactions));
+  }
+  
+  // Tab Switching
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      
+      const tabId = tab.getAttribute('data-tab');
+      tabContents.forEach(content => {
+        content.classList.remove('active');
+        if (content.id === tabId) {
+          content.classList.add('active');
+        }
+      });
+    });
+  });
+  
+  // Render Functions
+  function renderInventory() {
+    if (!inventoryBody) return; // Safety check
     
-    // Initial Data (will be used if no data in local storage)
-    const initialItems = [
-      { id: 1, name: "Item A", price: 100, quantity: 10, taxRate: 10 },
-      { id: 2, name: "Item B", price: 200, quantity: 5, taxRate: 5 },
-      { id: 3, name: "Item C", price: 150, quantity: 8, taxRate: 8 },
-      { id: 4, name: "Low Stock D", price: 50, quantity: 2, taxRate: 15 },
-    ];
+    inventoryBody.innerHTML = '';
     
-    const initialCustomers = [
-      { id: 1, name: "John Doe", phone: "555-1234", creditLimit: 1000, creditUsed: 200 },
-      { id: 2, name: "Jane Smith", phone: "555-5678", creditLimit: 2000, creditUsed: 500 },
-    ];
+    const searchTerm = searchItemInput ? searchItemInput.value.toLowerCase() : '';
+    const filteredItems = items.filter(item => 
+      item.name.toLowerCase().includes(searchTerm)
+    );
     
-    const initialTransactions = [
-      { id: 1, customerId: 1, items: [{ id: 1, name: "Item A", price: 100, quantity: 2, taxRate: 10 }], total: 220, tax: 20, paymentMode: "paid", date: "2025-03-28" },
-      { id: 2, customerId: 2, items: [{ id: 2, name: "Item B", price: 200, quantity: 1, taxRate: 5 }], total: 210, tax: 10, paymentMode: "credit", date: "2025-03-29" },
-      { id: 3, customerId: 1, items: [{ id: 3, name: "Item C", price: 150, quantity: 3, taxRate: 8 }], total: 486, tax: 36, paymentMode: "credit", date: "2025-03-30" },
-    ];
-    
-    // Load data from local storage or use initial data
-    let items = JSON.parse(localStorage.getItem(ITEMS_KEY)) || initialItems;
-    let customers = JSON.parse(localStorage.getItem(CUSTOMERS_KEY)) || initialCustomers;
-    let transactions = JSON.parse(localStorage.getItem(TRANSACTIONS_KEY)) || initialTransactions;
-    
-    let cart = [];
-    let selectedCustomer = null;
-    let paymentMode = "paid";
-    let latestTransaction = null; // Store the latest transaction for the bill
-    
-    // DOM Elements
-    const tabs = document.querySelectorAll('.tab');
-    const tabContents = document.querySelectorAll('.tab-content');
-    const inventoryBody = document.getElementById('inventoryBody');
-    const cartBody = document.getElementById('cartBody');
-    const customersBody = document.getElementById('customersBody');
-    const historyBody = document.getElementById('historyBody');
-    const customerSelect = document.getElementById('customerSelect');
-    const customerInfo = document.getElementById('customerInfo');
-    const emptyCart = document.getElementById('emptyCart');
-    const subtotalEl = document.getElementById('subtotal');
-    const taxEl = document.getElementById('tax');
-    const totalEl = document.getElementById('total');
-    const completePurchaseBtn = document.getElementById('completePurchase');
-    const paymentModeSelect = document.getElementById('paymentMode');
-    const searchItemInput = document.getElementById('searchItem');
-    
-    // Modal Elements
-    const addItemModal = document.getElementById('addItemModal');
-    const addCustomerModal = document.getElementById('addCustomerModal');
-    const billModal = document.getElementById('billModal');
-    const billContent = document.getElementById('billContent');
-    const printBillBtn = document.getElementById('printBillBtn');
-    const closeBillModalBtn = document.getElementById('closeBillModal');
-    const addItemBtn = document.getElementById('addItemBtn');
-    const addCustomerBtn = document.getElementById('addCustomerBtn');
-    const closeButtons = document.querySelectorAll('.modal-close');
-    const cancelAddItemBtn = document.getElementById('cancelAddItem');
-    const saveAddItemBtn = document.getElementById('saveAddItem');
-    const cancelAddCustomerBtn = document.getElementById('cancelAddCustomer');
-    const saveAddCustomerBtn = document.getElementById('saveAddCustomer');
-    
-    // Function to save data to local storage
-    function saveData() {
-      localStorage.setItem(ITEMS_KEY, JSON.stringify(items));
-      localStorage.setItem(CUSTOMERS_KEY, JSON.stringify(customers));
-      localStorage.setItem(TRANSACTIONS_KEY, JSON.stringify(transactions));
+    if (filteredItems.length === 0) {
+      inventoryBody.innerHTML = `
+        <tr>
+          <td colspan="5" class="text-center" style="padding: 20px; color: #777;">
+            No items match your search.
+          </td>
+        </tr>
+      `;
+      return;
     }
     
-    // Tab Switching
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
+    filteredItems.forEach(item => {
+      const row = document.createElement('tr');
+      
+      const badgeClass = item.quantity > 3 ? 'badge-blue' : (item.quantity > 0 ? 'badge-gray' : 'badge-red');
+      
+      row.innerHTML = `
+        <td>${item.name}</td>
+        <td>$${item.price.toFixed(2)}</td>
+        <td>${item.taxRate}%</td>
+        <td><span class="badge ${badgeClass}">${item.quantity}</span></td>
+        <td class="text-right">
+          <input type="number" id="qty-${item.id}" value="1" min="1" max="${item.quantity}" class="sm" style="width: 50px;" ${item.quantity < 1 ? 'disabled' : ''}>
+          <button class="sm add-to-cart-btn" data-id="${item.id}" ${item.quantity < 1 ? 'disabled' : ''}>Add</button>
+        </td>
+      `;
+      
+      inventoryBody.appendChild(row);
+    });
+    
+    // Add event listeners after DOM is updated
+    document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+      button.addEventListener('click', function() {
+        const itemId = parseInt(this.getAttribute('data-id'));
+        const item = items.find(i => i.id === itemId);
+        if (!item) return;
         
-        const tabId = tab.getAttribute('data-tab');
-        tabContents.forEach(content => {
-          content.classList.remove('active');
-          if (content.id === tabId) {
-            content.classList.add('active');
-          }
-        });
+        const qtyInput = document.getElementById(`qty-${itemId}`);
+        const quantity = parseInt(qtyInput.value);
+        
+        if (isNaN(quantity) || quantity < 1) {
+          alert("Please enter a valid quantity (must be 1 or more)!");
+          qtyInput.value = 1;
+          return;
+        }
+        
+        if (quantity > item.quantity) {
+          alert("Not enough stock available!");
+          return;
+        }
+        
+        addToCart(item, quantity);
+      });
+    });
+  }
+  
+  function renderCart() {
+    if (!cartBody || !emptyCart) return; // Safety check
+    
+    if (cart.length === 0) {
+      cartBody.innerHTML = '';
+      emptyCart.style.display = 'block';
+      updateTotals();
+      return;
+    }
+    
+    emptyCart.style.display = 'none';
+    cartBody.innerHTML = '';
+    
+    cart.forEach(item => {
+      const row = document.createElement('tr');
+      
+      row.innerHTML = `
+        <td>${item.name}</td>
+        <td>$${item.price.toFixed(2)}</td>
+        <td>
+          <button class="sm outline decrease-btn" data-id="${item.id}">-</button>
+          <span style="margin: 0 5px;">${item.quantity}</span>
+          <button class="sm outline increase-btn" data-id="${item.id}">+</button>
+        </td>
+        <td>${item.taxRate}%</td>
+        <td>$${(item.price * item.quantity).toFixed(2)}</td>
+        <td class="text-right">
+          <button class="sm danger remove-btn" data-id="${item.id}">×</button>
+        </td>
+      `;
+      
+      cartBody.appendChild(row);
+    });
+    
+    // Add event listeners after DOM is updated
+    document.querySelectorAll('.decrease-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const itemId = parseInt(this.getAttribute('data-id'));
+        adjustQuantity(itemId, -1);
       });
     });
     
-    // Render Functions
-    function renderInventory() {
-      inventoryBody.innerHTML = '';
-      
-      const searchTerm = searchItemInput.value.toLowerCase();
-      const filteredItems = items.filter(item => 
-        item.name.toLowerCase().includes(searchTerm)
-      );
-      
-      if (filteredItems.length === 0) {
-        inventoryBody.innerHTML = `
-          <tr>
-            <td colspan="5" class="text-center" style="padding: 20px; color: #777;">
-              No items match your search.
-            </td>
-          </tr>
-        `;
-        return;
-      }
-      
-      filteredItems.forEach(item => {
-        const row = document.createElement('tr');
-        
-        const badgeClass = item.quantity > 3 ? 'badge-blue' : (item.quantity > 0 ? 'badge-gray' : 'badge-red');
-        
-        row.innerHTML = `
-          <td>${item.name}</td>
-          <td>$${item.price.toFixed(2)}</td>
-          <td>${item.taxRate}%</td>
-          <td><span class="badge ${badgeClass}">${item.quantity}</span></td>
-          <td class="text-right">
-            <input type="number" id="qty-${item.id}" value="1" min="1" max="${item.quantity}" class="sm" style="width: 50px;" ${item.quantity < 1 ? 'disabled' : ''}>
-            <button class="sm" data-id="${item.id}" ${item.quantity < 1 ? 'disabled' : ''}>Add</button>
-          </td>
-        `;
-        
-        inventoryBody.appendChild(row);
-        
-        // Add event listener to the Add button
-        const addButton = row.querySelector('button');
-        addButton.addEventListener('click', () => {
-          const qtyInput = document.getElementById(`qty-${item.id}`);
-          const quantity = parseInt(qtyInput.value);
-          
-          if (isNaN(quantity) || quantity < 1) {
-            alert("Please enter a valid quantity (must be 1 or more)!");
-            qtyInput.value = 1;
-            return;
-          }
-          
-          if (quantity > item.quantity) {
-            alert("Not enough stock available!");
-            return;
-          }
-          
-          addToCart(item, quantity);
-        });
+    document.querySelectorAll('.increase-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const itemId = parseInt(this.getAttribute('data-id'));
+        adjustQuantity(itemId, 1);
       });
-    }
+    });
     
-    function renderCart() {
-      if (cart.length === 0) {
-        cartBody.innerHTML = '';
-        emptyCart.style.display = 'block';
-        updateTotals();
-        return;
-      }
-      
-      emptyCart.style.display = 'none';
-      cartBody.innerHTML = '';
-      
-      cart.forEach(item => {
-        const row = document.createElement('tr');
-        
-        row.innerHTML = `
-          <td>${item.name}</td>
-          <td>$${item.price.toFixed(2)}</td>
-          <td>
-            <button class="sm outline" data-id="${item.id}" data-action="decrease">-</button>
-            <span style="margin: 0 5px;">${item.quantity}</span>
-            <button class="sm outline" data-id="${item.id}" data-action="increase">+</button>
-          </td>
-          <td>${item.taxRate}%</td>
-          <td>$${(item.price * item.quantity).toFixed(2)}</td>
-          <td class="text-right">
-            <button class="sm danger" data-id="${item.id}" data-action="remove">×</button>
-          </td>
-        `;
-        
-        cartBody.appendChild(row);
-        
-        // Add event listeners for the buttons
-        const decreaseBtn = row.querySelector('[data-action="decrease"]');
-        const increaseBtn = row.querySelector('[data-action="increase"]');
-        const removeBtn = row.querySelector('[data-action="remove"]');
-        
-        decreaseBtn.addEventListener('click', () => adjustQuantity(item.id, -1));
-        increaseBtn.addEventListener('click', () => adjustQuantity(item.id, 1));
-        removeBtn.addEventListener('click', () => removeFromCart(item.id));
+    document.querySelectorAll('.remove-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const itemId = parseInt(this.getAttribute('data-id'));
+        removeFromCart(itemId);
       });
-      
-      updateTotals();
-    }
+    });
     
-    function renderCustomers() {
-      // For dropdown
+    updateTotals();
+  }
+  
+  function renderCustomers() {
+    // For dropdown
+    if (customerSelect) {
       customerSelect.innerHTML = '<option value="">Select a customer...</option>';
       customers.forEach(customer => {
         const option = document.createElement('option');
@@ -764,8 +789,10 @@
         option.textContent = customer.name;
         customerSelect.appendChild(option);
       });
-      
-      // For customers tab
+    }
+    
+    // For customers tab
+    if (customersBody) {
       customersBody.innerHTML = '';
       customers.forEach(customer => {
         const availableCredit = customer.creditLimit - customer.creditUsed;
@@ -783,405 +810,436 @@
         customersBody.appendChild(row);
       });
     }
+  }
+  
+  function renderTransactions() {
+    if (!historyBody) return; // Safety check
     
-    function renderTransactions() {
-      historyBody.innerHTML = '';
-      transactions.forEach(transaction => {
-        const customer = customers.find(c => c.id === transaction.customerId);
-        const row = document.createElement('tr');
-        
-        row.innerHTML = `
-          <td>${transaction.date}</td>
-          <td>${customer ? customer.name : 'Unknown'}</td>
-          <td>${transaction.items.length} items</td>
-          <td>$${transaction.tax.toFixed(2)}</td>
-          <td>$${transaction.total.toFixed(2)}</td>
-          <td>
-            <span class="badge ${transaction.paymentMode === 'paid' ? 'badge-blue' : 'badge-gray'}">
-              ${transaction.paymentMode === 'paid' ? 'Paid' : 'On Credit'}
-            </span>
-          </td>
-        `;
-        
-        historyBody.appendChild(row);
+    historyBody.innerHTML = '';
+    transactions.forEach(transaction => {
+      const customer = customers.find(c => c.id === transaction.customerId);
+      const row = document.createElement('tr');
+      
+      row.innerHTML = `
+        <td>${transaction.date}</td>
+        <td>${customer ? customer.name : 'Unknown'}</td>
+        <td>${transaction.items.length} items</td>
+        <td>$${transaction.tax.toFixed(2)}</td>
+        <td>$${transaction.total.toFixed(2)}</td>
+        <td>
+          <span class="badge ${transaction.paymentMode === 'paid' ? 'badge-blue' : 'badge-gray'}">
+            ${transaction.paymentMode === 'paid' ? 'Paid' : 'On Credit'}
+          </span>
+        </td>
+      `;
+      
+      historyBody.appendChild(row);
+    });
+  }
+  
+  function updateCustomerInfo() {
+    if (!customerInfo) return; // Safety check
+    
+    if (!selectedCustomer) {
+      customerInfo.style.display = 'none';
+      return;
+    }
+    
+    customerInfo.style.display = 'flex';
+    customerInfo.innerHTML = `
+      <div style="flex: 1;">
+        <span style="font-weight: 600;">${selectedCustomer.name}</span>
+        <p style="color: #777; font-size: 14px;">${selectedCustomer.phone}</p>
+      </div>
+      <div style="text-align: right;">
+        <div style="font-size: 14px; color: #777;">Credit Limit: $${selectedCustomer.creditLimit.toFixed(2)}</div>
+        <div style="font-size: 14px;">Available: $${(selectedCustomer.creditLimit - selectedCustomer.creditUsed).toFixed(2)}</div>
+      </div>
+    `;
+  }
+  
+  function updateTotals() {
+    if (!subtotalEl || !taxEl || !totalEl || !completePurchaseBtn) return; // Safety check
+    
+    const subtotal = calculateSubtotal();
+    const tax = calculateTax();
+    const total = subtotal + tax;
+    
+    subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
+    taxEl.textContent = `$${tax.toFixed(2)}`;
+    totalEl.textContent = `$${total.toFixed(2)}`;
+    
+    completePurchaseBtn.disabled = cart.length === 0 || !selectedCustomer;
+  }
+  
+  // Cart Functions
+  function addToCart(item, quantity) {
+    // Update inventory
+    const inventoryItem = items.find(i => i.id === item.id);
+    if (!inventoryItem) return;
+    
+    inventoryItem.quantity -= quantity;
+    saveData();
+    
+    // Update cart
+    const existingCartItem = cart.find(c => c.id === item.id);
+    
+    if (existingCartItem) {
+      existingCartItem.quantity += quantity;
+    } else {
+      cart.push({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        taxRate: item.taxRate,
+        quantity: quantity
       });
     }
     
-    function updateCustomerInfo() {
-      if (!selectedCustomer) {
-        customerInfo.style.display = 'none';
+    renderInventory();
+    renderCart();
+  }
+  
+  function adjustQuantity(itemId, change) {
+    const cartItem = cart.find(item => item.id === itemId);
+    if (!cartItem) return;
+  
+    // Check if we're decreasing quantity
+    if (change < 0 && cartItem.quantity <= 1) {
+      removeFromCart(itemId);
+      return;
+    }
+  
+    // Check if enough inventory when increasing
+    if (change > 0) {
+      const inventoryItem = items.find(i => i.id === itemId);
+      if (!inventoryItem || inventoryItem.quantity < 1) {
+        alert("Not enough stock available!");
+        return;
+      }
+      inventoryItem.quantity -= 1;
+    } else {
+      // Return item to inventory when decreasing
+      const inventoryItem = items.find(i => i.id === itemId);
+      if (inventoryItem) {
+        inventoryItem.quantity += 1;
+      }
+    }
+  
+    cartItem.quantity += change;
+    saveData();
+    renderInventory();
+    renderCart();
+  }
+  
+  function removeFromCart(itemId) {
+    const cartItem = cart.find(item => item.id === itemId);
+    if (!cartItem) return;
+  
+    // Return items to inventory
+    const inventoryItem = items.find(i => i.id === itemId);
+    if (inventoryItem) {
+      inventoryItem.quantity += cartItem.quantity;
+    }
+  
+    // Remove from cart
+    cart = cart.filter(item => item.id !== itemId);
+    
+    saveData();
+    renderInventory();
+    renderCart();
+  }
+  
+  function calculateSubtotal() {
+    return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+  }
+  
+  function calculateTax() {
+    return cart.reduce((total, item) => {
+      const itemTax = (item.price * item.quantity) * (item.taxRate / 100);
+      return total + itemTax;
+    }, 0);
+  }
+  
+  // Transaction Functions
+  function completePurchase() {
+    if (cart.length === 0 || !selectedCustomer) {
+      alert("Please select a customer and add items to the cart!");
+      return;
+    }
+  
+    // Check credit limit if payment mode is credit
+    if (paymentMode === "credit") {
+      const total = calculateSubtotal() + calculateTax();
+      const availableCredit = selectedCustomer.creditLimit - selectedCustomer.creditUsed;
+      
+      if (total > availableCredit) {
+        alert("Transaction exceeds available credit limit! Available: $" + availableCredit.toFixed(2));
         return;
       }
       
-      customerInfo.style.display = 'flex';
-      customerInfo.innerHTML = `
-        <div style="flex: 1;">
-          <span style="font-weight: 600;">${selectedCustomer.name}</span>
-          <p style="color: #777; font-size: 14px;">${selectedCustomer.phone}</p>
-        </div>
-        <div style="text-align: right;">
-          <div style="font-size: 14px; color: #777;">Credit Limit: $${selectedCustomer.creditLimit.toFixed(2)}</div>
-          <div style="font-size: 14px;">Available: $${(selectedCustomer.creditLimit - selectedCustomer.creditUsed).toFixed(2)}</div>
-        </div>
-      `;
+      // Update customer credit used
+      selectedCustomer.creditUsed += total;
     }
+  
+    // Create transaction
+    const transaction = {
+      id: transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1,
+      customerId: selectedCustomer.id,
+      items: [...cart],
+      subtotal: calculateSubtotal(),
+      tax: calculateTax(),
+      total: calculateSubtotal() + calculateTax(),
+      paymentMode: paymentMode,
+      date: new Date().toISOString().split('T')[0]
+    };
+  
+    transactions.push(transaction);
+    latestTransaction = transaction;
+  
+    // Reset cart
+    cart = [];
     
-    function updateTotals() {
-      const subtotal = calculateSubtotal();
-      const tax = calculateTax();
-      const total = subtotal + tax;
+    saveData();
+    renderInventory();
+    renderCart();
+    renderCustomers();
+    renderTransactions();
+    
+    // Show bill
+    showBill();
+  }
+  
+  function showBill() {
+    if (!latestTransaction || !billContent || !billModal) return;
+    
+    const customer = customers.find(c => c.id === latestTransaction.customerId);
+    
+    billContent.innerHTML = `
+      <div class="bill-header">
+        <h2>Receipt</h2>
+        <p>Transaction #${latestTransaction.id}</p>
+        <p>${latestTransaction.date}</p>
+      </div>
       
-      subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
-      taxEl.textContent = `$${tax.toFixed(2)}`;
-      totalEl.textContent = `$${total.toFixed(2)}`;
+      <div class="bill-details">
+        <div>
+          <strong>Customer:</strong><br>
+          ${customer ? customer.name : 'Unknown'}<br>
+          ${customer ? customer.phone : ''}
+        </div>
+        <div>
+          <strong>Payment:</strong><br>
+          ${latestTransaction.paymentMode === 'paid' ? 'Paid' : 'On Credit'}
+        </div>
+      </div>
       
-      completePurchaseBtn.disabled = cart.length === 0 || !selectedCustomer;
+      <table class="bill-items">
+        <thead>
+          <tr>
+            <th width="40%">Item</th>
+            <th>Price</th>
+            <th>Qty</th>
+            <th>Tax</th>
+            <th class="text-right">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${latestTransaction.items.map(item => `
+            <tr>
+              <td>${item.name}</td>
+              <td>$${item.price.toFixed(2)}</td>
+              <td>${item.quantity}</td>
+              <td>${item.taxRate}%</td>
+              <td class="text-right">$${(item.price * item.quantity).toFixed(2)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      
+      <div class="bill-total">
+        <p>Subtotal: $${latestTransaction.subtotal.toFixed(2)}</p>
+        <p>Tax: $${latestTransaction.tax.toFixed(2)}</p>
+        <p style="font-size: 18px; margin-top: 5px;">Total: $${latestTransaction.total.toFixed(2)}</p>
+      </div>
+      
+      <p style="text-align: center; margin-top: 30px; color: #777;">
+        Thank you for your business!
+      </p>
+    `;
+    
+    billModal.style.display = "block";
+  }
+  
+  // Modal Functions
+  function openModal(modal) {
+    if (!modal) return;
+    modal.style.display = "block";
+  }
+  
+  function closeModal(modal) {
+    if (!modal) return;
+    modal.style.display = "none";
+  }
+  
+  // Event Listeners - Only attach if elements exist
+  if (searchItemInput) {
+    searchItemInput.addEventListener('input', renderInventory);
+  }
+  
+  if (customerSelect) {
+    customerSelect.addEventListener('change', (e) => {
+      const customerId = parseInt(e.target.value);
+      selectedCustomer = customers.find(c => c.id === customerId) || null;
+      updateCustomerInfo();
+      updateTotals();
+    });
+  }
+  
+  if (paymentModeSelect) {
+    paymentModeSelect.addEventListener('change', (e) => {
+      paymentMode = e.target.value;
+    });
+  }
+  
+  if (addItemBtn) {
+    addItemBtn.addEventListener('click', () => openModal(addItemModal));
+  }
+  
+  if (addCustomerBtn) {
+    addCustomerBtn.addEventListener('click', () => openModal(addCustomerModal));
+  }
+  
+  if (closeButtons.length > 0) {
+    closeButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const modal = e.target.closest('.modal');
+        closeModal(modal);
+      });
+    });
+  }
+  
+  // Close modals when clicking outside
+  window.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal')) {
+      closeModal(e.target);
     }
-    
-    // Cart Functions
-    function addToCart(item, quantity) {
-      // Update inventory
-      const inventoryItem = items.find(i => i.id === item.id);
-      if (!inventoryItem) return;
+  });
+  
+  if (cancelAddItemBtn) {
+    cancelAddItemBtn.addEventListener('click', () => closeModal(addItemModal));
+  }
+  
+  if (cancelAddCustomerBtn) {
+    cancelAddCustomerBtn.addEventListener('click', () => closeModal(addCustomerModal));
+  }
+  
+  if (printBillBtn) {
+    printBillBtn.addEventListener('click', () => {
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write('<html><head><title>Purchase Bill</title>');
+      printWindow.document.write('<style>body { font-family: Arial; padding: 20px; } table { width: 100%; border-collapse: collapse; } th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }</style>');
+      printWindow.document.write('</head><body>');
+      printWindow.document.write(billContent.innerHTML);
+      printWindow.document.write('</body></html>');
+      printWindow.document.close();
+      printWindow.print();
+    });
+  }
+  
+  if (closeBillModalBtn) {
+    closeBillModalBtn.addEventListener('click', () => closeModal(billModal));
+  }
+  
+  if (saveAddItemBtn) {
+    saveAddItemBtn.addEventListener('click', () => {
+      const nameInput = document.getElementById('itemName');
+      const priceInput = document.getElementById('itemPrice');
+      const quantityInput = document.getElementById('itemQuantity');
+      const taxRateInput = document.getElementById('itemTaxRate');
       
-      inventoryItem.quantity -= quantity;
-      saveData();
+      const name = nameInput.value.trim();
+      const price = parseFloat(priceInput.value);
+      const quantity = parseInt(quantityInput.value);
+      const taxRate = parseFloat(taxRateInput.value);
       
-      // Update cart
-      const existingCartItem = cart.find(c => c.id === item.id);
-      
-      if (existingCartItem) {
-        existingCartItem.quantity += quantity;
-      } else {
-        cart.push({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          taxRate: item.taxRate,
-          quantity: quantity
-        });
+      if (!name || isNaN(price) || isNaN(quantity) || isNaN(taxRate)) {
+        alert("Please fill in all fields with valid values!");
+        return;
       }
       
+      const newItem = {
+        id: items.length > 0 ? Math.max(...items.map(i => i.id)) + 1 : 1,
+        name: name,
+        price: price,
+        quantity: quantity,
+        taxRate: taxRate
+      };
+      
+      items.push(newItem);
+      saveData();
       renderInventory();
-      renderCart();
-}
-
-function adjustQuantity(itemId, change) {
-  const cartItem = cart.find(item => item.id === itemId);
-  if (!cartItem) return;
-
-  // Check if we're decreasing quantity
-  if (change < 0 && cartItem.quantity <= 1) {
-    removeFromCart(itemId);
-    return;
+      
+      // Reset form and close modal
+      nameInput.value = "";
+      priceInput.value = "";
+      quantityInput.value = "";
+      taxRateInput.value = "";
+      closeModal(addItemModal);
+    });
   }
-
-  // Check if enough inventory when increasing
-  if (change > 0) {
-    const inventoryItem = items.find(i => i.id === itemId);
-    if (!inventoryItem || inventoryItem.quantity < 1) {
-      alert("Not enough stock available!");
-      return;
-    }
-    inventoryItem.quantity -= 1;
-  } else {
-    // Return item to inventory when decreasing
-    const inventoryItem = items.find(i => i.id === itemId);
-    if (inventoryItem) {
-      inventoryItem.quantity += 1;
-    }
+  
+  if (saveAddCustomerBtn) {
+    saveAddCustomerBtn.addEventListener('click', () => {
+      const nameInput = document.getElementById('customerName');
+      const phoneInput = document.getElementById('customerPhone');
+      const creditLimitInput = document.getElementById('customerCreditLimit');
+      
+      const name = nameInput.value.trim();
+      const phone = phoneInput.value.trim();
+      const creditLimit = parseFloat(creditLimitInput.value);
+      
+      if (!name || !phone || isNaN(creditLimit)) {
+        alert("Please fill in all fields with valid values!");
+        return;
+      }
+      
+      const newCustomer = {
+        id: customers.length > 0 ? Math.max(...customers.map(c => c.id)) + 1 : 1,
+        name: name,
+        phone: phone,
+        creditLimit: creditLimit,
+        creditUsed: 0
+      };
+      
+      customers.push(newCustomer);
+      saveData();
+      renderCustomers();
+      
+      // Reset form and close modal
+      nameInput.value = "";
+      phoneInput.value = "";
+      creditLimitInput.value = "";
+      closeModal(addCustomerModal);
+    });
   }
-
-  cartItem.quantity += change;
-  saveData();
-  renderInventory();
-  renderCart();
-}
-
-function removeFromCart(itemId) {
-  const cartItem = cart.find(item => item.id === itemId);
-  if (!cartItem) return;
-
-  // Return items to inventory
-  const inventoryItem = items.find(i => i.id === itemId);
-  if (inventoryItem) {
-    inventoryItem.quantity += cartItem.quantity;
+  
+  if (completePurchaseBtn) {
+    completePurchaseBtn.addEventListener('click', completePurchase);
   }
-
-  // Remove from cart
-  cart = cart.filter(item => item.id !== itemId);
   
-  saveData();
-  renderInventory();
-  renderCart();
-}
-
-function calculateSubtotal() {
-  return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-}
-
-function calculateTax() {
-  return cart.reduce((total, item) => {
-    const itemTax = (item.price * item.quantity) * (item.taxRate / 100);
-    return total + itemTax;
-  }, 0);
-}
-
-// Transaction Functions
-function completePurchase() {
-  if (cart.length === 0 || !selectedCustomer) {
-    alert("Please select a customer and add items to the cart!");
-    return;
+  // Initialize the dashboard
+  function initialize() {
+    renderInventory();
+    renderCustomers();
+    renderTransactions();
+    renderCart();
   }
-
-  // Check credit limit if payment mode is credit
-  if (paymentMode === "credit") {
-    const total = calculateSubtotal() + calculateTax();
-    const availableCredit = selectedCustomer.creditLimit - selectedCustomer.creditUsed;
-    
-    if (total > availableCredit) {
-      alert("Transaction exceeds available credit limit! Available: $" + availableCredit.toFixed(2));
-      return;
-    }
-    
-    // Update customer credit used
-    selectedCustomer.creditUsed += total;
-  }
-
-  // Create transaction
-  const transaction = {
-    id: transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1,
-    customerId: selectedCustomer.id,
-    items: [...cart],
-    subtotal: calculateSubtotal(),
-    tax: calculateTax(),
-    total: calculateSubtotal() + calculateTax(),
-    paymentMode: paymentMode,
-    date: new Date().toISOString().split('T')[0]
-  };
-
-  transactions.push(transaction);
-  latestTransaction = transaction;
-
-  // Reset cart
-  cart = [];
   
-  saveData();
-  renderInventory();
-  renderCart();
-  renderCustomers();
-  renderTransactions();
-  
-  // Show bill
-  showBill();
-}
-
-function showBill() {
-  if (!latestTransaction) return;
-  
-  const customer = customers.find(c => c.id === latestTransaction.customerId);
-  
-  billContent.innerHTML = `
-    <div class="bill-header">
-      <h2>Receipt</h2>
-      <p>Transaction #${latestTransaction.id}</p>
-      <p>${latestTransaction.date}</p>
-    </div>
-    
-    <div class="bill-details">
-      <div>
-        <strong>Customer:</strong><br>
-        ${customer ? customer.name : 'Unknown'}<br>
-        ${customer ? customer.phone : ''}
-      </div>
-      <div>
-        <strong>Payment:</strong><br>
-        ${latestTransaction.paymentMode === 'paid' ? 'Paid' : 'On Credit'}
-      </div>
-    </div>
-    
-    <table class="bill-items">
-      <thead>
-        <tr>
-          <th width="40%">Item</th>
-          <th>Price</th>
-          <th>Qty</th>
-          <th>Tax</th>
-          <th class="text-right">Total</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${latestTransaction.items.map(item => `
-          <tr>
-            <td>${item.name}</td>
-            <td>$${item.price.toFixed(2)}</td>
-            <td>${item.quantity}</td>
-            <td>${item.taxRate}%</td>
-            <td class="text-right">$${(item.price * item.quantity).toFixed(2)}</td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
-    
-    <div class="bill-total">
-      <p>Subtotal: $${latestTransaction.subtotal.toFixed(2)}</p>
-      <p>Tax: $${latestTransaction.tax.toFixed(2)}</p>
-      <p style="font-size: 18px; margin-top: 5px;">Total: $${latestTransaction.total.toFixed(2)}</p>
-    </div>
-    
-    <p style="text-align: center; margin-top: 30px; color: #777;">
-      Thank you for your business!
-    </p>
-  `;
-  
-  billModal.style.display = "block";
-}
-
-// Modal Functions
-function openModal(modal) {
-  modal.style.display = "block";
-}
-
-function closeModal(modal) {
-  modal.style.display = "none";
-}
-
-// Event Listeners
-searchItemInput.addEventListener('input', renderInventory);
-
-// Tab switching reuse the existing code
-
-// Customer selection
-customerSelect.addEventListener('change', (e) => {
-  const customerId = parseInt(e.target.value);
-  selectedCustomer = customers.find(c => c.id === customerId) || null;
-  updateCustomerInfo();
-  updateTotals();
+  // Start the app
+  initialize();
 });
 
-// Payment mode selection
-paymentModeSelect.addEventListener('change', (e) => {
-  paymentMode = e.target.value;
-});
-
-// Modal open buttons
-addItemBtn.addEventListener('click', () => openModal(addItemModal));
-addCustomerBtn.addEventListener('click', () => openModal(addCustomerModal));
-
-// Modal close buttons
-closeButtons.forEach(btn => {
-  btn.addEventListener('click', (e) => {
-    const modal = e.target.closest('.modal');
-    closeModal(modal);
-  });
-});
-
-// Close modals when clicking outside
-window.addEventListener('click', (e) => {
-  if (e.target.classList.contains('modal')) {
-    closeModal(e.target);
-  }
-});
-
-// Modal cancel buttons
-cancelAddItemBtn.addEventListener('click', () => closeModal(addItemModal));
-cancelAddCustomerBtn.addEventListener('click', () => closeModal(addCustomerModal));
-
-// Print bill button
-printBillBtn.addEventListener('click', () => {
-  const printWindow = window.open('', '_blank');
-  printWindow.document.write('<html><head><title>Purchase Bill</title>');
-  printWindow.document.write('<style>body { font-family: Arial; padding: 20px; } table { width: 100%; border-collapse: collapse; } th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }</style>');
-  printWindow.document.write('</head><body>');
-  printWindow.document.write(billContent.innerHTML);
-  printWindow.document.write('</body></html>');
-  printWindow.document.close();
-  printWindow.print();
-});
-
-closeBillModalBtn.addEventListener('click', () => closeModal(billModal));
-
-// Add Item Form
-saveAddItemBtn.addEventListener('click', () => {
-  const nameInput = document.getElementById('itemName');
-  const priceInput = document.getElementById('itemPrice');
-  const quantityInput = document.getElementById('itemQuantity');
-  const taxRateInput = document.getElementById('itemTaxRate');
-  
-  const name = nameInput.value.trim();
-  const price = parseFloat(priceInput.value);
-  const quantity = parseInt(quantityInput.value);
-  const taxRate = parseFloat(taxRateInput.value);
-  
-  if (!name || isNaN(price) || isNaN(quantity) || isNaN(taxRate)) {
-    alert("Please fill in all fields with valid values!");
-    return;
-  }
-  
-  const newItem = {
-    id: items.length > 0 ? Math.max(...items.map(i => i.id)) + 1 : 1,
-    name: name,
-    price: price,
-    quantity: quantity,
-    taxRate: taxRate
-  };
-  
-  items.push(newItem);
-  saveData();
-  renderInventory();
-  
-  // Reset form and close modal
-  nameInput.value = "";
-  priceInput.value = "";
-  quantityInput.value = "";
-  taxRateInput.value = "";
-  closeModal(addItemModal);
-});
-
-// Add Customer Form
-saveAddCustomerBtn.addEventListener('click', () => {
-  const nameInput = document.getElementById('customerName');
-  const phoneInput = document.getElementById('customerPhone');
-  const creditLimitInput = document.getElementById('customerCreditLimit');
-  
-  const name = nameInput.value.trim();
-  const phone = phoneInput.value.trim();
-  const creditLimit = parseFloat(creditLimitInput.value);
-  
-  if (!name || !phone || isNaN(creditLimit)) {
-    alert("Please fill in all fields with valid values!");
-    return;
-  }
-  
-  const newCustomer = {
-    id: customers.length > 0 ? Math.max(...customers.map(c => c.id)) + 1 : 1,
-    name: name,
-    phone: phone,
-    creditLimit: creditLimit,
-    creditUsed: 0
-  };
-  
-  customers.push(newCustomer);
-  saveData();
-  renderCustomers();
-  
-  // Reset form and close modal
-  nameInput.value = "";
-  phoneInput.value = "";
-  creditLimitInput.value = "";
-  closeModal(addCustomerModal);
-});
-
-// Complete Purchase Button
-completePurchaseBtn.addEventListener('click', completePurchase);
-
-// Initialize the dashboard
-function initialize() {
-  renderInventory();
-  renderCustomers();
-  renderTransactions();
-  renderCart();
-}
-
-// Start the app
-initialize();
+<script>
+  <style>
+    <html>
