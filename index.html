@@ -1,405 +1,1504 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Complete Billing System</title>
-    <style>
-        /* Base Styles */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        :root {
-            --primary: #3b82f6;
-            --primary-dark: #2563eb;
-            --danger: #ef4444;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --gray: #6b7280;
-            --light-gray: #e5e7eb;
-            --border-radius: 8px;
-            --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        body {
-            background-color: #f3f4f6;
-            color: #111827;
-            line-height: 1.6;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            padding: 20px;
-        }
-
-        /* Header Styles */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid var(--light-gray);
-        }
-
-        h1 {
-            font-size: 24px;
-            color: #1f2937;
-        }
-
-        /* Tabs Navigation */
-        .tabs {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid var(--light-gray);
-        }
-
-        .tab {
-            padding: 10px 20px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .tab.active {
-            color: var(--primary);
-            border-bottom: 2px solid var(--primary);
-        }
-
-        /* Table Styles */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            background: white;
-            border-radius: var(--border-radius);
-            overflow: hidden;
-            box-shadow: var(--shadow);
-        }
-
-        th, td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid var(--light-gray);
-        }
-
-        th {
-            background-color: #f9fafb;
-            font-weight: 600;
-            color: #374151;
-        }
-
-        /* Button Styles */
-        button {
-            padding: 8px 16px;
-            border: none;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 500;
-        }
-
-        .btn-primary {
-            background-color: var(--primary);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: var(--primary-dark);
-        }
-
-        .btn-danger {
-            background-color: var(--danger);
-            color: white;
-        }
-
-        .btn-success {
-            background-color: var(--success);
-            color: white;
-        }
-
-        /* Form Styles */
-        input, select {
-            padding: 8px 12px;
-            border: 1px solid var(--light-gray);
-            border-radius: var(--border-radius);
-            width: 100%;
-            margin: 5px 0;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 20px;
-            border-radius: var(--border-radius);
-            width: 400px;
-            max-width: 90%;
-        }
-
-        /* Toast Notification */
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 15px 25px;
-            background: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            display: none;
-        }
-
-        .toast-success {
-            border-left: 4px solid var(--success);
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enhanced Billing Dashboard</title>
+  <style>
+    /* Core styling */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    }
+    
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --danger: #ef4444;
+      --danger-dark: #dc2626;
+      --success: #10b981;
+      --success-dark: #059669;
+      --warning: #f59e0b;
+      --gray: #6b7280;
+      --light-gray: #e2e8f0;
+      --border-radius: 8px;
+      --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    body {
+      background-color: #f5f5f5;
+      color: #333;
+      line-height: 1.6;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background-color: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+    
+    header {
+      margin-bottom: 20px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    h1 {
+      font-size: 24px;
+      margin-bottom: 5px;
+    }
+    
+    /* Tabs */
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      font-weight: 500;
+      position: relative;
+    }
+    
+    .tab.active {
+      color: var(--primary);
+      border-bottom: 2px solid var(--primary);
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    /* Cards and grids */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    
+    @media (min-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    
+    .card {
+      background: white;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--light-gray);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    
+    .card-header {
+      padding: 15px;
+      border-bottom: 1px solid var(--light-gray);
+      background-color: #f8fafc;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .card-body {
+      padding: 15px;
+    }
+    
+    /* Summary cards */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .summary-card {
+      background-color: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      padding: 15px;
+      text-align: center;
+    }
+    
+    .summary-card h3 {
+      font-size: 24px;
+      font-weight: 700;
+      margin: 10px 0;
+    }
+    
+    .summary-card p {
+      font-size: 14px;
+      color: var(--gray);
+    }
+    
+    .summary-icon {
+      background-color: rgba(59, 130, 246, 0.1);
+      color: var(--primary);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 10px;
+    }
+    
+    /* Forms and inputs */
+    input, select, button, textarea {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    button {
+      background-color: var(--primary);
+      color: white;
+      cursor: pointer;
+      border: none;
+      transition: background-color 0.2s;
+    }
+    
+    button:hover {
+      background-color: var(--primary-dark);
+    }
+    
+    button:disabled {
+      background-color: var(--gray);
+      cursor: not-allowed;
+    }
+    
+    button.secondary {
+      background-color: var(--gray);
+    }
+    
+    button.danger {
+      background-color: var(--danger);
+    }
+    
+    button.danger:hover {
+      background-color: var(--danger-dark);
+    }
+    
+    button.success {
+      background-color: var(--success);
+    }
+    
+    button.success:hover {
+      background-color: var(--success-dark);
+    }
+    
+    button.warning {
+      background-color: var(--warning);
+    }
+    
+    button.outline {
+      background-color: transparent;
+      border: 1px solid #ddd;
+      color: #333;
+    }
+    
+    button.outline:hover {
+      background-color: #f5f5f5;
+    }
+    
+    button.sm {
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+    
+    /* Search bar */
+    .search-container {
+      display: flex;
+      margin-bottom: 15px;
+    }
+    
+    .search-container input {
+      flex: 1;
+      border-right: none;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+    
+    .search-container button {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+    
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+    
+    th {
+      background-color: #f8fafc;
+      text-align: left;
+      font-weight: 600;
+    }
+    
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid var(--light-gray);
+    }
+    
+    tr:hover {
+      background-color: #f1f5f9;
+    }
+    
+    /* Date range selector */
+    .date-range {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+      margin-top: 15px;
+    }
+    
+    .pagination button {
+      min-width: 30px;
+      text-align: center;
+    }
+    
+    .pagination button.active {
+      background-color: var(--primary-dark);
+    }
+    
+    /* Utilities */
+    .text-right {
+      text-align: right;
+    }
+    
+    .text-center {
+      text-align: center;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 500;
+      color: white;
+    }
+    
+    .badge-blue {
+      background-color: var(--primary);
+    }
+    
+    .badge-gray {
+      background-color: var(--gray);
+    }
+    
+    .badge-red {
+      background-color: var(--danger);
+    }
+    
+    .badge-green {
+      background-color: var(--success);
+    }
+    
+    .badge-yellow {
+      background-color: var(--warning);
+      color: #333;
+    }
+    
+    .mb-5 {
+      margin-bottom: 5px;
+    }
+    
+    .mb-10 {
+      margin-bottom: 10px;
+    }
+    
+    .mb-20 {
+      margin-bottom: 20px;
+    }
+    
+    .mt-10 {
+      margin-top: 10px;
+    }
+    
+    .mt-20 {
+      margin-top: 20px;
+    }
+    
+    .flex {
+      display: flex;
+    }
+    
+    .flex-wrap {
+      flex-wrap: wrap;
+    }
+    
+    .items-center {
+      align-items: center;
+    }
+    
+    .justify-between {
+      justify-content: space-between;
+    }
+    
+    .gap-10 {
+      gap: 10px;
+    }
+    
+    .w-full {
+      width: 100%;
+    }
+    
+    .hide {
+      display: none;
+    }
+    
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      overflow: auto;
+    }
+    
+    .modal-content {
+      background-color: white;
+      margin: 10% auto;
+      padding: 20px;
+      border-radius: var(--border-radius);
+      max-width: 500px;
+      animation: slideIn 0.3s ease;
+    }
+    
+    @keyframes slideIn {
+      from {
+        transform: translateY(-50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .modal-body {
+      margin-bottom: 15px;
+    }
+    
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .close:hover {
+      color: #555;
+    }
+    
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    
+    .form-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    
+    .text-danger {
+      color: var(--danger);
+    }
+    
+    .text-success {
+      color: var(--success);
+    }
+    
+    /* Customer panel */
+    .customer-panel {
+      background-color: #f8fafc;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+    }
+    
+    /* Category selector */
+    .category-selector {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 15px;
+    }
+    
+    .category-tag {
+      padding: 5px 10px;
+      background-color: #f1f5f9;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .category-tag.active {
+      background-color: var(--primary);
+      color: white;
+    }
+    
+    /* Bill Modal */
+    #billModal .modal-content {
+      max-width: 700px;
+      font-size: 14px;
+    }
+    
+    .bill-header {
+      text-align: center;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #333;
+      padding-bottom: 10px;
+    }
+    
+    .bill-details {
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .bill-items {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    
+    .bill-items th, .bill-items td {
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+    }
+    
+    .bill-items th {
+      background-color: #f8fafc;
+    }
+    
+    .bill-total {
+      text-align: right;
+      font-weight: bold;
+    }
+    
+    /* Analytics elements */
+    .chart-container {
+      height: 300px;
+      margin-bottom: 20px;
+    }
+    
+    /* Toast notifications */
+    .toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1050;
+    }
+    
+    .toast {
+      padding: 12px 20px;
+      background-color: white;
+      border-radius: var(--border-radius);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      animation: fadeIn 0.3s ease;
+      max-width: 300px;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .toast-success {
+      border-left: 4px solid var(--success);
+    }
+    
+    .toast-error {
+      border-left: 4px solid var(--danger);
+    }
+    
+    .toast-warning {
+      border-left: 4px solid var(--warning);
+    }
+    
+    .toast-info {
+      border-left: 4px solid var(--primary);
+    }
+    
+    .toast-close {
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 18px;
+      margin-left: 10px;
+    }
+    
+    /* Loader */
+    .loader {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid var(--primary);
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 10px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Responsive adjustments */
+    @media screen and (max-width: 600px) {
+      .form-grid, .form-grid-3 {
+        grid-template-columns: 1fr;
+      }
+      
+      .date-range {
+        flex-direction: column;
+      }
+    }
+  </style>
 </head>
+
 <body>
-    <div class="container">
-        <header>
-            <h1>Billing Management System</h1>
-            <div class="header-buttons">
-                <button class="btn-primary" id="newInvoice">New Invoice</button>
-                <button class="btn-success" id="newCustomer">New Customer</button>
-            </div>
-        </header>
-
-        <!-- Main Content -->
-        <main>
-            <!-- Inventory Section -->
-            <section id="inventory">
-                <div class="section-header">
-                    <h2>Inventory Management</h2>
-                    <button class="btn-primary" id="addItem">Add New Item</button>
-                </div>
-                <table id="inventoryTable">
-                    <thead>
-                        <tr>
-                            <th>Item Name</th>
-                            <th>Price</th>
-                            <th>Stock</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="inventoryList">
-                        <!-- Dynamically populated -->
-                    </tbody>
-                </table>
-            </section>
-
-            <!-- Customers Section -->
-            <section id="customers">
-                <div class="section-header">
-                    <h2>Customer Management</h2>
-                </div>
-                <table id="customerTable">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Phone</th>
-                            <th>Email</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="customerList">
-                        <!-- Dynamically populated -->
-                    </tbody>
-                </table>
-            </section>
-        </main>
-
-        <!-- Modals -->
-        <div id="itemModal" class="modal">
-            <div class="modal-content">
-                <h3>Add New Item</h3>
-                <form id="itemForm">
-                    <div class="form-group">
-                        <label>Item Name</label>
-                        <input type="text" id="itemName" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Price</label>
-                        <input type="number" id="itemPrice" step="0.01" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Initial Stock</label>
-                        <input type="number" id="itemStock" required>
-                    </div>
-                    <div class="form-buttons">
-                        <button type="button" class="btn-danger" onclick="closeModal('itemModal')">Cancel</button>
-                        <button type="submit" class="btn-primary">Save Item</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <div id="customerModal" class="modal">
-            <div class="modal-content">
-                <h3>Add New Customer</h3>
-                <form id="customerForm">
-                    <div class="form-group">
-                        <label>Full Name</label>
-                        <input type="text" id="customerName" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Phone</label>
-                        <input type="tel" id="customerPhone" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="customerEmail">
-                    </div>
-                    <div class="form-buttons">
-                        <button type="button" class="btn-danger" onclick="closeModal('customerModal')">Cancel</button>
-                        <button type="submit" class="btn-primary">Save Customer</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Toast Notification -->
-        <div id="toast" class="toast"></div>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Business Billing Dashboard</h1>
+        <p>Manage your inventory, customers, and transactions efficiently</p>
+      </div>
+      <div class="flex gap-10">
+        <button id="settingsBtn" class="outline">
+          <i class="fas fa-cog"></i> Settings
+        </button>
+        <button id="exportDataBtn" class="outline">
+          <i class="fas fa-download"></i> Export Data
+        </button>
+      </div>
+    </header>
+    
+    <div class="tabs">
+      <div class="tab active" data-tab="dashboard">Dashboard</div>
+      <div class="tab" data-tab="billing">Billing</div>
+      <div class="tab" data-tab="inventory">Inventory</div>
+      <div class="tab" data-tab="customers">Customers</div>
+      <div class="tab" data-tab="history">Transactions</div>
+      <div class="tab" data-tab="analytics">Analytics</div>
     </div>
-
-    <script>
-        // Data Storage
-        let inventory = JSON.parse(localStorage.getItem('inventory')) || [];
-        let customers = JSON.parse(localStorage.getItem('customers')) || [];
-
-        // DOM Elements
-        const itemModal = document.getElementById('itemModal');
-        const customerModal = document.getElementById('customerModal');
-        const toast = document.getElementById('toast');
-
-        // Event Listeners
-        document.getElementById('addItem').addEventListener('click', () => showModal('itemModal'));
-        document.getElementById('newCustomer').addEventListener('click', () => showModal('customerModal'));
-
-        document.getElementById('itemForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            addNewItem();
-        });
-
-        document.getElementById('customerForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            addNewCustomer();
-        });
-
-        // Core Functions
-        function showModal(modalId) {
-            document.getElementById(modalId).style.display = 'flex';
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-
-        function showToast(message, type = 'success') {
-            toast.textContent = message;
-            toast.className = `toast toast-${type}`;
-            toast.style.display = 'block';
-            setTimeout(() => {
-                toast.style.display = 'none';
-            }, 3000);
-        }
-
-        function addNewItem() {
-            const newItem = {
-                id: Date.now(),
-                name: document.getElementById('itemName').value,
-                price: parseFloat(document.getElementById('itemPrice').value),
-                stock: parseInt(document.getElementById('itemStock').value)
-            };
-
-            inventory.push(newItem);
-            localStorage.setItem('inventory', JSON.stringify(inventory));
-            renderInventory();
-            closeModal('itemModal');
-            showToast('Item added successfully!');
-            document.getElementById('itemForm').reset();
-        }
-
-        function addNewCustomer() {
-            const newCustomer = {
-                id: Date.now(),
-                name: document.getElementById('customerName').value,
-                phone: document.getElementById('customerPhone').value,
-                email: document.getElementById('customerEmail').value
-            };
-
-            customers.push(newCustomer);
-            localStorage.setItem('customers', JSON.stringify(customers));
-            renderCustomers();
-            closeModal('customerModal');
-            showToast('Customer added successfully!');
-            document.getElementById('customerForm').reset();
-        }
-
-        function renderInventory() {
-            const tbody = document.getElementById('inventoryList');
-            tbody.innerHTML = inventory.map(item => `
+    
+    <!-- Dashboard Section -->
+    <div class="tab-content active" id="dashboard">
+      <div class="summary-grid">
+        <div class="summary-card">
+          <div class="summary-icon">
+            <i class="fas fa-shopping-cart"></i>
+          </div>
+          <p>Today's Sales</p>
+          <h3 id="todaySales">$0.00</h3>
+        </div>
+        <div class="summary-card">
+          <div class="summary-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <p>Active Customers</p>
+          <h3 id="activeCustomers">0</h3>
+        </div>
+        <div class="summary-card">
+          <div class="summary-icon">
+            <i class="fas fa-boxes"></i>
+          </div>
+          <p>Low Stock Items</p>
+          <h3 id="lowStockItems">0</h3>
+        </div>
+        <div class="summary-card">
+          <div class="summary-icon">
+            <i class="fas fa-credit-card"></i>
+          </div>
+          <p>Outstanding Credit</p>
+          <h3 id="outstandingCredit">$0.00</h3>
+        </div>
+      </div>
+      
+      <div class="grid mb-20">
+        <div class="card">
+          <div class="card-header">
+            <h3>Recent Transactions</h3>
+            <button id="viewAllTransactions" class="outline sm">View All</button>
+          </div>
+          <div class="card-body">
+            <table id="recentTransactionsTable">
+              <thead>
                 <tr>
-                    <td>${item.name}</td>
-                    <td>$${item.price.toFixed(2)}</td>
-                    <td>${item.stock}</td>
-                    <td>
-                        <button class="btn-danger" onclick="deleteItem(${item.id})">Delete</button>
-                    </td>
+                  <th>Date</th>
+                  <th>Customer</th>
+                  <th>Items</th>
+                  <th>Total</th>
+                  <th>Status</th>
                 </tr>
-            `).join('');
-        }
-
-        function renderCustomers() {
-            const tbody = document.getElementById('customerList');
-            tbody.innerHTML = customers.map(customer => `
+              </thead>
+              <tbody id="recentTransactionsBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <h3>Top Selling Items</h3>
+            <button id="viewInventory" class="outline sm">View Inventory</button>
+          </div>
+          <div class="card-body">
+            <table id="topSellingTable">
+              <thead>
                 <tr>
-                    <td>${customer.name}</td>
-                    <td>${customer.phone}</td>
-                    <td>${customer.email || '-'}</td>
-                    <td>
-                        <button class="btn-danger" onclick="deleteCustomer(${customer.id})">Delete</button>
-                    </td>
+                  <th>Item</th>
+                  <th>Qty Sold</th>
+                  <th>Revenue</th>
+                  <th>In Stock</th>
                 </tr>
-            `).join('');
-        }
+              </thead>
+              <tbody id="topSellingBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <h3>Weekly Sales Overview</h3>
+          <div class="flex gap-10">
+            <select id="chartViewSelector">
+              <option value="revenue">Revenue</option>
+              <option value="transactions">Transactions</option>
+              <option value="items">Items Sold</option>
+            </select>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="chart-container">
+            <canvas id="salesChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Billing Section -->
+    <div class="tab-content" id="billing">
+      <div class="grid">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3>Inventory</h3>
+              <p>Available items for sale</p>
+            </div>
+            <button id="addItemBtn" class="success">
+              <i class="fas fa-plus"></i> Add Item
+            </button>
+          </div>
+          <div class="card-body">
+            <div class="search-container">
+              <input type="text" id="searchItem" placeholder="Search items...">
+              <button id="searchBtn">
+                <i class="fas fa-search"></i>
+              </button>
+            </div>
+            
+            <div class="category-selector" id="categorySelector">
+              <div class="category-tag active" data-category="all">All</div>
+              <!-- Categories will be added dynamically -->
+            </div>
+            
+            <table id="inventoryTable">
+              <thead>
+                <tr>
+                  <th width="40%">Name</th>
+                  <th>Price</th>
+                  <th>Tax</th>
+                  <th>Stock</th>
+                  <th class="text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="inventoryBody">
+              </tbody>
+            </table>
+            
+            <div id="inventoryPagination" class="pagination">
+              <!-- Pagination buttons will be added dynamically -->
+            </div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <h3>Customer Cart</h3>
+          </div>
+          <div class="card-body">
+            <div class="flex justify-between mb-10">
+              <div style="width: 48%;">
+                <label for="customerSelect">Select Customer</label>
+                <select id="customerSelect" class="w-full">
+                  <option value="">Select a customer...</option>
+                </select>
+              </div>
+              <div style="width: 48%;">
+                <label>&nbsp;</label>
+                <button id="addCustomerBtn" class="w-full outline">
+                  <i class="fas fa-user-plus"></i> Add New Customer
+                </button>
+              </div>
+            </div>
+            
+            <div id="customerInfo" class="customer-panel" style="display: none;">
+            </div>
+            
+            <div class="form-group">
+              <label for="paymentMode">Payment Mode</label>
+              <select id="paymentMode" class="w-full">
+                <option value="paid">Pay Now</option>
+                <option value="credit">Credit Account</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="discountAmount">Discount</label>
+              <div class="flex gap-10">
+                <select id="discountType" style="width: 30%;">
+                  <option value="percentage">%</option>
+                  <option value="fixed">$</option>
+                </select>
+                <input type="number" id="discountAmount" placeholder="0" min="0" style="width: 70%;">
+              </div>
+            </div>
+            
+            <table id="cartTable">
+              <thead>
+                <tr>
+                  <th width="30%">Item</th>
+                  <th>Price</th>
+                  <th>Qty</th>
+                  <th>Tax</th>
+                  <th>Subtotal</th>
+                  <th class="text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="cartBody">
+              </tbody>
+            </table>
+            
+            <div id="emptyCart" class="text-center" style="padding: 20px; color: #777;">
+              Cart is empty. Add items from inventory.
+            </div>
+            
+            <div class="flex justify-between mb-10">
+              <span>Subtotal:</span>
+              <span id="subtotal">$0.00</span>
+            </div>
+            <div class="flex justify-between mb-10">
+              <span>Discount:</span>
+              <span id="discount">$0.00</span>
+            </div>
+            <div class="flex justify-between mb-10">
+              <span>Tax:</span>
+              <span id="tax">$0.00</span>
+            </div>
+            <div class="flex justify-between mb-10" style="border-top: 1px solid #eee; padding-top: 10px; font-weight: bold;">
+              <span>Total:</span>
+              <span id="total">$0.00</span>
+            </div>
+            
+            <button id="completePurchase" class="w-full success" disabled>
+              <i class="fas fa-check-circle"></i> Complete Purchase
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Inventory Management Section -->
+    <div class="tab-content" id="inventory">
+      <div class="card">
+        <div class="card-header">
+          <h3>Inventory Management</h3>
+          <div class="flex gap-10">
+            <button id="bulkUpdateBtn" class="outline">Bulk Update</button>
+            <button id="manageCategories" class="outline">Categories</button>
+            <button id="addNewInventoryBtn" class="success">
+              <i class="fas fa-plus"></i> Add Item
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="search-container mb-10">
+            <input type="text" id="inventorySearchInput" placeholder="Search inventory...">
+            <button id="inventorySearchBtn">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+          
+          <div class="flex justify-between mb-10">
+            <div class="category-selector" id="inventoryCategoryFilter">
+              <div class="category-tag active" data-category="all">All</div>
+              <!-- Categories will be added dynamically -->
+            </div>
+            
+            <select id="inventoryFilterSelect">
+              <option value="all">All Items</option>
+              <option value="low">Low Stock</option>
+              <option value="out">Out of Stock</option>
+              <option value="popular">Most Popular</option>
+            </select>
+          </div>
+          
+          <table id="fullInventoryTable">
+            <thead>
+              <tr>
+                <th>
+                  <input type="checkbox" id="selectAllInventory">
+                </th>
+                <th>Item Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Cost</th>
+                <th>Profit</th>
+                <th>Tax</th>
+                <th>Stock</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="fullInventoryBody">
+            </tbody>
+          </table>
+          
+          <div id="fullInventoryPagination" class="pagination">
+            <!-- Pagination buttons will be added dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Customers Section -->
+    <div class="tab-content" id="customers">
+      <div class="card">
+        <div class="card-header">
+          <h3>Customer Management</h3>
+          <div class="flex gap-10">
+            <button id="importCustomersBtn" class="outline">Import</button>
+            <button id="exportCustomersBtn" class="outline">Export</button>
+            <button id="addNewCustomerBtn" class="success">
+              <i class="fas fa-user-plus"></i> Add Customer
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="search-container mb-10">
+            <input type="text" id="customerSearchInput" placeholder="Search customers...">
+            <button id="customerSearchBtn">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+          
+          <div class="flex justify-between mb-10">
+            <div>
+              <select id="customerFilterSelect">
+                <option value="all">All Customers</option>
+                <option value="active">Active Customers</option>
+                <option value="credit">With Outstanding Credit</option>
+                <option value="limit">Near Credit Limit</option>
+              </select>
+            </div>
+            <div>
+              <label>Sort By: </label>
+              <select id="customerSortSelect">
+                <option value="name">Name</option>
+                <option value="credit">Credit Used</option>
+                <option value="purchases">Total Purchases</option>
+                <option value="recent">Recent Activity</option>
+              </select>
+            </div>
+          </div>
+          
+          <table id="customersTable">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Credit Limit</th>
+                <th>Credit Used</th>
+                <th>Available Credit</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="customersBody">
+            </tbody>
+          </table>
+          
+          <div id="customersPagination" class="pagination">
+            <!-- Pagination buttons will be added dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Transaction History Section (continued) -->
+            <select id="transactionFilter">
+                <option value="all">All Transactions</option>
+                <option value="sales">Sales</option>
+                <option value="returns">Returns</option>
+                <option value="credits">Credits</option>
+              </select>
+            </div>
+            <div>
+              <label>Show: </label>
+              <select id="transactionLimit">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
+          </div>
+          
+          <table id="transactionsTable">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Customer</th>
+                <th>Items</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="transactionsBody">
+            </tbody>
+          </table>
+          
+          <div id="transactionsPagination" class="pagination">
+            <!-- Pagination buttons will be added dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Analytics Section -->
+    <div class="tab-content" id="analytics">
+      <div class="grid">
+        <div class="card">
+          <div class="card-header">
+            <h3>Sales Trends</h3>
+            <select id="analyticsPeriod">
+              <option value="7d">Last 7 Days</option>
+              <option value="30d">Last 30 Days</option>
+              <option value="90d">Last 90 Days</option>
+              <option value="ytd">Year to Date</option>
+            </select>
+          </div>
+          <div class="card-body">
+            <div class="chart-container">
+              <canvas id="salesTrendChart"></canvas>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <h3>Inventory Distribution</h3>
+          </div>
+          <div class="card-body">
+            <div class="chart-container">
+              <canvas id="inventoryPieChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card mt-20">
+        <div class="card-header">
+          <h3>Customer Insights</h3>
+          <select id="customerSegmentation">
+            <option value="value">By Customer Value</option>
+            <option value="frequency">By Purchase Frequency</option>
+            <option value="recency">By Recency</option>
+          </select>
+        </div>
+        <div class="card-body">
+          <div class="chart-container">
+            <canvas id="customerChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-        function deleteItem(id) {
-            inventory = inventory.filter(item => item.id !== id);
-            localStorage.setItem('inventory', JSON.stringify(inventory));
-            renderInventory();
-            showToast('Item deleted successfully!', 'danger');
-        }
+  <!-- Modals -->
+  <div id="itemModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Add New Item</h3>
+        <span class="close">&times;</span>
+      </div>
+      <div class="modal-body">
+        <form id="itemForm" class="form-grid">
+          <div class="form-group">
+            <label>Item Name</label>
+            <input type="text" id="itemName" required>
+          </div>
+          <div class="form-group">
+            <label>Price</label>
+            <input type="number" id="itemPrice" step="0.01" required>
+          </div>
+          <div class="form-group">
+            <label>Cost</label>
+            <input type="number" id="itemCost" step="0.01" required>
+          </div>
+          <div class="form-group">
+            <label>Tax Rate (%)</label>
+            <input type="number" id="itemTax" step="0.1" required>
+          </div>
+          <div class="form-group">
+            <label>Stock Quantity</label>
+            <input type="number" id="itemStock" required>
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <select id="itemCategory" required>
+              <!-- Categories loaded dynamically -->
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="secondary close">Cancel</button>
+        <button class="success" id="saveItem">Save Item</button>
+      </div>
+    </div>
+  </div>
 
-        function deleteCustomer(id) {
-            customers = customers.filter(customer => customer.id !== id);
-            localStorage.setItem('customers', JSON.stringify(customers));
-            renderCustomers();
-            showToast('Customer deleted successfully!', 'danger');
-        }
+  <div id="customerModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Add New Customer</h3>
+        <span class="close">&times;</span>
+      </div>
+      <div class="modal-body">
+        <form id="customerForm" class="form-grid">
+          <div class="form-group">
+            <label>Customer Name</label>
+            <input type="text" id="customerName" required>
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="tel" id="customerPhone" required>
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="customerEmail">
+          </div>
+          <div class="form-group">
+            <label>Credit Limit ($)</label>
+            <input type="number" id="creditLimit" value="1000" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="secondary close">Cancel</button>
+        <button class="success" id="saveCustomer">Save Customer</button>
+      </div>
+    </div>
+  </div>
 
-        // Initial Render
-        renderInventory();
-        renderCustomers();
-    </script>
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Data Stores
+    let inventory = JSON.parse(localStorage.getItem('inventory')) || [];
+    let customers = JSON.parse(localStorage.getItem('customers')) || [];
+    let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+    let currentCart = [];
+    let categories = ['Electronics', 'Clothing', 'Groceries', 'Office Supplies'];
+    let currentTab = 'dashboard';
+
+    // DOM Elements
+    const tabContents = document.querySelectorAll('.tab-content');
+    const tabs = document.querySelectorAll('.tab');
+    const itemForm = document.getElementById('itemForm');
+    const customerForm = document.getElementById('customerForm');
+
+    // Initialize
+    initData();
+    setupEventListeners();
+    renderAll();
+
+    function initData() {
+      if (!inventory.length) {
+        inventory.push({
+          id: 1,
+          name: 'Sample Item',
+          price: 29.99,
+          cost: 15.00,
+          tax: 8.25,
+          stock: 100,
+          category: 'Electronics',
+          salesCount: 0
+        });
+      }
+      
+      if (!customers.length) {
+        customers.push({
+          id: 1,
+          name: 'Walk-in Customer',
+          phone: '000-0000',
+          email: '',
+          creditLimit: 0,
+          creditUsed: 0,
+          purchases: []
+        });
+      }
+      saveData();
+    }
+
+    function setupEventListeners() {
+      // Tab Navigation
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          currentTab = tab.dataset.tab;
+          tabContents.forEach(content => content.classList.remove('active'));
+          tabs.forEach(t => t.classList.remove('active'));
+          document.getElementById(currentTab).classList.add('active');
+          tab.classList.add('active');
+        });
+      });
+
+      // Item Management
+      document.getElementById('addItemBtn').addEventListener('click', showItemModal);
+      document.getElementById('saveItem').addEventListener('click', saveItem);
+      document.getElementById('inventoryBody').addEventListener('click', handleInventoryActions);
+
+      // Customer Management
+      document.getElementById('addCustomerBtn').addEventListener('click', showCustomerModal);
+      document.getElementById('saveCustomer').addEventListener('click', saveCustomer);
+
+      // Cart Management
+      document.getElementById('customerSelect').addEventListener('change', updateCustomerInfo);
+      document.getElementById('cartBody').addEventListener('click', handleCartActions);
+      document.getElementById('discountAmount').addEventListener('input', updateTotals);
+      document.getElementById('completePurchase').addEventListener('click', completePurchase);
+    }
+
+    function saveItem(e) {
+      e.preventDefault();
+      const newItem = {
+        id: Date.now(),
+        name: document.getElementById('itemName').value,
+        price: parseFloat(document.getElementById('itemPrice').value),
+        cost: parseFloat(document.getElementById('itemCost').value),
+        tax: parseFloat(document.getElementById('itemTax').value),
+        stock: parseInt(document.getElementById('itemStock').value),
+        category: document.getElementById('itemCategory').value,
+        salesCount: 0
+      };
+      inventory.push(newItem);
+      saveData();
+      renderInventory();
+      closeModal('itemModal');
+      showToast('Item added successfully!', 'success');
+      itemForm.reset();
+    }
+
+    function saveCustomer(e) {
+      e.preventDefault();
+      const newCustomer = {
+        id: Date.now(),
+        name: document.getElementById('customerName').value,
+        phone: document.getElementById('customerPhone').value,
+        email: document.getElementById('customerEmail').value,
+        creditLimit: parseFloat(document.getElementById('creditLimit').value),
+        creditUsed: 0,
+        purchases: []
+      };
+      customers.push(newCustomer);
+      saveData();
+      renderCustomers();
+      closeModal('customerModal');
+      showToast('Customer added successfully!', 'success');
+      customerForm.reset();
+    }
+
+    function handleInventoryActions(e) {
+      if (e.target.classList.contains('add-to-cart')) {
+        const itemId = parseInt(e.target.dataset.itemId);
+        const item = inventory.find(i => i.id === itemId);
+        if (item.stock > 0) {
+          addToCart(item);
+          renderCart();
+          updateTotals();
+        }
+      }
+    }
+
+    function addToCart(item) {
+      const existing = currentCart.find(i => i.id === item.id);
+      if (existing) {
+        existing.quantity++;
+      } else {
+        currentCart.push({ ...item, quantity: 1 });
+      }
+      item.stock--;
+      saveData();
+    }
+
+    function handleCartActions(e) {
+      if (e.target.classList.contains('remove-item')) {
+        const itemId = parseInt(e.target.dataset.itemId);
+        removeFromCart(itemId);
+        renderCart();
+        updateTotals();
+      }
+    }
+
+    function removeFromCart(itemId) {
+      const itemIndex = currentCart.findIndex(i => i.id === itemId);
+      if (itemIndex > -1) {
+        const item = currentCart[itemIndex];
+        inventory.find(i => i.id === itemId).stock += item.quantity;
+        currentCart.splice(itemIndex, 1);
+        saveData();
+      }
+    }
+
+    function updateTotals() {
+      const subtotal = currentCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const discountType = document.getElementById('discountType').value;
+      const discountValue = parseFloat(document.getElementById('discountAmount').value) || 0;
+      const discount = discountType === 'percentage' ? subtotal * (discountValue / 100) : discountValue;
+      const tax = currentCart.reduce((sum, item) => sum + (item.price * item.quantity * (item.tax / 100)), 0);
+      const total = subtotal - discount + tax;
+
+      document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
+      document.getElementById('discount').textContent = `-$${discount.toFixed(2)}`;
+      document.getElementById('tax').textContent = `$${tax.toFixed(2)}`;
+      document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+      document.getElementById('completePurchase').disabled = currentCart.length === 0;
+    }
+
+    function completePurchase() {
+      const customerId = document.getElementById('customerSelect').value;
+      const paymentMode = document.getElementById('paymentMode').value;
+      const total = parseFloat(document.getElementById('total').textContent.replace('$', ''));
+
+      const transaction = {
+        id: Date.now(),
+        date: new Date(),
+        items: currentCart,
+        total,
+        customer: customerId,
+        paymentMode,
+        status: paymentMode === 'credit' ? 'Pending' : 'Completed'
+      };
+
+      transactions.push(transaction);
+
+      if (paymentMode === 'credit') {
+        const customer = customers.find(c => c.id === customerId);
+        if (customer) customer.creditUsed += total;
+      }
+
+      currentCart.forEach(item => {
+        const inventoryItem = inventory.find(i => i.id === item.id);
+        if (inventoryItem) inventoryItem.salesCount += item.quantity;
+      });
+
+      currentCart = [];
+      saveData();
+      renderAll();
+      showToast('Purchase completed successfully!', 'success');
+    }
+
+    function renderAll() {
+      renderInventory();
+      renderCustomers();
+      renderCart();
+      renderTransactions();
+      updateDashboard();
+    }
+
+    function renderInventory() {
+      const tbody = document.getElementById('inventoryBody');
+      tbody.innerHTML = inventory.map(item => `
+        <tr>
+          <td>${item.name}</td>
+          <td>$${item.price.toFixed(2)}</td>
+          <td>${item.tax}%</td>
+          <td>${item.stock}</td>
+          <td class="text-right">
+            <button class="btn sm success add-to-cart" data-item-id="${item.id}">
+              Add to Cart
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderCustomers() {
+      const select = document.getElementById('customerSelect');
+      select.innerHTML = '<option value="">Select customer...</option>' + 
+        customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    }
+
+    function renderCart() {
+      const tbody = document.getElementById('cartBody');
+      tbody.innerHTML = currentCart.map(item => `
+        <tr>
+          <td>${item.name}</td>
+          <td>$${item.price.toFixed(2)}</td>
+          <td>${item.quantity}</td>
+          <td>$${(item.price * item.quantity * (item.tax / 100)).toFixed(2)}</td>
+          <td>$${(item.price * item.quantity).toFixed(2)}</td>
+          <td class="text-right">
+            <button class="btn sm danger remove-item" data-item-id="${item.id}">
+              Remove
+            </button>
+          </td>
+        </tr>
+      `).join('');
+      document.getElementById('emptyCart').style.display = currentCart.length ? 'none' : 'block';
+    }
+
+    function renderTransactions() {
+      const tbody = document.getElementById('transactionsBody');
+      tbody.innerHTML = transactions.map(t => `
+        <tr>
+          <td>${new Date(t.date).toLocaleDateString()}</td>
+          <td>${t.paymentMode}</td>
+          <td>${customers.find(c => c.id === t.customer)?.name || 'Walk-in'}</td>
+          <td>${t.items.length}</td>
+          <td>$${t.total.toFixed(2)}</td>
+          <td><span class="badge ${t.status === 'Completed' ? 'badge-green' : 'badge-yellow'}">${t.status}</span></td>
+          <td>
+            <button class="btn sm outline" onclick="viewTransaction(${t.id})">View</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function updateDashboard() {
+      document.getElementById('todaySales').textContent = `$${calculateTodaySales().toFixed(2)}`;
+      document.getElementById('activeCustomers').textContent = customers.length;
+      document.getElementById('lowStockItems').textContent = inventory.filter(i => i.stock < 5).length;
+      document.getElementById('outstandingCredit').textContent = 
+        `$${customers.reduce((sum, c) => sum + c.creditUsed, 0).toFixed(2)}`;
+    }
+
+    function calculateTodaySales() {
+      const today = new Date().toDateString();
+      return transactions
+        .filter(t => new Date(t.date).toDateString() === today)
+        .reduce((sum, t) => sum + t.total, 0);
+    }
+
+    function showModal(modalId) {
+      document.getElementById(modalId).style.display = 'block';
+      if (modalId === 'itemModal') populateCategories();
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).style.display = 'none';
+    }
+
+    function populateCategories() {
+      const select = document.getElementById('itemCategory');
+      select.innerHTML = categories.map(c => `<option>${c}</option>`).join('');
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.innerHTML = `
+        ${message}
+        <span class="toast-close">&times;</span>
+      `;
+      document.querySelector('.toast-container').appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    function saveData() {
+      localStorage.setItem('inventory', JSON.stringify(inventory));
+      localStorage.setItem('customers', JSON.stringify(customers));
+      localStorage.setItem('transactions', JSON.stringify(transactions));
+    }
+  });
+  </script>
 </body>
 </html>
