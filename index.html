@@ -280,7 +280,7 @@
       </button>
     );
 
-    const Input = ({
+const Input = ({
       type = "text",
       value,
       onChange,
@@ -289,21 +289,22 @@
       id,
       min,
       max,
-      defaultValue, // Note: Using defaultValue with controlled components (value prop) is usually not needed. Prefer value.
+      defaultValue,
       disabled = false
     }) => (
       <input
         type={type}
-        value={value} // Prefer value for controlled components
+        value={value}
         onChange={onChange}
         placeholder={placeholder}
         className={`input ${className}`}
         id={id}
         min={min}
         max={max}
-        defaultValue={defaultValue} // Keep if needed for uncontrolled cases, but prioritize value
+        defaultValue={defaultValue}
         disabled={disabled}
-        step={type === 'number' ? (placeholder?.toLowerCase().includes('price') || placeholder?.toLowerCase().includes('limit') ? '0.01' : '1') : undefined} // Basic step logic
+        // *** CORRECTED LINE: Replaced ?. with explicit checks ***
+        step={type === 'number' ? ((placeholder && placeholder.toLowerCase().includes('price')) || (placeholder && placeholder.toLowerCase().includes('limit')) ? '0.01' : '1') : undefined}
       />
     );
 
