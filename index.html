@@ -1181,12 +1181,14 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
   <script>
+    // Initialize Chart.js and FontAwesome from CDN
 document.addEventListener('DOMContentLoaded', () => {
   // ======================
   // DATA STORES & CONFIG
   // ======================
   const DATA_VERSION = '1.0';
   const DEFAULT_CATEGORIES = ['Electronics', 'Clothing', 'Groceries', 'Office Supplies'];
+  const LOW_STOCK_THRESHOLD = 10;
   
   let state = {
     inventory: [],
@@ -1197,7 +1199,11 @@ document.addEventListener('DOMContentLoaded', () => {
     settings: {
       taxEnabled: true,
       defaultTaxRate: 8.25,
-      currency: 'USD'
+      currency: 'USD',
+      businessName: 'Business Billing System',
+      businessAddress: '123 Main Street, City, State, 12345',
+      businessPhone: '(555) 123-4567',
+      businessEmail: 'contact@business.com'
     }
   };
 
@@ -1208,26 +1214,77 @@ document.addEventListener('DOMContentLoaded', () => {
     tabs: document.querySelectorAll('.tab'),
     tabContents: document.querySelectorAll('.tab-content'),
     modals: document.querySelectorAll('.modal'),
+    
+    // Dashboard
+    todaySales: document.getElementById('todaySales'),
+    activeCustomers: document.getElementById('activeCustomers'),
+    lowStockItems: document.getElementById('lowStockItems'),
+    outstandingCredit: document.getElementById('outstandingCredit'),
+    recentTransactionsBody: document.getElementById('recentTransactionsBody'),
+    topSellingBody: document.getElementById('topSellingBody'),
+    salesChart: document.getElementById('salesChart'),
+    chartViewSelector: document.getElementById('chartViewSelector'),
+    
     // Inventory
     inventoryBody: document.getElementById('inventoryBody'),
     inventoryPagination: document.getElementById('inventoryPagination'),
+    categorySelector: document.getElementById('categorySelector'),
+    searchItem: document.getElementById('searchItem'),
+    
+    // Full Inventory Management
+    fullInventoryBody: document.getElementById('fullInventoryBody'),
+    fullInventoryPagination: document.getElementById('fullInventoryPagination'),
+    inventoryCategoryFilter: document.getElementById('inventoryCategoryFilter'),
+    inventoryFilterSelect: document.getElementById('inventoryFilterSelect'),
+    inventorySearchInput: document.getElementById('inventorySearchInput'),
+    
     // Customers
     customersBody: document.getElementById('customersBody'),
+    customersPagination: document.getElementById('customersPagination'),
     customerSelect: document.getElementById('customerSelect'),
+    customerInfo: document.getElementById('customerInfo'),
+    customerFilterSelect: document.getElementById('customerFilterSelect'),
+    customerSortSelect: document.getElementById('customerSortSelect'),
+    customerSearchInput: document.getElementById('customerSearchInput'),
+    
     // Cart
     cartBody: document.getElementById('cartBody'),
+    emptyCart: document.getElementById('emptyCart'),
     subtotal: document.getElementById('subtotal'),
     discount: document.getElementById('discount'),
     tax: document.getElementById('tax'),
     total: document.getElementById('total'),
+    completePurchase: document.getElementById('completePurchase'),
+    paymentMode: document.getElementById('paymentMode'),
+    discountAmount: document.getElementById('discountAmount'),
+    discountType: document.getElementById('discountType'),
+    
     // Forms
     itemForm: document.getElementById('itemForm'),
     customerForm: document.getElementById('customerForm'),
-    // Other
-    todaySales: document.getElementById('todaySales'),
-    activeCustomers: document.getElementById('activeCustomers'),
-    lowStockItems: document.getElementById('lowStockItems'),
-    outstandingCredit: document.getElementById('outstandingCredit')
+    
+    // Analytics
+    salesTrendChart: document.getElementById('salesTrendChart'),
+    inventoryPieChart: document.getElementById('inventoryPieChart'),
+    customerChart: document.getElementById('customerChart'),
+    analyticsPeriod: document.getElementById('analyticsPeriod'),
+    customerSegmentation: document.getElementById('customerSegmentation'),
+    
+    // Transactions
+    transactionsBody: document.getElementById('transactionsBody'),
+    transactionsPagination: document.getElementById('transactionsPagination'),
+    transactionDateFrom: document.getElementById('transactionDateFrom'),
+    transactionDateTo: document.getElementById('transactionDateTo'),
+    transactionFilter: document.getElementById('transactionFilter'),
+    transactionLimit: document.getElementById('transactionLimit')
+  };
+
+  // Chart instances
+  let charts = {
+    salesChart: null,
+    salesTrendChart: null,
+    inventoryPieChart: null,
+    customerChart: null
   };
 
   // ======================
@@ -1238,32 +1295,173 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     setupDefaultCategories();
     renderAll();
+    initializeCharts();
   }
 
   function loadData() {
     const savedState = localStorage.getItem('billingDashboard');
     if (savedState) {
-      const parsed = JSON.parse(savedState);
-      if (parsed.version === DATA_VERSION) {
-        state = parsed;
+      try {
+        const parsed = JSON.parse(savedState);
+        if (parsed.version === DATA_VERSION) {
+          state = parsed;
+          
+          // Convert string dates back to Date objects
+          state.transactions.forEach(t => {
+            t.date = new Date(t.date);
+          });
+          
+          state.inventory.forEach(item => {
+            item.createdAt = new Date(item.createdAt);
+          });
+          
+          state.customers.forEach(customer => {
+            customer.createdAt = new Date(customer.createdAt);
+          });
+        }
+      } catch (e) {
+        console.error('Error loading data from localStorage', e);
+        initializeDefaultData();
       }
+    } else {
+      initializeDefaultData();
     }
-    
+  }
+
+  function initializeDefaultData() {
     // Initialize default data if empty
+    state.categories = [...DEFAULT_CATEGORIES];
+    
     if (state.inventory.length === 0) {
-      state.inventory.push(createInventoryItem({
-        name: 'Sample Item',
-        price: 29.99,
-        stock: 100,
-        category: 'Electronics'
-      }));
+      // Add some sample inventory items
+      state.inventory.push(
+        createInventoryItem({
+          name: 'Laptop',
+          price: 899.99,
+          cost: 650,
+          stock: 15,
+          category: 'Electronics'
+        }),
+        createInventoryItem({
+          name: 'Wireless Mouse',
+          price: 29.99,
+          cost: 12,
+          stock: 30,
+          category: 'Electronics'
+        }),
+        createInventoryItem({
+          name: 'T-Shirt',
+          price: 19.99,
+          cost: 8,
+          stock: 50,
+          category: 'Clothing'
+        }),
+        createInventoryItem({
+          name: 'Coffee Beans (1lb)',
+          price: 12.99,
+          cost: 7.5,
+          stock: 25,
+          category: 'Groceries'
+        }),
+        createInventoryItem({
+          name: 'Notebook',
+          price: 4.99,
+          cost: 1.5,
+          stock: 100,
+          category: 'Office Supplies'
+        })
+      );
     }
     
     if (state.customers.length === 0) {
-      state.customers.push(createCustomer({
-        name: 'Walk-in Customer',
-        phone: '000-0000'
-      }));
+      state.customers.push(
+        createCustomer({
+          name: 'Walk-in Customer',
+          phone: '000-0000',
+          creditLimit: 0
+        }),
+        createCustomer({
+          name: 'John Doe',
+          phone: '555-1234',
+          email: 'john@example.com',
+          creditLimit: 1000
+        }),
+        createCustomer({
+          name: 'Jane Smith',
+          phone: '555-5678',
+          email: 'jane@example.com',
+          creditLimit: 2000
+        })
+      );
+    }
+    
+    if (state.transactions.length === 0) {
+      // Create some sample transactions
+      const pastDays = [0, 1, 2, 3, 4, 5, 6];
+      
+      pastDays.forEach(day => {
+        const date = new Date();
+        date.setDate(date.getDate() - day);
+        
+        // Create 1-3 transactions per day
+        const numTransactions = Math.floor(Math.random() * 3) + 1;
+        
+        for (let i = 0; i < numTransactions; i++) {
+          const items = [];
+          const numItems = Math.floor(Math.random() * 3) + 1;
+          
+          for (let j = 0; j < numItems; j++) {
+            const randomItem = state.inventory[Math.floor(Math.random() * state.inventory.length)];
+            const quantity = Math.floor(Math.random() * 3) + 1;
+            
+            items.push({
+              itemId: randomItem.id,
+              name: randomItem.name,
+              price: randomItem.price,
+              tax: randomItem.tax,
+              quantity: quantity,
+              subtotal: randomItem.price * quantity
+            });
+            
+            // Update item sales count
+            const itemIndex = state.inventory.findIndex(item => item.id === randomItem.id);
+            if (itemIndex !== -1) {
+              state.inventory[itemIndex].salesCount += quantity;
+            }
+          }
+          
+          // Calculate totals
+          const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
+          const taxAmount = items.reduce((sum, item) => sum + (item.subtotal * (item.tax / 100)), 0);
+          const total = subtotal + taxAmount;
+          
+          // Random customer
+          const randomCustomer = state.customers[Math.floor(Math.random() * state.customers.length)];
+          
+          // Create transaction
+          state.transactions.push({
+            id: Date.now() - day * 86400000 - i * 1000,
+            date: new Date(date),
+            customerId: randomCustomer.id,
+            customerName: randomCustomer.name,
+            items: items,
+            subtotal: subtotal,
+            discount: 0,
+            tax: taxAmount,
+            total: total,
+            paymentMode: Math.random() > 0.7 ? 'credit' : 'paid',
+            status: 'completed'
+          });
+          
+          // Update customer credit if paid on credit
+          if (state.transactions[state.transactions.length - 1].paymentMode === 'credit') {
+            const customerIndex = state.customers.findIndex(c => c.id === randomCustomer.id);
+            if (customerIndex !== -1) {
+              state.customers[customerIndex].creditUsed += total;
+            }
+          }
+        }
+      });
     }
     
     saveData();
@@ -1280,12 +1478,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // ======================
   function createInventoryItem(data) {
     return {
-      id: Date.now(),
+      id: Date.now() + Math.floor(Math.random() * 1000),
       name: data.name,
-      price: parseFloat(data.price),
-      cost: data.cost || 0,
-      tax: data.tax || state.settings.defaultTaxRate,
-      stock: parseInt(data.stock),
+      price: parseFloat(data.price) || 0,
+      cost: parseFloat(data.cost) || 0,
+      tax: parseFloat(data.tax) || state.settings.defaultTaxRate,
+      stock: parseInt(data.stock) || 0,
       category: data.category || 'Uncategorized',
       salesCount: 0,
       createdAt: new Date()
@@ -1294,7 +1492,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function createCustomer(data) {
     return {
-      id: Date.now(),
+      id: Date.now() + Math.floor(Math.random() * 1000),
       name: data.name,
       phone: data.phone,
       email: data.email || '',
@@ -1324,38 +1522,103 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Modal Handling
     dom.modals.forEach(modal => {
-      modal.querySelector('.close').addEventListener('click', () => hideModal(modal.id));
-      modal.querySelector('.secondary').addEventListener('click', () => hideModal(modal.id));
+      const closeButtons = modal.querySelectorAll('.close, .secondary');
+      closeButtons.forEach(btn => {
+        btn.addEventListener('click', () => hideModal(modal.id));
+      });
     });
 
-    // Inventory Actions
+    // Billing Section
+    document.getElementById('searchBtn').addEventListener('click', () => {
+      filterInventory(dom.searchItem.value);
+    });
+    
+    dom.categorySelector.addEventListener('click', handleCategorySelection);
+    
     dom.inventoryBody.addEventListener('click', handleInventoryActions);
-    document.getElementById('addItemBtn').addEventListener('click', () => showModal('itemModal'));
-    document.getElementById('saveItem').addEventListener('click', handleItemSave);
+    document.getElementById('addItemBtn').addEventListener('click', () => showAddItemModal());
 
-    // Customer Actions
-    dom.customersBody.addEventListener('click', handleCustomerActions);
-    document.getElementById('addCustomerBtn').addEventListener('click', () => showModal('customerModal'));
-    document.getElementById('saveCustomer').addEventListener('click', handleCustomerSave);
+    // Customer Selection
+    dom.customerSelect.addEventListener('change', handleCustomerSelect);
+    document.getElementById('addCustomerBtn').addEventListener('click', () => showAddCustomerModal());
 
     // Cart Actions
     dom.cartBody.addEventListener('click', handleCartActions);
-    document.getElementById('completePurchase').addEventListener('click', handlePurchase);
-    document.getElementById('discountAmount').addEventListener('input', updateCartTotals);
-    document.getElementById('discountType').addEventListener('change', updateCartTotals);
+    dom.completePurchase.addEventListener('click', handlePurchase);
+    dom.discountAmount.addEventListener('input', updateCartTotals);
+    dom.discountType.addEventListener('change', updateCartTotals);
+    dom.paymentMode.addEventListener('change', validatePurchaseButton);
+
+    // Item Modal
+    document.getElementById('saveItem').addEventListener('click', handleItemSave);
+
+    // Customer Modal
+    document.getElementById('saveCustomer').addEventListener('click', handleCustomerSave);
+
+    // Inventory Management
+    dom.fullInventoryBody.addEventListener('click', handleFullInventoryActions);
+    document.getElementById('addNewInventoryBtn').addEventListener('click', () => showAddItemModal());
+    document.getElementById('inventoryFilterSelect').addEventListener('change', renderFullInventory);
+    dom.inventoryCategoryFilter.addEventListener('click', handleInventoryCategoryFilter);
+    dom.inventorySearchInput.addEventListener('input', () => {
+      renderFullInventory();
+    });
+
+    // Customer Management
+    dom.customersBody.addEventListener('click', handleCustomerTableActions);
+    document.getElementById('addNewCustomerBtn').addEventListener('click', () => showAddCustomerModal());
+    dom.customerFilterSelect.addEventListener('change', renderCustomers);
+    dom.customerSortSelect.addEventListener('change', renderCustomers);
+    dom.customerSearchInput.addEventListener('input', () => {
+      renderCustomers();
+    });
+
+    // Transaction History
+    dom.transactionsBody.addEventListener('click', handleTransactionActions);
+    document.getElementById('transactionFilter').addEventListener('change', renderTransactions);
+    document.getElementById('transactionLimit').addEventListener('change', renderTransactions);
+
+    // Dashboard
+    dom.chartViewSelector.addEventListener('change', updateDashboardChart);
+
+    // Analytics
+    dom.analyticsPeriod.addEventListener('change', updateAnalyticsCharts);
+    dom.customerSegmentation.addEventListener('change', updateCustomerChart);
+
+    // Settings & Export
+    document.getElementById('settingsBtn').addEventListener('click', showSettingsModal);
+    document.getElementById('exportDataBtn').addEventListener('click', exportData);
+    
+    // View All buttons
+    document.getElementById('viewAllTransactions').addEventListener('click', () => {
+      navigateToTab('history');
+    });
+    
+    document.getElementById('viewInventory').addEventListener('click', () => {
+      navigateToTab('inventory');
+    });
   }
 
   function handleTabNavigation(e) {
     const tab = e.target.closest('.tab');
     if (!tab) return;
+    
+    navigateToTab(tab.dataset.tab);
+  }
 
-    const targetTab = tab.dataset.tab;
-    dom.tabs.forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
+  function navigateToTab(tabId) {
+    dom.tabs.forEach(t => {
+      t.classList.toggle('active', t.dataset.tab === tabId);
+    });
 
     dom.tabContents.forEach(content => {
-      content.classList.toggle('active', content.id === targetTab);
+      content.classList.toggle('active', content.id === tabId);
     });
+    
+    // Update specific tab data when navigating
+    if (tabId === 'analytics') {
+      updateAnalyticsCharts();
+    }
   }
 
   function handleInventoryActions(e) {
@@ -1367,19 +1630,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btn.classList.contains('add-to-cart')) {
       addToCart(item);
-      renderCart();
     }
   }
 
-  function handleCustomerActions(e) {
+  function handleFullInventoryActions(e) {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+
+    const itemId = parseInt(btn.dataset.itemId);
+    
+    if (btn.classList.contains('edit-item')) {
+      const item = state.inventory.find(i => i.id === itemId);
+      showEditItemModal(item);
+    } else if (btn.classList.contains('delete-item')) {
+      confirmDeleteItem(itemId);
+    }
+  }
+
+  function handleCustomerTableActions(e) {
     const btn = e.target.closest('button');
     if (!btn) return;
 
     const customerId = parseInt(btn.dataset.customerId);
-    const customer = state.customers.find(c => c.id === customerId);
-
+    
     if (btn.classList.contains('edit-customer')) {
-      openCustomerEditor(customer);
+      const customer = state.customers.find(c => c.id === customerId);
+      showEditCustomerModal(customer);
+    } else if (btn.classList.contains('delete-customer')) {
+      confirmDeleteCustomer(customerId);
+    } else if (btn.classList.contains('view-history')) {
+      showCustomerHistory(customerId);
     }
   }
 
@@ -1387,362 +1667,1788 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = e.target.closest('button');
     if (!btn) return;
 
-    const itemId = parseInt(btn.dataset.itemId);
+    const itemIndex = parseInt(btn.dataset.index);
     
-    if (btn.classList.contains('remove-item')) {
-      removeFromCart(itemId);
+    if (btn.classList.contains('remove-from-cart')) {
+      state.currentCart.splice(itemIndex, 1);
       renderCart();
+    } else if (btn.classList.contains('increase-qty')) {
+      const item = state.inventory.find(i => i.id === state.currentCart[itemIndex].itemId);
+      if (state.currentCart[itemIndex].quantity < item.stock) {
+        state.currentCart[itemIndex].quantity++;
+        state.currentCart[itemIndex].subtotal = state.currentCart[itemIndex].price * state.currentCart[itemIndex].quantity;
+        renderCart();
+      } else {
+        showToast('Cannot add more. Stock limit reached.', 'warning');
+      }
+    } else if (btn.classList.contains('decrease-qty')) {
+      if (state.currentCart[itemIndex].quantity > 1) {
+        state.currentCart[itemIndex].quantity--;
+        state.currentCart[itemIndex].subtotal = state.currentCart[itemIndex].price * state.currentCart[itemIndex].quantity;
+        renderCart();
+      }
     }
   }
 
-  // ======================
-  // CART MANAGEMENT
-  // ======================
-  function addToCart(item) {
-    if (item.stock < 1) {
-      showToast('Item out of stock!', 'error');
+  function handleCustomerSelect() {
+    const selectedCustomerId = parseInt(dom.customerSelect.value);
+    if (!selectedCustomerId) {
+      dom.customerInfo.style.display = 'none';
       return;
     }
-
-    const existing = state.currentCart.find(i => i.id === item.id);
-    if (existing) {
-      existing.quantity++;
-    } else {
-      state.currentCart.push({
-        ...item,
-        quantity: 1
-      });
+    
+    const customer = state.customers.find(c => c.id === selectedCustomerId);
+    if (customer) {
+      renderCustomerInfo(customer);
+      validatePurchaseButton();
     }
-
-    item.stock--;
-    saveData();
-    updateCartTotals();
   }
 
-  function removeFromCart(itemId) {
-    const index = state.currentCart.findIndex(i => i.id === itemId);
-    if (index === -1) return;
+  function handleTransactionActions(e) {
+    const btn = e.target.closest('button');
+    if (!btn) return;
 
-    const item = state.currentCart[index];
-    const inventoryItem = state.inventory.find(i => i.id === itemId);
+    const transactionId = parseInt(btn.dataset.transactionId);
+    const transaction = state.transactions.find(t => t.id === transactionId);
     
-    inventoryItem.stock += item.quantity;
-    state.currentCart.splice(index, 1);
-    
-    saveData();
-    updateCartTotals();
+    if (btn.classList.contains('view-transaction')) {
+      showBillModal(transaction);
+    } else if (btn.classList.contains('print-transaction')) {
+      printBill(transaction);
+    }
   }
 
-  function updateCartTotals() {
-    const subtotal = state.currentCart.reduce((sum, item) => 
-      sum + (item.price * item.quantity), 0);
+  function handleCategorySelection(e) {
+    const categoryTag = e.target.closest('.category-tag');
+    if (!categoryTag) return;
     
-    const discountValue = parseFloat(document.getElementById('discountAmount').value) || 0;
-    const discountType = document.getElementById('discountType').value;
-    const discount = discountType === 'percentage' 
-      ? subtotal * (discountValue / 100)
-      : discountValue;
-
-    const tax = state.settings.taxEnabled
-      ? state.currentCart.reduce((sum, item) =>
-          sum + (item.price * item.quantity * (item.tax / 100)), 0)
-      : 0;
-
-    const total = Math.max(0, subtotal - discount + tax);
-
-    dom.subtotal.textContent = formatCurrency(subtotal);
-    dom.discount.textContent = formatCurrency(discount);
-    dom.tax.textContent = formatCurrency(tax);
-    dom.total.textContent = formatCurrency(total);
+    const category = categoryTag.dataset.category;
     
-    document.getElementById('completePurchase').disabled = 
-      state.currentCart.length === 0 || total <= 0;
-  }
-
-  // ======================
-  // TRANSACTION PROCESSING
-  // ======================
-  function handlePurchase() {
-    const customerId = document.getElementById('customerSelect').value;
-    const paymentMode = document.getElementById('paymentMode').value;
-    const total = parseCurrency(dom.total.textContent);
-
-    if (paymentMode === 'credit' && !customerId) {
-      showToast('Select customer for credit purchases', 'error');
-      return;
-    }
-
-    const transaction = {
-      id: Date.now(),
-      date: new Date(),
-      items: [...state.currentCart],
-      total,
-      customerId,
-      paymentMode,
-      status: paymentMode === 'credit' ? 'pending' : 'completed'
-    };
-
-    // Handle credit purchases
-    if (paymentMode === 'credit') {
-      const customer = state.customers.find(c => c.id === customerId);
-      if (!customer) {
-        showToast('Customer not found!', 'error');
-        return;
-      }
-
-      const availableCredit = customer.creditLimit - customer.creditUsed;
-      if (total > availableCredit) {
-        showToast(`Credit limit exceeded by ${formatCurrency(total - availableCredit)}`, 'error');
-        return;
-      }
-
-      customer.creditUsed += total;
-    }
-
-    // Update inventory sales counts
-    state.currentCart.forEach(item => {
-      const inventoryItem = state.inventory.find(i => i.id === item.id);
-      if (inventoryItem) inventoryItem.salesCount += item.quantity;
+    // Update active state
+    document.querySelectorAll('#categorySelector .category-tag').forEach(tag => {
+      tag.classList.toggle('active', tag === categoryTag);
     });
+    
+    // Filter inventory
+    if (category === 'all') {
+      renderInventory();
+    } else {
+      renderInventory(item => item.category === category);
+    }
+  }
 
-    // Record transaction
-    state.transactions.push(transaction);
-    state.currentCart = [];
+  function handleInventoryCategoryFilter(e) {
+    const categoryTag = e.target.closest('.category-tag');
+    if (!categoryTag) return;
+    
+    const category = categoryTag.dataset.category;
+    
+    // Update active state
+    document.querySelectorAll('#inventoryCategoryFilter .category-tag').forEach(tag => {
+      tag.classList.toggle('active', tag === categoryTag);
+    });
+    
+    renderFullInventory();
+  }
+
+  // ======================
+  // FORM HANDLERS
+  // ======================
+  function handleItemSave() {
+    const nameInput = document.getElementById('itemName');
+    const priceInput = document.getElementById('itemPrice');
+    const costInput = document.getElementById('itemCost');
+    const taxInput = document.getElementById('itemTax');
+    const stockInput = document.getElementById('itemStock');
+    const categoryInput = document.getElementById('itemCategory');
+    const itemId = parseInt(document.getElementById('itemId')?.value);
+    
+    const itemData = {
+      name: nameInput.value.trim(),
+      price: parseFloat(priceInput.value),
+      cost: parseFloat(costInput.value),
+      tax: parseFloat(taxInput.value),
+      stock: parseInt(stockInput.value),
+      category: categoryInput.value
+    };
+    
+    // Validation
+    if (!itemData.name || isNaN(itemData.price) || isNaN(itemData.stock)) {
+      showToast('Please fill in all required fields correctly', 'error');
+      return;
+    }
+    
+    if (itemId) {
+      // Edit existing item
+      const itemIndex = state.inventory.findIndex(item => item.id === itemId);
+      if (itemIndex !== -1) {
+        const updatedItem = {
+          ...state.inventory[itemIndex],
+          ...itemData
+        };
+        state.inventory[itemIndex] = updatedItem;
+        showToast('Item updated successfully', 'success');
+      }
+    } else {
+      // Add new item
+      const newItem = createInventoryItem(itemData);
+      state.inventory.push(newItem);
+      showToast('Item added successfully', 'success');
+    }
     
     saveData();
     renderAll();
-    showToast('Purchase completed successfully!', 'success');
+    hideModal('itemModal');
+  }
+
+  function handleCustomerSave() {
+    const nameInput = document.getElementById('customerName');
+    const phoneInput = document.getElementById('customerPhone');
+    const emailInput = document.getElementById('customerEmail');
+    const creditLimitInput = document.getElementById('creditLimit');
+    const customerId = parseInt(document.getElementById('customerId')?.value);
+    
+    const customerData = {
+      name: nameInput.value.trim(),
+      phone: phoneInput.value.trim(),
+      email: emailInput.value.trim(),
+      creditLimit: parseFloat(creditLimitInput.value)
+    };
+    
+    // Validation
+    if (!customerData.name || !customerData.phone) {
+      showToast('Please fill in all required fields', 'error');
+      return;
+    }
+    
+    if (customerId) {
+      // Edit existing customer
+      const customerIndex = state.customers.findIndex(customer => customer.id === customerId);
+      if (customerIndex !== -1) {
+        const updatedCustomer = {
+          ...state.customers[customerIndex],
+          ...customerData
+        };
+        state.customers[customerIndex] = updatedCustomer;
+        showToast('Customer updated successfully', 'success');
+      }
+    } else {
+      // Add new customer
+      const newCustomer = createCustomer(customerData);
+      state.customers.push(newCustomer);
+      showToast('Customer added successfully', 'success');
+    }
+    
+    saveData();
+    renderCustomers();
+    populateCustomerSelect();
+    hideModal('customerModal');
+  }
+
+  function handlePurchase() {
+    const selectedCustomerId = parseInt(dom.customerSelect.value);
+    if (!selectedCustomerId) {
+      showToast('Please select a customer', 'error');
+      return;
+    }
+    
+    if (state.currentCart.length === 0) {
+      showToast('Cart is empty', 'error');
+      return;
+    }
+    
+    const customer = state.customers.find(c => c.id === selectedCustomerId);
+    const paymentMode = dom.paymentMode.value;
+    
+    // Calculate totals
+    const { subtotal, discount, tax, total } = calculateCartTotals();
+    
+    // Check credit limit if paying on credit
+    if (paymentMode === 'credit') {
+      const newCreditTotal = customer.creditUsed + total;
+      if (newCreditTotal > customer.creditLimit) {
+        showToast(`Credit limit exceeded by $${(newCreditTotal - customer.creditLimit).toFixed(2)}`, 'error');
+        return;
+      }
+    }
+    
+    // Create transaction
+    const transaction = {
+      id: Date.now(),
+      date: new Date(),
+      customerId: selectedCustomerId,
+      customerName: customer.name,
+      items: [...state.currentCart],
+      subtotal,
+      discount,
+      tax,
+      total,
+      paymentMode,
+      status: 'completed'
+    };
+    
+    // Update inventory
+    state.currentCart.forEach(cartItem => {
+      const itemIndex = state.inventory.findIndex(item => item.id === cartItem.itemId);
+      if (itemIndex !== -1) {
+        state.inventory[itemIndex].stock -= cartItem.quantity;
+        state.inventory[itemIndex].salesCount += cartItem.quantity;
+      }
+    });
+    
+    // Update customer credit if paying on credit
+    if (paymentMode === 'credit') {
+      const customerIndex = state.customers.findIndex(c => c.id === selectedCustomerId);
+      if (customerIndex !== -1) {
+        state.customers[customerIndex].creditUsed += total;
+      }
+    }
+    
+    // Add transaction to store
+    state.transactions.push(transaction);
+    
+    // Clear cart
+    state.currentCart = [];
+    
+    // Show success message and bill
+    showToast('Purchase completed successfully', 'success');
+    showBillModal(transaction);
+    
+    // Save and render
+    saveData();
+    renderAll();
   }
 
   // ======================
-  // RENDERING SYSTEM
+  // RENDERING FUNCTIONS
   // ======================
   function renderAll() {
-    renderInventory();
-    renderCustomers();
-    renderCart();
     renderDashboard();
+    renderInventory();
+    renderFullInventory();
+    renderCustomers();
     renderTransactions();
-  }
-
-  function renderInventory() {
-    dom.inventoryBody.innerHTML = state.inventory.map(item => `
-      <tr>
-        <td>${item.name}</td>
-        <td>${formatCurrency(item.price)}</td>
-        <td>${item.tax}%</td>
-        <td>${item.stock}</td>
-        <td class="text-right">
-          <button class="btn sm success add-to-cart" 
-                  data-item-id="${item.id}"
-                  ${item.stock < 1 ? 'disabled' : ''}>
-            ${item.stock < 1 ? 'Out of Stock' : 'Add to Cart'}
-          </button>
-        </td>
-      </tr>
-    `).join('');
-  }
-
-  function renderCustomers() {
-    dom.customersBody.innerHTML = state.customers.map(customer => `
-      <tr>
-        <td>${customer.name}</td>
-        <td>${customer.phone}</td>
-        <td>${customer.email}</td>
-        <td>${formatCurrency(customer.creditLimit)}</td>
-        <td>${formatCurrency(customer.creditUsed)}</td>
-        <td>
-          <button class="btn sm outline edit-customer" 
-                  data-customer-id="${customer.id}">
-            Edit
-          </button>
-        </td>
-      </tr>
-    `).join('');
-
-    // Update customer select dropdown
-    dom.customerSelect.innerHTML = `
-      <option value="">Select Customer...</option>
-      ${state.customers.map(c => `
-        <option value="${c.id}">${c.name}</option>
-      `).join('')}
-    `;
-  }
-
-  function renderCart() {
-    dom.cartBody.innerHTML = state.currentCart.map(item => `
-      <tr>
-        <td>${item.name}</td>
-        <td>${formatCurrency(item.price)}</td>
-        <td>${item.quantity}</td>
-        <td>${item.tax}%</td>
-        <td>${formatCurrency(item.price * item.quantity)}</td>
-        <td class="text-right">
-          <button class="btn sm danger remove-item" 
-                  data-item-id="${item.id}">
-            Remove
-          </button>
-        </td>
-      </tr>
-    `).join('');
-
-    document.getElementById('emptyCart').style.display = 
-      state.currentCart.length > 0 ? 'none' : 'block';
+    renderCart();
+    populateCustomerSelect();
+    populateCategorySelectors();
   }
 
   function renderDashboard() {
-    dom.todaySales.textContent = calculateTodaySales();
-    dom.activeCustomers.textContent = state.customers.length;
-    dom.lowStockItems.textContent = state.inventory.filter(i => i.stock < 5).length;
-    dom.outstandingCredit.textContent = formatCurrency(
-      state.customers.reduce((sum, c) => sum + c.creditUsed, 0)
-    );
+    // Calculate dashboard metrics
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Today's sales
+    const todayTransactions = state.transactions.filter(t => {
+      const transactionDate = new Date(t.date);
+      transactionDate.setHours(0, 0, 0, 0);
+      return transactionDate.getTime() === today.getTime();
+    });
+    
+    const todaySalesTotal = todayTransactions.reduce((sum, t) => sum + t.total, 0);
+    dom.todaySales.textContent = formatCurrency(todaySalesTotal);
+    
+    // Active customers (made purchase in last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const recentTransactions = state.transactions.filter(t => new Date(t.date) >= thirtyDaysAgo);
+    const activeCustomerIds = new Set(recentTransactions.map(t => t.customerId));
+    
+    dom.activeCustomers.textContent = activeCustomerIds.size;
+    
+    // Low stock items
+    const lowStockCount = state.inventory.filter(i => i.stock <= LOW_STOCK_THRESHOLD).length;
+    dom.lowStockItems.textContent = lowStockCount;
+    
+    // Outstanding credit
+    const totalCredit = state.customers.reduce((sum, c) => sum + c.creditUsed, 0);
+    dom.outstandingCredit.textContent = formatCurrency(totalCredit);
+    
+    // Recent transactions
+    const recentFive = [...state.transactions]
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 5);
+    
+    dom.recentTransactionsBody.innerHTML = '';
+    
+    recentFive.forEach(transaction => {
+      const row = document.createElement('tr');
+      
+      const date = new Date(transaction.date);
+      const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+      
+      row.innerHTML = `
+        <td>${formattedDate}</td>
+        <td>${transaction.customerName}</td>
+        <td>${transaction.items.length} items</td>
+        <td>${formatCurrency(transaction.total)}</td>
+        <td><span class="badge badge-${transaction.paymentMode === 'credit' ? 'yellow' : 'green'}">${transaction.paymentMode === 'credit' ? 'Credit' : 'Paid'}</span></td>
+      `;
+      
+      dom.recentTransactionsBody.appendChild(row);
+    });
+    
+    // Top selling items
+    const topItems = [...state.inventory]
+      .sort((a, b) => b.salesCount - a.salesCount)
+      .slice(0, 5);
+    
+    dom.topSellingBody.innerHTML = '';
+    
+    topItems.forEach(item => {
+      const revenue = item.price * item.salesCount;
+      
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${item.name}</td>
+        <td>${item.salesCount}</td>
+        <td>${formatCurrency(revenue)}</td>
+        <td>${item.stock}</td>
+      `;
+      
+      dom.topSellingBody.appendChild(row);
+    });
+    
+    // Update dashboard chart
+    updateDashboardChart();
+  }
+
+  function renderInventory(filterFn) {
+    dom.inventoryBody.innerHTML = '';
+    
+    const itemsToShow = filterFn 
+      ? state.inventory.filter(filterFn)
+      : state.inventory;
+    
+    if (itemsToShow.length === 0) {
+      const emptyRow = document.createElement('tr');
+      emptyRow.innerHTML = `
+        <td colspan="5" class="text-center">No items found</td>
+      `;
+      dom.inventoryBody.appendChild(emptyRow);
+      return;
+    }
+    
+    itemsToShow.forEach(item => {
+      const row = document.createElement('tr');
+      
+      const stockClass = item.stock <= LOW_STOCK_THRESHOLD 
+        ? 'text-danger' 
+        : '';
+      
+      row.innerHTML = `
+        <td>${item.name}</td>
+        <td>${formatCurrency(item.price)}</td>
+        <td>${item.tax}%</td>
+        <td class="${stockClass}">${item.stock}</td>
+        <td class="text-right">
+          <button class="add-to-cart sm success" data-item-id="${item.id}">
+            <i class="fas fa-plus"></i> Add
+          </button>
+        </td>
+      `;
+      
+      dom.inventoryBody.appendChild(row);
+    });
+  }
+
+  function renderFullInventory() {
+    dom.fullInventoryBody.innerHTML = '';
+    
+    // Get filter values
+    const searchQuery = dom.inventorySearchInput.value.toLowerCase();
+    const filterType = dom.inventoryFilterSelect.value;
+    const categoryFilter = document.querySelector('#inventoryCategoryFilter .category-tag.active').dataset.category;
+    
+    // Apply filters
+    let filteredItems = state.inventory;
+    
+    if (searchQuery) {
+      filteredItems = filteredItems.filter(item => 
+        item.name.toLowerCase().includes(searchQuery) || 
+        item.category.toLowerCase().includes(searchQuery)
+      );
+    }
+    
+    if (filterType === 'low-stock') {
+      filteredItems = filteredItems.filter(item => item.stock <= LOW_STOCK_THRESHOLD);
+    } else if (filterType === 'out-of-stock') {
+      filteredItems = filteredItems.filter(item => item.stock === 0);
+    } else if (filterType === 'top-selling') {
+      filteredItems = [...filteredItems].sort((a, b) => b.salesCount - a.salesCount);
+    }
+    
+    if (categoryFilter !== 'all') {
+      filteredItems = filteredItems.filter(item => item.category === categoryFilter);
+    }
+    
+    if (filteredItems.length === 0) {
+      const emptyRow = document.createElement('tr');
+      emptyRow.innerHTML = `
+        <td colspan="7" class="text-center">No items found</td>
+      `;
+      dom.fullInventoryBody.appendChild(emptyRow);
+      return;
+    }
+    
+    filteredItems.forEach(item => {
+      const row = document.createElement('tr');
+      
+      const stockClass = item.stock <= LOW_STOCK_THRESHOLD 
+        ? 'text-danger' 
+        : '';
+      
+      const profit = item.price - item.cost;
+      const margin = (profit / item.price * 100).toFixed(1);
+      
+      row.innerHTML = `
+        <td>${item.name}</td>
+        <td>${formatCurrency(item.cost)}</td>
+        <td>${formatCurrency(item.price)}</td>
+        <td>${margin}%</td>
+        <td class="${stockClass}">${item.stock}</td>
+        <td>${item.category}</td>
+        <td class="text-right">
+          <button class="edit-item sm primary" data-item-id="${item.id}">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="delete-item sm danger" data-item-id="${item.id}">
+            <i class="fas fa-trash"></i>
+          </button>
+        </td>
+      `;
+      
+      dom.fullInventoryBody.appendChild(row);
+    });
+    
+    // TODO: Implement pagination
+  }
+
+  function renderCustomers() {
+    dom.customersBody.innerHTML = '';
+    
+    // Get filter values
+    const searchQuery = dom.customerSearchInput.value.toLowerCase();
+    const filterType = dom.customerFilterSelect.value;
+    const sortType = dom.customerSortSelect.value;
+    
+    // Apply filters
+    let filteredCustomers = state.customers;
+    
+    if (searchQuery) {
+      filteredCustomers = filteredCustomers.filter(customer => 
+        customer.name.toLowerCase().includes(searchQuery) || 
+        customer.phone.includes(searchQuery) ||
+        customer.email.toLowerCase().includes(searchQuery)
+      );
+    }
+    
+    if (filterType === 'with-credit') {
+      filteredCustomers = filteredCustomers.filter(customer => customer.creditUsed > 0);
+    } else if (filterType === 'high-value') {
+      // Customers who have spent over $1000
+      const customerPurchases = {};
+      
+      state.transactions.forEach(transaction => {
+        if (!customerPurchases[transaction.customerId]) {
+          customerPurchases[transaction.customerId] = 0;
+        }
+        customerPurchases[transaction.customerId] += transaction.total;
+      });
+      
+      filteredCustomers = filteredCustomers.filter(customer => 
+        (customerPurchases[customer.id] || 0) > 1000
+      );
+    }
+    
+    // Apply sorting
+    if (sortType === 'name') {
+      filteredCustomers.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortType === 'credit') {
+      filteredCustomers.sort((a, b) => b.creditUsed - a.creditUsed);
+    } else if (sortType === 'recent') {
+      filteredCustomers.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
+    
+    if (filteredCustomers.length === 0) {
+      const emptyRow = document.createElement('tr');
+      emptyRow.innerHTML = `
+        <td colspan="6" class="text-center">No customers found</td>
+      `;
+      dom.customersBody.appendChild(emptyRow);
+      return;
+    }
+    
+    filteredCustomers.forEach(customer => {
+      const row = document.createElement('tr');
+      
+      const creditClass = customer.creditUsed > 0 ? 'text-warning' : '';
+      const creditLimitWarning = customer.creditUsed > customer.creditLimit * 0.8;
+      
+      row.innerHTML = `
+        <td>${customer.name}</td>
+        <td>${customer.phone}</td>
+        <td>${customer.email || '-'}</td>
+        <td>${formatCurrency(customer.creditLimit)}</td>
+        <td class="${creditClass} ${creditLimitWarning ? 'font-weight-bold' : ''}">
+          ${formatCurrency(customer.creditUsed)}
+        </td>
+        <td class="text-right">
+          <button class="view-history sm" data-customer-id="${customer.id}">
+            <i class="fas fa-history"></i>
+          </button>
+          <button class="edit-customer sm primary" data-customer-id="${customer.id}">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="delete-customer sm danger" data-customer-id="${customer.id}">
+            <i class="fas fa-trash"></i>
+          </button>
+        </td>
+      `;
+      
+      dom.customersBody.appendChild(row);
+    });
+    
+    // TODO: Implement pagination
+  }
+
+  function renderTransactions() {
+    dom.transactionsBody.innerHTML = '';
+    
+    // Get filter values
+    const filterType = dom.transactionFilter.value;
+    const limit = parseInt(dom.transactionLimit.value);
+    
+    // Apply filters
+    let filteredTransactions = [...state.transactions];
+    
+    if (filterType === 'today') {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      filteredTransactions = filteredTransactions.filter(t => {
+        const transactionDate = new Date(t.date);
+        transactionDate.setHours(0, 0, 0, 0);
+        return transactionDate.getTime() === today.getTime();
+      });
+    } else if (filterType === 'week') {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      
+      filteredTransactions = filteredTransactions.filter(t => 
+        new Date(t.date) >= weekAgo
+      );
+    } else if (filterType === 'month') {
+      const monthAgo = new Date();
+      monthAgo.setMonth(monthAgo.getMonth() - 1);
+      
+      filteredTransactions = filteredTransactions.filter(t => 
+        new Date(t.date) >= monthAgo
+      );
+    } else if (filterType === 'credit') {
+      filteredTransactions = filteredTransactions.filter(t => 
+        t.paymentMode === 'credit'
+      );
+    }
+    
+    // Sort by date (newest first)
+    filteredTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    // Apply limit
+    if (limit) {
+      filteredTransactions = filteredTransactions.slice(0, limit);
+    }
+    
+    if (filteredTransactions.length === 0) {
+      const emptyRow = document.createElement('tr');
+      emptyRow.innerHTML = `
+        <td colspan="6" class="text-center">No transactions found</td>
+      `;
+      dom.transactionsBody.appendChild(emptyRow);
+      return;
+    }
+    
+    filteredTransactions.forEach(transaction => {
+      const row = document.createElement('tr');
+      
+      const date = new Date(transaction.date);
+      const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+      
+      row.innerHTML = `
+        <td>${formattedDate}</td>
+        <td>${transaction.customerName}</td>
+        <td>${transaction.items.length} items</td>
+        <td>${formatCurrency(transaction.total)}</td>
+        <td><span class="badge badge-${transaction.paymentMode === 'credit' ? 'yellow' : 'green'}">${transaction.paymentMode === 'credit' ? 'Credit' : 'Paid'}</span></td>
+        <td class="text-right">
+          <button class="view-transaction sm" data-transaction-id="${transaction.id}">
+            <i class="fas fa-eye"></i>
+          </button>
+          <button class="print-transaction sm primary" data-transaction-id="${transaction.id}">
+            <i class="fas fa-print"></i>
+          </button>
+        </td>
+      `;
+      
+      dom.transactionsBody.appendChild(row);
+    });
+  }
+
+  function renderCart() {
+    const hasItems = state.currentCart.length > 0;
+    
+    dom.cartBody.innerHTML = '';
+    dom.emptyCart.style.display = hasItems ? 'none' : 'block';
+    
+    if (!hasItems) {
+      dom.subtotal.textContent = formatCurrency(0);
+      dom.tax.textContent = formatCurrency(0);
+      dom.total.textContent = formatCurrency(0);
+      return;
+    }
+    
+    state.currentCart.forEach((item, index) => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${item.name}</td>
+        <td>${formatCurrency(item.price)}</td>
+        <td>
+          <div class="quantity-control">
+            <button class="decrease-qty" data-index="${index}">-</button>
+            <span>${item.quantity}</span>
+            <button class="increase-qty" data-index="${index}">+</button>
+          </div>
+        </td>
+        <td>${formatCurrency(item.subtotal)}</td>
+        <td>
+          <button class="remove-from-cart danger sm" data-index="${index}">
+            <i class="fas fa-times"></i>
+          </button>
+        </td>
+      `;
+      
+      dom.cartBody.appendChild(row);
+    });
+    
+    updateCartTotals();
+  }
+
+  function renderCustomerInfo(customer) {
+    dom.customerInfo.style.display = 'block';
+    
+    const creditPercentage = customer.creditLimit > 0
+      ? (customer.creditUsed / customer.creditLimit) * 100
+      : 0;
+    
+    const creditWidth = Math.min(100, creditPercentage);
+    const creditColor = creditPercentage > 80 ? 'danger' : 'primary';
+    
+    document.getElementById('customerDisplay').textContent = customer.name;
+    document.getElementById('creditUsedAmount').textContent = `${formatCurrency(customer.creditUsed)} / ${formatCurrency(customer.creditLimit)}`;
+    document.getElementById('creditProgressBar').style.width = `${creditWidth}%`;
+    document.getElementById('creditProgressBar').className = `progress-bar bg-${creditColor}`;
+  }
+
+  function populateCustomerSelect() {
+    dom.customerSelect.innerHTML = '';
+    
+    // Add placeholder option
+    const placeholderOption = document.createElement('option');
+    placeholderOption.value = '';
+    placeholderOption.textContent = 'Select a customer';
+    placeholderOption.disabled = true;
+    placeholderOption.selected = true;
+    dom.customerSelect.appendChild(placeholderOption);
+    
+    // Add customer options
+    state.customers.forEach(customer => {
+      const option = document.createElement('option');
+      option.value = customer.id;
+      option.textContent = customer.name;
+      dom.customerSelect.appendChild(option);
+    });
+  }
+
+  function populateCategorySelectors() {
+    // Populate category selectors/filters
+    const categorySelectors = [
+      dom.categorySelector,
+      dom.inventoryCategoryFilter,
+      document.getElementById('itemCategory')
+    ];
+    
+    categorySelectors.forEach(selector => {
+      if (!selector) return;
+      
+      // Clear existing
+      selector.innerHTML = '';
+      
+      // Add 'All' option for filters
+      if (selector !== document.getElementById('itemCategory')) {
+        const allTag = document.createElement('div');
+        allTag.className = 'category-tag active';
+        allTag.dataset.category = 'all';
+        allTag.textContent = 'All';
+        selector.appendChild(allTag);
+      }
+      
+      // Add categories
+      state.categories.forEach(category => {
+        if (selector === document.getElementById('itemCategory')) {
+          // For select element
+          const option = document.createElement('option');
+          option.value = category;
+          option.textContent = category;
+          selector.appendChild(option);
+        } else {
+          // For tag elements
+          const tag = document.createElement('div');
+          tag.className = 'category-tag';
+          tag.dataset.category = category;
+          tag.textContent = category;
+          selector.appendChild(tag);
+        }
+      });
+    });
+  }
+
+  // ======================
+  // MODAL FUNCTIONS
+  // ======================
+  function showModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      modal.style.display = 'flex';
+    }
+  }
+
+  function hideModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      modal.style.display = 'none';
+    }
+  }
+
+  function showAddItemModal() {
+    // Reset form
+    dom.itemForm.reset();
+    document.getElementById('itemId').value = '';
+    document.getElementById('modalTitle').textContent = 'Add New Item';
+    showModal('itemModal');
+  }
+
+  function showEditItemModal(item) {
+    // Populate form
+    document.getElementById('itemId').value = item.id;
+    document.getElementById('itemName').value = item.name;
+    document.getElementById('itemPrice').value = item.price;
+    document.getElementById('itemCost').value = item.cost;
+    document.getElementById('itemTax').value = item.tax;
+    document.getElementById('itemStock').value = item.stock;
+    document.getElementById('itemCategory').value = item.category;
+    
+    document.getElementById('modalTitle').textContent = 'Edit Item';
+    showModal('itemModal');
+  }
+
+  function showAddCustomerModal() {
+    // Reset form
+    dom.customerForm.reset();
+    document.getElementById('customerId').value = '';
+    document.getElementById('customerModalTitle').textContent = 'Add New Customer';
+    showModal('customerModal');
+  }
+
+  function showEditCustomerModal(customer) {
+    // Populate form
+    document.getElementById('customerId').value = customer.id;
+    document.getElementById('customerName').value = customer.name;
+    document.getElementById('customerPhone').value = customer.phone;
+    document.getElementById('customerEmail').value = customer.email || '';
+    document.getElementById('creditLimit').value = customer.creditLimit;
+    
+    document.getElementById('customerModalTitle').textContent = 'Edit Customer';
+    showModal('customerModal');
+  }
+
+  function showBillModal(transaction) {
+    const billContent = document.getElementById('billContent');
+    
+    // Format date
+    const date = new Date(transaction.date);
+    const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    
+    // Generate bill HTML
+    let billHtml = `
+      <div class="bill-header">
+        <h1>${state.settings.businessName}</h1>
+        <p>${state.settings.businessAddress}</p>
+        <p>Phone: ${state.settings.businessPhone} | Email: ${state.settings.businessEmail}</p>
+        <div class="bill-details">
+          <div>
+            <strong>Invoice #:</strong> ${transaction.id}
+            <br>
+            <strong>Date:</strong> ${formattedDate}
+          </div>
+          <div>
+            <strong>Customer:</strong> ${transaction.customerName}
+            <br>
+            <strong>Payment:</strong> ${transaction.paymentMode === 'credit' ? 'Credit' : 'Paid'}
+          </div>
+        </div>
+      </div>
+      
+      <table class="bill-table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Price</th>
+            <th>Qty</th>
+            <th>Tax</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+    
+    transaction.items.forEach(item => {
+      const itemTax = item.subtotal * (item.tax / 100);
+      billHtml += `
+        <tr>
+          <td>${item.name}</td>
+          <td>${formatCurrency(item.price)}</td>
+          <td>${item.quantity}</td>
+          <td>${formatCurrency(itemTax)}</td>
+          <td>${formatCurrency(item.subtotal + itemTax)}</td>
+        </tr>
+      `;
+    });
+    
+    billHtml += `
+        </tbody>
+      </table>
+      
+      <div class="bill-summary">
+        <div class="summary-item">
+          <span>Subtotal:</span>
+          <span>${formatCurrency(transaction.subtotal)}</span>
+        </div>
+    `;
+    
+    if (transaction.discount > 0) {
+      billHtml += `
+        <div class="summary-item">
+          <span>Discount:</span>
+          <span>-${formatCurrency(transaction.discount)}</span>
+        </div>
+      `;
+    }
+    
+    billHtml += `
+        <div class="summary-item">
+          <span>Tax:</span>
+          <span>${formatCurrency(transaction.tax)}</span>
+        </div>
+        <div class="summary-item total">
+          <span>Total:</span>
+          <span>${formatCurrency(transaction.total)}</span>
+        </div>
+      </div>
+      
+      <div class="bill-footer">
+        <p>Thank you for your business!</p>
+      </div>
+    `;
+    
+    billContent.innerHTML = billHtml;
+    showModal('billModal');
+  }
+
+  function showCustomerHistory(customerId) {
+    const customer = state.customers.find(c => c.id === customerId);
+    if (!customer) return;
+    
+    const customerTransactions = state.transactions.filter(t => t.customerId === customerId);
+    
+    const historyContent = document.getElementById('customerHistoryContent');
+    const historyTitle = document.getElementById('customerHistoryTitle');
+    
+    historyTitle.textContent = `${customer.name}'s Transaction History`;
+    
+    // Generate history HTML
+    let historyHtml = `
+      <div class="customer-info-summary">
+        <div>
+          <strong>Phone:</strong> ${customer.phone}
+          ${customer.email ? `<br><strong>Email:</strong> ${customer.email}` : ''}
+        </div>
+        <div>
+          <strong>Credit Used:</strong> ${formatCurrency(customer.creditUsed)}
+          <br>
+          <strong>Credit Limit:</strong> ${formatCurrency(customer.creditLimit)}
+        </div>
+      </div>
+    `;
+    
+    if (customerTransactions.length === 0) {
+      historyHtml += `<p class="text-center mt-4">No transaction history found.</p>`;
+    } else {
+      // Sort by date (newest first)
+      customerTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      historyHtml += `
+        <table class="full-width mt-3">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Items</th>
+              <th>Total</th>
+              <th>Payment</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      
+      customerTransactions.forEach(transaction => {
+        const date = new Date(transaction.date);
+        const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+        
+        historyHtml += `
+          <tr>
+            <td>${formattedDate}</td>
+            <td>${transaction.items.length} items</td>
+            <td>${formatCurrency(transaction.total)}</td>
+            <td><span class="badge badge-${transaction.paymentMode === 'credit' ? 'yellow' : 'green'}">${transaction.paymentMode === 'credit' ? 'Credit' : 'Paid'}</span></td>
+            <td>
+              <button class="view-transaction sm" data-transaction-id="${transaction.id}">
+                <i class="fas fa-eye"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+      
+      historyHtml += `
+          </tbody>
+        </table>
+      `;
+    }
+    
+    historyContent.innerHTML = historyHtml;
+    showModal('customerHistoryModal');
+  }
+
+  function showSettingsModal() {
+    // Populate settings form
+    document.getElementById('businessName').value = state.settings.businessName;
+    document.getElementById('businessAddress').value = state.settings.businessAddress;
+    document.getElementById('businessPhone').value = state.settings.businessPhone;
+    document.getElementById('businessEmail').value = state.settings.businessEmail;
+    document.getElementById('defaultTaxRate').value = state.settings.defaultTaxRate;
+    document.getElementById('currencySelect').value = state.settings.currency;
+    document.getElementById('taxEnabled').checked = state.settings.taxEnabled;
+    
+    // Show modal
+    showModal('settingsModal');
+  }
+
+  function saveSettings() {
+    state.settings.businessName = document.getElementById('businessName').value;
+    state.settings.businessAddress = document.getElementById('businessAddress').value;
+    state.settings.businessPhone = document.getElementById('businessPhone').value;
+    state.settings.businessEmail = document.getElementById('businessEmail').value;
+    state.settings.defaultTaxRate = parseFloat(document.getElementById('defaultTaxRate').value);
+    state.settings.currency = document.getElementById('currencySelect').value;
+    state.settings.taxEnabled = document.getElementById('taxEnabled').checked;
+    
+    saveData();
+    showToast('Settings saved successfully', 'success');
+    hideModal('settingsModal');
   }
 
   // ======================
   // UTILITY FUNCTIONS
   // ======================
   function formatCurrency(amount) {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: state.settings.currency
+    return new Intl.NumberFormat('en-US', { 
+      style: 'currency', 
+      currency: state.settings.currency 
     }).format(amount);
   }
 
-  function parseCurrency(value) {
-    return parseFloat(value.replace(/[^0-9.-]+/g, ''));
-  }
-
-  function calculateTodaySales() {
-    const today = new Date().toLocaleDateString();
-    return formatCurrency(
-      state.transactions
-        .filter(t => new Date(t.date).toLocaleDateString() === today)
-        .reduce((sum, t) => sum + t.total, 0)
+  function filterInventory(searchTerm) {
+    if (!searchTerm) {
+      renderInventory();
+      return;
+    }
+    
+    searchTerm = searchTerm.toLowerCase().trim();
+    
+    renderInventory(item => 
+      item.name.toLowerCase().includes(searchTerm) || 
+      item.category.toLowerCase().includes(searchTerm)
     );
   }
 
-  // ======================
-  // MODAL SYSTEM
-  // ======================
-  function showModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (!modal) return;
-
-    if (modalId === 'itemModal') populateCategories();
-    modal.style.display = 'block';
+  function addToCart(item) {
+    if (item.stock <= 0) {
+      showToast('Item out of stock', 'error');
+      return;
+    }
+    
+    const existingItemIndex = state.currentCart.findIndex(cartItem => cartItem.itemId === item.id);
+    
+    if (existingItemIndex !== -1) {
+      // Item already in cart
+      if (state.currentCart[existingItemIndex].quantity < item.stock) {
+        state.currentCart[existingItemIndex].quantity++;
+        state.currentCart[existingItemIndex].subtotal = state.currentCart[existingItemIndex].price * state.currentCart[existingItemIndex].quantity;
+      } else {
+        showToast('Cannot add more. Stock limit reached.', 'warning');
+      }
+    } else {
+      // Add new item to cart
+      state.currentCart.push({
+        itemId: item.id,
+        name: item.name,
+        price: item.price,
+        tax: item.tax,
+        quantity: 1,
+        subtotal: item.price
+      });
+    }
+    
+    renderCart();
+    showToast(`${item.name} added to cart`, 'success');
   }
 
-  function hideModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) modal.style.display = 'none';
+  function calculateCartTotals() {
+    // Calculate subtotal
+    const subtotal = state.currentCart.reduce((sum, item) => sum + item.subtotal, 0);
+    
+    // Calculate discount
+    let discount = 0;
+    if (dom.discountAmount.value) {
+      const discountValue = parseFloat(dom.discountAmount.value);
+      if (!isNaN(discountValue) && discountValue > 0) {
+        if (dom.discountType.value === 'percentage') {
+          discount = (subtotal * discountValue) / 100;
+        } else {
+          discount = discountValue;
+        }
+      }
+    }
+    
+    // Ensure discount doesn't exceed subtotal
+    discount = Math.min(discount, subtotal);
+    
+    // Calculate tax on discounted subtotal
+    const taxableAmount = subtotal - discount;
+    const tax = state.settings.taxEnabled 
+      ? state.currentCart.reduce((sum, item) => sum + ((item.subtotal / subtotal) * taxableAmount * (item.tax / 100)), 0)
+      : 0;
+    
+    // Calculate total
+    const total = taxableAmount + tax;
+    
+    return { subtotal, discount, tax, total };
   }
 
-  function populateCategories() {
-    const select = document.getElementById('itemCategory');
-    select.innerHTML = state.categories
-      .map(c => `<option value="${c}">${c}</option>`)
-      .join('');
+  function updateCartTotals() {
+    const { subtotal, discount, tax, total } = calculateCartTotals();
+    
+    dom.subtotal.textContent = formatCurrency(subtotal);
+    dom.discount.textContent = formatCurrency(discount);
+    dom.tax.textContent = formatCurrency(tax);
+    dom.total.textContent = formatCurrency(total);
+    
+    validatePurchaseButton();
   }
 
-  // ======================
-  // NOTIFICATION SYSTEM
-  // ======================
-  function showToast(message, type = 'success') {
+  function validatePurchaseButton() {
+    dom.completePurchase.disabled = true;
+    
+    if (state.currentCart.length === 0) {
+      return;
+    }
+    
+    const selectedCustomerId = parseInt(dom.customerSelect.value);
+    if (!selectedCustomerId) {
+      return;
+    }
+    
+    const customer = state.customers.find(c => c.id === selectedCustomerId);
+    if (!customer) {
+      return;
+    }
+    
+    const { total } = calculateCartTotals();
+    
+    if (dom.paymentMode.value === 'credit') {
+      // Check if credit limit allows this purchase
+      const newCreditTotal = customer.creditUsed + total;
+      if (newCreditTotal > customer.creditLimit) {
+        return;
+      }
+    }
+    
+    dom.completePurchase.disabled = false;
+  }
+
+  function confirmDeleteItem(itemId) {
+    if (confirm('Are you sure you want to delete this item?')) {
+      const itemIndex = state.inventory.findIndex(i => i.id === itemId);
+      if (itemIndex !== -1) {
+        state.inventory.splice(itemIndex, 1);
+        saveData();
+        renderAll();
+        showToast('Item deleted successfully', 'success');
+      }
+    }
+  }
+
+  function confirmDeleteCustomer(customerId) {
+    // Check if customer has transactions
+    const hasTransactions = state.transactions.some(t => t.customerId === customerId);
+    
+    if (hasTransactions) {
+      alert('Cannot delete customer with existing transactions.');
+      return;
+    }
+    
+    if (confirm('Are you sure you want to delete this customer?')) {
+      const customerIndex = state.customers.findIndex(c => c.id === customerId);
+      if (customerIndex !== -1) {
+        state.customers.splice(customerIndex, 1);
+        saveData();
+        renderAll();
+        showToast('Customer deleted successfully', 'success');
+      }
+    }
+  }
+
+  function showToast(message, type = 'info') {
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
     toast.innerHTML = `
-      ${message}
-      <span class="toast-close">&times;</span>
+      <div class="toast-content">
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+        <span>${message}</span>
+      </div>
+      <button class="toast-close">×</button>
     `;
-
+    
+    document.getElementById('toastContainer').appendChild(toast);
+    
+    // Add event listener to close button
     toast.querySelector('.toast-close').addEventListener('click', () => {
-      toast.remove();
+      toast.classList.add('toast-closing');
+      setTimeout(() => {
+        toast.remove();
+      }, 300);
     });
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+      if (document.contains(toast)) {
+        toast.classList.add('toast-closing');
+        setTimeout(() => {
+          if (document.contains(toast)) {
+            toast.remove();
+          }
+        }, 300);
+      }
+    }, 5000);
+  }
 
-    document.querySelector('.toast-container').appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
+  function printBill(transaction) {
+    // Open a new window
+    const printWindow = window.open('', '_blank');
+    
+    // Format date
+    const date = new Date(transaction.date);
+    const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    
+    // Generate print content
+    let printContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Invoice #${transaction.id}</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            font-size: 12px;
+          }
+          .bill-header {
+            text-align: center;
+            margin-bottom: 20px;
+          }
+          .bill-header h1 {
+            margin: 0;
+            font-size: 24px;
+          }
+          .bill-header p {
+            margin: 5px 0;
+          }
+          .bill-details {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            border-top: 1px solid #ccc;
+            border-bottom: 1px solid #ccc;
+            padding: 10px 0;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+          }
+          th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+          }
+          th {
+            background-color: #f2f2f2;
+          }
+          .bill-summary {
+            margin-top: 20px;
+            text-align: right;
+          }
+          .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+          }
+          .total {
+            font-weight: bold;
+            font-size: 14px;
+            border-top: 1px solid #000;
+            padding-top: 5px;
+          }
+          .bill-footer {
+            text-align: center;
+            margin-top: 30px;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="bill-header">
+          <h1>${state.settings.businessName}</h1>
+          <p>${state.settings.businessAddress}</p>
+          <p>Phone: ${state.settings.businessPhone} | Email: ${state.settings.businessEmail}</p>
+          <div class="bill-details">
+            <div>
+              <strong>Invoice #:</strong> ${transaction.id}
+              <br>
+              <strong>Date:</strong> ${formattedDate}
+            </div>
+            <div>
+              <strong>Customer:</strong> ${transaction.customerName}
+              <br>
+              <strong>Payment:</strong> ${transaction.paymentMode === 'credit' ? 'Credit' : 'Paid'}
+            </div>
+          </div>
+        </div>
+        
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Price</th>
+              <th>Qty</th>
+              <th>Tax</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+    
+    transaction.items.forEach(item => {
+      const itemTax = item.subtotal * (item.tax / 100);
+      printContent += `
+        <tr>
+          <td>${item.name}</td>
+          <td>${formatCurrency(item.price)}</td>
+          <td>${item.quantity}</td>
+          <td>${formatCurrency(itemTax)}</td>
+          <td>${formatCurrency(item.subtotal + itemTax)}</td>
+        </tr>
+      `;
+    });
+    
+    printContent += `
+        </tbody>
+      </table>
+      
+      <div class="bill-summary">
+        <div class="summary-item">
+          <span>Subtotal:</span>
+          <span>${formatCurrency(transaction.subtotal)}</span>
+        </div>
+    `;
+    
+    if (transaction.discount > 0) {
+      printContent += `
+        <div class="summary-item">
+          <span>Discount:</span>
+          <span>-${formatCurrency(transaction.discount)}</span>
+        </div>
+      `;
+    }
+    
+    printContent += `
+        <div class="summary-item">
+          <span>Tax:</span>
+          <span>${formatCurrency(transaction.tax)}</span>
+        </div>
+        <div class="summary-item total">
+          <span>Total:</span>
+          <span>${formatCurrency(transaction.total)}</span>
+        </div>
+      </div>
+      
+      <div class="bill-footer">
+        <p>Thank you for your business!</p>
+      </div>
+      </body>
+      </html>
+    `;
+    
+    // Write to the new window and print
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    
+    // Wait for resources to load then print
+    setTimeout(() => {
+      printWindow.print();
+      // Close after printing (optional)
+      // printWindow.close();
+    }, 500);
   }
 
   // ======================
-  // FORM HANDLERS
+  // EVENT LISTENERS
   // ======================
-  function handleItemSave(e) {
-    e.preventDefault();
+  function setupEventListeners() {
+    // Tab switching
+    document.querySelectorAll('.tab-link').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const targetId = tab.getAttribute('data-tab');
+        
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(content => {
+          content.classList.remove('active');
+        });
+        
+        // Deactivate all tab links
+        document.querySelectorAll('.tab-link').forEach(link => {
+          link.classList.remove('active');
+        });
+        
+        // Show target tab
+        document.getElementById(targetId).classList.add('active');
+        
+        // Activate target tab link
+        tab.classList.add('active');
+      });
+    });
     
-    const formData = new FormData(dom.itemForm);
-    const itemData = {
-      name: formData.get('itemName'),
-      price: formData.get('itemPrice'),
-      stock: formData.get('itemStock'),
-      category: formData.get('itemCategory'),
-      tax: formData.get('itemTax')
-    };
-
-    if (!validateItemForm(itemData)) return;
-
-    const newItem = createInventoryItem(itemData);
-    state.inventory.push(newItem);
+    // Show add item modal
+    dom.addItem.addEventListener('click', showAddItemModal);
     
-    saveData();
-    renderInventory();
-    hideModal('itemModal');
-    showToast('Item added successfully!', 'success');
-    dom.itemForm.reset();
-  }
-
-  function validateItemForm(data) {
-    if (!data.name.trim()) {
-      showToast('Item name is required', 'error');
-      return false;
-    }
-    if (isNaN(data.price) || data.price <= 0) {
-      showToast('Valid price is required', 'error');
-      return false;
-    }
-    return true;
-  }
-
-  function handleCustomerSave(e) {
-    e.preventDefault();
+    // Show add customer modal
+    dom.addCustomer.addEventListener('click', showAddCustomerModal);
     
-    const formData = new FormData(dom.customerForm);
-    const customerData = {
-      name: formData.get('customerName'),
-      phone: formData.get('customerPhone'),
-      email: formData.get('customerEmail'),
-      creditLimit: formData.get('creditLimit')
-    };
-
-    if (!validateCustomerForm(customerData)) return;
-
-    const newCustomer = createCustomer(customerData);
-    state.customers.push(newCustomer);
+    // Show settings modal
+    document.getElementById('settingsButton').addEventListener('click', showSettingsModal);
     
-    saveData();
-    renderCustomers();
-    hideModal('customerModal');
-    showToast('Customer added successfully!', 'success');
-    dom.customerForm.reset();
-  }
-
-  function validateCustomerForm(data) {
-    if (!data.name.trim()) {
-      showToast('Customer name is required', 'error');
-      return false;
-    }
-    if (!/^\d{3}-\d{4}$/.test(data.phone)) {
-      showToast('Phone format: 000-0000', 'error');
-      return false;
-    }
-    return true;
+    // Save settings
+    document.getElementById('saveSettings').addEventListener('click', saveSettings);
+    
+    // Close modals
+    document.querySelectorAll('.close-modal').forEach(button => {
+      button.addEventListener('click', () => {
+        const modal = button.closest('.modal');
+        if (modal) {
+          modal.style.display = 'none';
+        }
+      });
+    });
+    
+    // Filter inventory
+    dom.inventorySearch.addEventListener('input', e => {
+      filterInventory(e.target.value);
+    });
+    
+    // Save item
+    dom.itemForm.addEventListener('submit', e => {
+      e.preventDefault();
+      
+      const itemId = document.getElementById('itemId').value;
+      const isNewItem = !itemId;
+      
+      const item = {
+        name: document.getElementById('itemName').value,
+        price: parseFloat(document.getElementById('itemPrice').value),
+        cost: parseFloat(document.getElementById('itemCost').value),
+        tax: parseFloat(document.getElementById('itemTax').value || state.settings.defaultTaxRate),
+        stock: parseInt(document.getElementById('itemStock').value),
+        category: document.getElementById('itemCategory').value,
+        salesCount: isNewItem ? 0 : (state.inventory.find(i => i.id === parseInt(itemId))?.salesCount || 0)
+      };
+      
+      if (isNewItem) {
+        // Add new item
+        item.id = Date.now();
+        state.inventory.push(item);
+      } else {
+        // Update existing item
+        const itemIndex = state.inventory.findIndex(i => i.id === parseInt(itemId));
+        if (itemIndex !== -1) {
+          item.id = parseInt(itemId);
+          state.inventory[itemIndex] = item;
+        }
+      }
+      
+      saveData();
+      renderAll();
+      hideModal('itemModal');
+      showToast(`Item ${isNewItem ? 'added' : 'updated'} successfully`, 'success');
+    });
+    
+    // Save customer
+    dom.customerForm.addEventListener('submit', e => {
+      e.preventDefault();
+      
+      const customerId = document.getElementById('customerId').value;
+      const isNewCustomer = !customerId;
+      
+      const customer = {
+        name: document.getElementById('customerName').value,
+        phone: document.getElementById('customerPhone').value,
+        email: document.getElementById('customerEmail').value,
+        creditLimit: parseFloat(document.getElementById('creditLimit').value || 0),
+        creditUsed: isNewCustomer ? 0 : (state.customers.find(c => c.id === parseInt(customerId))?.creditUsed || 0),
+        createdAt: isNewCustomer ? new Date().toISOString() : (state.customers.find(c => c.id === parseInt(customerId))?.createdAt || new Date().toISOString())
+      };
+      
+      if (isNewCustomer) {
+        // Add new customer
+        customer.id = Date.now();
+        state.customers.push(customer);
+      } else {
+        // Update existing customer
+        const customerIndex = state.customers.findIndex(c => c.id === parseInt(customerId));
+        if (customerIndex !== -1) {
+          customer.id = parseInt(customerId);
+          state.customers[customerIndex] = customer;
+        }
+      }
+      
+      saveData();
+      renderAll();
+      populateCustomerSelect();
+      hideModal('customerModal');
+      showToast(`Customer ${isNewCustomer ? 'added' : 'updated'} successfully`, 'success');
+    });
+    
+    // POS inventory filtering
+    dom.posSearch.addEventListener('input', e => {
+      const searchTerm = e.target.value.toLowerCase();
+      renderPosInventory(searchTerm);
+    });
+    
+    // Category filtering for POS
+    dom.categorySelector.addEventListener('click', e => {
+      if (e.target.classList.contains('category-tag')) {
+        // Deactivate all category tags
+        dom.categorySelector.querySelectorAll('.category-tag').forEach(tag => {
+          tag.classList.remove('active');
+        });
+        
+        // Activate selected tag
+        e.target.classList.add('active');
+        
+        // Update category filter and render
+        state.currentCategoryFilter = e.target.dataset.category;
+        renderPosInventory();
+      }
+    });
+    
+    // Discount input
+    dom.discountAmount.addEventListener('input', updateCartTotals);
+    dom.discountType.addEventListener('change', updateCartTotals);
+    
+    // Payment mode change
+    dom.paymentMode.addEventListener('change', validatePurchaseButton);
+    
+    // Customer select change
+    dom.customerSelect.addEventListener('change', e => {
+      const customerId = parseInt(e.target.value);
+      state.currentCustomer = null;
+      dom.customerInfo.style.display = 'none';
+      
+      if (customerId) {
+        const customer = state.customers.find(c => c.id === customerId);
+        if (customer) {
+          state.currentCustomer = customer;
+          renderCustomerInfo(customer);
+        }
+      }
+      
+      validatePurchaseButton();
+    });
+    
+    // Complete purchase button
+    dom.completePurchase.addEventListener('click', () => {
+      if (state.currentCart.length === 0) {
+        showToast('Cart is empty', 'error');
+        return;
+      }
+      
+      if (!dom.customerSelect.value) {
+        showToast('Please select a customer', 'error');
+        return;
+      }
+      
+      // Get customer
+      const customerId = parseInt(dom.customerSelect.value);
+      const customer = state.customers.find(c => c.id === customerId);
+      
+      if (!customer) {
+        showToast('Invalid customer', 'error');
+        return;
+      }
+      
+      // Calculate totals
+      const { subtotal, discount, tax, total } = calculateCartTotals();
+      
+      // Create transaction
+      const transaction = {
+        id: `INV-${Date.now()}`,
+        date: new Date().toISOString(),
+        customerId: customer.id,
+        customerName: customer.name,
+        items: [...state.currentCart],
+        subtotal,
+        discount,
+        tax,
+        total,
+        paymentMode: dom.paymentMode.value
+      };
+      
+      // Update inventory
+      state.currentCart.forEach(cartItem => {
+        const inventoryItem = state.inventory.find(item => item.id === cartItem.itemId);
+        if (inventoryItem) {
+          inventoryItem.stock -= cartItem.quantity;
+          inventoryItem.salesCount += cartItem.quantity;
+        }
+      });
+      
+      // Update customer credit if payment mode is credit
+      if (transaction.paymentMode === 'credit') {
+        customer.creditUsed += total;
+      }
+      
+      // Add transaction
+      state.transactions.push(transaction);
+      
+      // Clear cart
+      state.currentCart = [];
+      
+      // Save data
+      saveData();
+      
+      // Render updates
+      renderAll();
+      populateCustomerSelect();
+      dom.customerSelect.value = '';
+      dom.customerInfo.style.display = 'none';
+      dom.discountAmount.value = '';
+      dom.paymentMode.value = 'cash';
+      state.currentCustomer = null;
+      
+      // Show success message
+      showToast('Purchase completed successfully', 'success');
+      
+      // Show bill
+      showBillModal(transaction);
+    });
+    
+    // Delegation for dynamic elements
+    document.addEventListener('click', e => {
+      // Edit item button
+      if (e.target.closest('.edit-item')) {
+        const itemId = parseInt(e.target.closest('.edit-item').dataset.itemId);
+        const item = state.inventory.find(i => i.id === itemId);
+        if (item) {
+          showEditItemModal(item);
+        }
+      }
+      
+      // Delete item button
+      if (e.target.closest('.delete-item')) {
+        const itemId = parseInt(e.target.closest('.delete-item').dataset.itemId);
+        confirmDeleteItem(itemId);
+      }
+      
+      // Edit customer button
+      if (e.target.closest('.edit-customer')) {
+        const customerId = parseInt(e.target.closest('.edit-customer').dataset.customerId);
+        const customer = state.customers.find(c => c.id === customerId);
+        if (customer) {
+          showEditCustomerModal(customer);
+        }
+      }
+      
+      // Delete customer button
+      if (e.target.closest('.delete-customer')) {
+        const customerId = parseInt(e.target.closest('.delete-customer').dataset.customerId);
+        confirmDeleteCustomer(customerId);
+      }
+      
+      // View customer history button
+      if (e.target.closest('.view-history')) {
+        const customerId = parseInt(e.target.closest('.view-history').dataset.customerId);
+        showCustomerHistory(customerId);
+      }
+      
+      // View transaction button
+      if (e.target.closest('.view-transaction')) {
+        const transactionId = e.target.closest('.view-transaction').dataset.transactionId;
+        const transaction = state.transactions.find(t => t.id === transactionId);
+        if (transaction) {
+          showBillModal(transaction);
+        }
+      }
+      
+      // Print transaction button
+      if (e.target.closest('.print-transaction')) {
+        const transactionId = e.target.closest('.print-transaction').dataset.transactionId;
+        const transaction = state.transactions.find(t => t.id === transactionId);
+        if (transaction) {
+          printBill(transaction);
+        }
+      }
+      
+      // Add to cart button
+      if (e.target.closest('.add-to-cart')) {
+        const itemId = parseInt(e.target.closest('.add-to-cart').dataset.itemId);
+        const item = state.inventory.find(i => i.id === itemId);
+        if (item) {
+          addToCart(item);
+        }
+      }
+      
+      // Remove from cart button
+      if (e.target.closest('.remove-from-cart')) {
+        const index = parseInt(e.target.closest('.remove-from-cart').dataset.index);
+        if (index >= 0 && index < state.currentCart.length) {
+          state.currentCart.splice(index, 1);
+          renderCart();
+          updateCartTotals();
+        }
+      }
+      
+      // Increase quantity button
+      if (e.target.closest('.increase-qty')) {
+        const index = parseInt(e.target.closest('.increase-qty').dataset.index);
+        if (index >= 0 && index < state.currentCart.length) {
+          const cartItem = state.currentCart[index];
+          const inventoryItem = state.inventory.find(item => item.id === cartItem.itemId);
+          
+          if (inventoryItem && cartItem.quantity < inventoryItem.stock) {
+            cartItem.quantity++;
+            cartItem.subtotal = cartItem.price * cartItem.quantity;
+            renderCart();
+            updateCartTotals();
+          } else {
+            showToast('Cannot add more. Stock limit reached.', 'warning');
+          }
+        }
+      }
+      
+      // Decrease quantity button
+      if (e.target.closest('.decrease-qty')) {
+        const index = parseInt(e.target.closest('.decrease-qty').dataset.index);
+        if (index >= 0 && index < state.currentCart.length) {
+          if (state.currentCart[index].quantity > 1) {
+            state.currentCart[index].quantity--;
+            state.currentCart[index].subtotal = state.currentCart[index].price * state.currentCart[index].quantity;
+            renderCart();
+            updateCartTotals();
+          } else {
+            // Remove item if quantity becomes 0
+            state.currentCart.splice(index, 1);
+            renderCart();
+            updateCartTotals();
+          }
+        }
+      }
+    });
+    
+    // Category filter for inventory
+    dom.inventoryCategoryFilter.addEventListener('click', e => {
+      if (e.target.classList.contains('category-tag')) {
+        // Deactivate all category tags
+        dom.inventoryCategoryFilter.querySelectorAll('.category-tag').forEach(tag => {
+          tag.classList.remove('active');
+        });
+        
+        // Activate selected tag
+        e.target.classList.add('active');
+        
+        // Get selected category
+        const category = e.target.dataset.category;
+        dom.categoryFilter.value = category;
+        
+        // Render inventory with category filter
+        renderInventory();
+      }
+    });
+    
+    // Inventory filters
+    dom.filterType.addEventListener('change', renderInventory);
+    dom.categoryFilter.addEventListener('change', renderInventory);
+    
+    // Customer filters
+    dom.customerSearchInput.addEventListener('input', renderCustomers);
+    dom.customerFilterSelect.addEventListener('change', renderCustomers);
+    dom.customerSortSelect.addEventListener('change', renderCustomers);
+    
+    // Transaction filters
+    dom.transactionFilter.addEventListener('change', renderTransactions);
+    dom.transactionLimit.addEventListener('change', renderTransactions);
   }
 
   // ======================
-  // START APPLICATION
+  // INITIALIZATION
   // ======================
+  function init() {
+    loadData();
+    
+    // Set initial active tab
+    document.getElementById('pos').classList.add('active');
+    document.querySelector('[data-tab="pos"]').classList.add('active');
+    
+    renderAll();
+    populateCustomerSelect();
+    populateCategorySelectors();
+    setupEventListeners();
+  }
+
+  // Start the application
   init();
-});
+})();
   </script>
 </body>
 </html>
