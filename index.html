@@ -1216,19 +1216,52 @@ function loadDemoData() {
   const today = new Date().toISOString().split('T')[0];
   const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
   data.transactions = [
-    { id: data.nextTransactionId++, date: today, customer: data.customers[0], items: [
-      { item: data.inventory[0], quantity: 1, price: data.inventory[0].price, tax: data.inventory[0].tax }
-    ], subtotal: 899.99, discount: 0, tax: 76.50, total: 976.49, status: 'paid', type: 'sale' },
-    { id: data.nextTransactionId++, date: today, customer: data.customers[1], items: [
-      { item: data.inventory[3], quantity: 2, price: data.inventory[3].price, tax: data.inventory[3].tax },
-      { item: data.inventory[4], quantity: 1, price: data.inventory[4].price, tax: data.inventory[4].tax }
-    ], subtotal: 89.97, discount: 0, tax: 5.40, total: 95.37, status: 'paid', type: 'sale' },
-    { id: data.nextTransactionId++, date: yesterday, customer: data.customers[2], items: [
-      { item: data.inventory[7], quantity: 1, price: data.inventory[7].price, tax: data.inventory[7].tax }
-    ], subtotal: 75, discount: 0, tax: 6.38, total: 81.38, status: 'credit', type: 'sale' }
+    { 
+      id: data.nextTransactionId++, 
+      date: today, 
+      customer: data.customers[0], 
+      items: [
+        { item: data.inventory[0], quantity: 1, price: data.inventory[0].price, tax: data.inventory[0].tax }
+      ], 
+      subtotal: 899.99, 
+      discount: 0, 
+      tax: 76.50, 
+      total: 976.49, 
+      status: 'paid', 
+      type: 'sale' 
+    },
+    { 
+      id: data.nextTransactionId++, 
+      date: today, 
+      customer: data.customers[1], 
+      items: [
+        { item: data.inventory[3], quantity: 2, price: data.inventory[3].price, tax: data.inventory[3].tax },
+        { item: data.inventory[4], quantity: 1, price: data.inventory[4].price, tax: data.inventory[4].tax }
+      ], 
+      subtotal: 89.97, 
+      discount: 0, 
+      tax: 5.40, 
+      total: 95.37, 
+      status: 'paid', 
+      type: 'sale' 
+    },
+    { 
+      id: data.nextTransactionId++, 
+      date: yesterday, 
+      customer: data.customers[2], 
+      items: [
+        { item: data.inventory[7], quantity: 1, price: data.inventory[7].price, tax: data.inventory[7].tax }
+      ], 
+      subtotal: 75, 
+      discount: 0, 
+      tax: 6.38, 
+      total: 81.38, 
+      status: 'credit', 
+      type: 'sale' 
+    }
   ];
 
-  // Update dashboard with demo data
+  // Update UI with demo data
   updateDashboard();
   populateCategories();
   populateInventoryTables();
@@ -1343,70 +1376,73 @@ function populateCategories() {
   
   // Also populate the category dropdown in item modal
   const itemCategory = document.getElementById('itemCategory');
-  itemCategory.innerHTML = '';
-  
-  data.categories.forEach(category => {
-    const option = document.createElement('option');
-    option.value = category;
-    option.textContent = category;
-    itemCategory.appendChild(option);
-  });
+  if (itemCategory) {
+    itemCategory.innerHTML = '';
+    
+    data.categories.forEach(category => {
+      const option = document.createElement('option');
+      option.value = category;
+      option.textContent = category;
+      itemCategory.appendChild(option);
+    });
+  }
 }
 
 // Filter inventory tables by category
 function filterInventoryByCategory(category, selectorId) {
+  let tableBody;
+  
   if (selectorId === 'categorySelector') {
-    const rows = document.getElementById('inventoryBody').querySelectorAll('tr');
-    rows.forEach(row => {
-      if (category === 'all' || row.dataset.category === category) {
-        row.style.display = '';
-      } else {
-        row.style.display = 'none';
-      }
-    });
+    tableBody = document.getElementById('inventoryBody');
   } else if (selectorId === 'inventoryCategoryFilter') {
-    const rows = document.getElementById('fullInventoryBody').querySelectorAll('tr');
-    rows.forEach(row => {
-      if (category === 'all' || row.dataset.category === category) {
-        row.style.display = '';
-      } else {
-        row.style.display = 'none';
-      }
-    });
+    tableBody = document.getElementById('fullInventoryBody');
   }
+  
+  if (!tableBody) return;
+  
+  const rows = tableBody.querySelectorAll('tr');
+  rows.forEach(row => {
+    if (category === 'all' || row.dataset.category === category) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  });
 }
 
 // Populate inventory tables
 function populateInventoryTables() {
   // Billing section inventory table
   const inventoryBody = document.getElementById('inventoryBody');
-  inventoryBody.innerHTML = '';
-  
-  data.inventory.forEach(item => {
-    const row = document.createElement('tr');
-    row.dataset.id = item.id;
-    row.dataset.category = item.category.toLowerCase();
+  if (inventoryBody) {
+    inventoryBody.innerHTML = '';
     
-    row.innerHTML = `
-      <td>${item.name}</td>
-      <td>${formatCurrency(item.price)}</td>
-      <td>${item.tax}%</td>
-      <td>${item.stock}</td>
-      <td class="text-right">
-        <button class="sm add-to-cart" data-id="${item.id}">Add to Cart</button>
-      </td>
-    `;
-    
-    inventoryBody.appendChild(row);
-  });
-  
-  // Add event listeners to "Add to Cart" buttons
-  document.querySelectorAll('.add-to-cart').forEach(button => {
-    button.addEventListener('click', () => {
-      const itemId = parseInt(button.dataset.id);
-      addToCart(itemId);
+    data.inventory.forEach(item => {
+      const row = document.createElement('tr');
+      row.dataset.id = item.id;
+      row.dataset.category = item.category.toLowerCase();
+      
+      row.innerHTML = `
+        <td>${item.name}</td>
+        <td>${formatCurrency(item.price)}</td>
+        <td>${item.tax}%</td>
+        <td>${item.stock}</td>
+        <td class="text-right">
+          <button class="sm add-to-cart" data-id="${item.id}">Add to Cart</button>
+        </td>
+      `;
+      
+      inventoryBody.appendChild(row);
     });
-  });
+    
+    // Add event listeners to "Add to Cart" buttons
+    document.querySelectorAll('.add-to-cart').forEach(button => {
+      button.addEventListener('click', () => {
+        const itemId = parseInt(button.dataset.id);
+        addToCart(itemId);
+      });
+    });
+  }
   
   // Full inventory management table
   const fullInventoryBody = document.getElementById('fullInventoryBody');
@@ -1457,17 +1493,19 @@ function populateInventoryTables() {
 function addToCart(itemId) {
   const item = data.inventory.find(i => i.id === itemId);
   
-  // Check if item exists and has stock
-  if (!item || item.stock <= 0) {
+  if (!item) {
+    showToast('error', 'Item not found');
+    return;
+  }
+  
+  if (item.stock <= 0) {
     showToast('error', 'Item is out of stock');
     return;
   }
   
-  // Check if item is already in cart
   const existingCartItem = data.cart.find(i => i.item.id === itemId);
   
   if (existingCartItem) {
-    // Don't allow adding more than available stock
     if (existingCartItem.quantity >= item.stock) {
       showToast('warning', 'Cannot add more items than available in stock');
       return;
@@ -1493,6 +1531,8 @@ function updateCart() {
   const emptyCart = document.getElementById('emptyCart');
   const completePurchaseBtn = document.getElementById('completePurchase');
   
+  if (!cartBody || !emptyCart || !completePurchaseBtn) return;
+  
   if (data.cart.length === 0) {
     cartBody.innerHTML = '';
     emptyCart.style.display = 'block';
@@ -1503,7 +1543,6 @@ function updateCart() {
     document.getElementById('discount').textContent = formatCurrency(0);
     document.getElementById('tax').textContent = formatCurrency(0);
     document.getElementById('total').textContent = formatCurrency(0);
-    
     return;
   }
   
@@ -1566,8 +1605,8 @@ function updateCart() {
   });
   
   // Calculate discount
-  const discountType = document.getElementById('discountType').value;
-  const discountAmount = parseFloat(document.getElementById('discountAmount').value) || 0;
+  const discountType = document.getElementById('discountType')?.value || 'amount';
+  const discountAmount = parseFloat(document.getElementById('discountAmount')?.value) || 0;
   let discountValue = 0;
   
   if (discountType === 'percentage') {
@@ -1619,7 +1658,10 @@ function removeCartItem(index) {
 
 // Complete purchase
 function completePurchase() {
-  const customerId = parseInt(document.getElementById('customerSelect').value);
+  const customerSelect = document.getElementById('customerSelect');
+  if (!customerSelect) return;
+  
+  const customerId = parseInt(customerSelect.value);
   const customer = data.customers.find(c => c.id === customerId);
   
   if (!customer) {
@@ -1635,8 +1677,8 @@ function completePurchase() {
   // Calculate totals
   const subtotal = data.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   
-  const discountType = document.getElementById('discountType').value;
-  const discountAmount = parseFloat(document.getElementById('discountAmount').value) || 0;
+  const discountType = document.getElementById('discountType')?.value || 'amount';
+  const discountAmount = parseFloat(document.getElementById('discountAmount')?.value) || 0;
   let discountValue = 0;
   
   if (discountType === 'percentage') {
@@ -1652,7 +1694,7 @@ function completePurchase() {
   const total = subtotal - discountValue + taxTotal;
   
   // Check payment mode
-  const paymentMode = document.getElementById('paymentMode').value;
+  const paymentMode = document.getElementById('paymentMode')?.value || 'paid';
   
   if (paymentMode === 'credit') {
     // Check if customer has enough credit
@@ -1684,8 +1726,10 @@ function completePurchase() {
   // Update inventory quantities
   data.cart.forEach(cartItem => {
     const inventoryItem = data.inventory.find(item => item.id === cartItem.item.id);
-    inventoryItem.stock -= cartItem.quantity;
-    inventoryItem.sales = (inventoryItem.sales || 0) + cartItem.quantity;
+    if (inventoryItem) {
+      inventoryItem.stock -= cartItem.quantity;
+      inventoryItem.sales = (inventoryItem.sales || 0) + cartItem.quantity;
+    }
   });
   
   // Show success message
@@ -1705,11 +1749,13 @@ function completePurchase() {
   populateTransactionsTable();
 }
 
-// Show bill modal
+// Generate bill/receipt
 function generateBill(transaction) {
   // Create bill modal if it doesn't exist
-  if (!document.getElementById('billModal')) {
-    const billModal = document.createElement('div');
+  let billModal = document.getElementById('billModal');
+  
+  if (!billModal) {
+    billModal = document.createElement('div');
     billModal.id = 'billModal';
     billModal.className = 'modal';
     
@@ -1755,11 +1801,17 @@ function generateBill(transaction) {
       printWindow.document.close();
       printWindow.print();
     });
+    
+    // Add close event listeners
+    billModal.querySelectorAll('.close').forEach(closeBtn => {
+      closeBtn.addEventListener('click', () => {
+        billModal.style.display = 'none';
+      });
+    });
   }
   
   // Populate bill content
   const billContent = document.getElementById('billContent');
-  
   billContent.innerHTML = `
     <div class="bill-header">
       <h2>Business Billing Dashboard</h2>
@@ -1812,12 +1864,14 @@ function generateBill(transaction) {
   `;
   
   // Show modal
-  document.getElementById('billModal').style.display = 'block';
+  billModal.style.display = 'block';
 }
 
 // Populate customer dropdown
 function populateCustomerSelect() {
   const customerSelect = document.getElementById('customerSelect');
+  if (!customerSelect) return;
+  
   customerSelect.innerHTML = '<option value="">Select a customer...</option>';
   
   data.customers.forEach(customer => {
@@ -1833,13 +1887,17 @@ function populateCustomerSelect() {
     updateCustomerInfo(customerId);
     
     // Enable/disable complete purchase button
-    document.getElementById('completePurchase').disabled = customerId === '' || data.cart.length === 0;
+    const completePurchaseBtn = document.getElementById('completePurchase');
+    if (completePurchaseBtn) {
+      completePurchaseBtn.disabled = customerId === '' || data.cart.length === 0;
+    }
   });
 }
 
 // Update customer info panel
 function updateCustomerInfo(customerId) {
   const customerInfo = document.getElementById('customerInfo');
+  if (!customerInfo) return;
   
   if (!customerId) {
     customerInfo.style.display = 'none';
@@ -1956,8 +2014,10 @@ function viewTransaction(transactionId) {
 // Show toast notification
 function showToast(type, message) {
   // Create toast container if it doesn't exist
-  if (!document.querySelector('.toast-container')) {
-    const toastContainer = document.createElement('div');
+  let toastContainer = document.querySelector('.toast-container');
+  
+  if (!toastContainer) {
+    toastContainer = document.createElement('div');
     toastContainer.className = 'toast-container';
     document.body.appendChild(toastContainer);
   }
@@ -1969,15 +2029,7 @@ function showToast(type, message) {
     <span class="toast-close">&times;</span>
   `;
   
-  document.querySelector('.toast-container').appendChild(toast);
-  
-  // Automatically remove toast after 3 seconds
-  setTimeout(() => {
-    toast.classList.add('fade-out');
-    setTimeout(() => {
-      toast.remove();
-    }, 300);
-  }, 3000);
+  toastContainer.appendChild(toast);
   
   // Add event listener to close button
   toast.querySelector('.toast-close').addEventListener('click', () => {
@@ -1986,6 +2038,14 @@ function showToast(type, message) {
       toast.remove();
     }, 300);
   });
+  
+  // Automatically remove toast after 3 seconds
+  setTimeout(() => {
+    toast.classList.add('fade-out');
+    setTimeout(() => {
+      toast.remove();
+    }, 300);
+  }, 3000);
 }
 
 // Edit inventory item
@@ -2021,7 +2081,7 @@ function deleteItem(itemId) {
 
 // Save item changes
 function saveItem() {
-  const id = parseInt(document.getElementById('itemId').value);
+  const id = parseInt(document.getElementById('itemId').value) || 0;
   const name = document.getElementById('itemName').value.trim();
   const price = parseFloat(document.getElementById('itemPrice').value);
   const cost = parseFloat(document.getElementById('itemCost').value);
@@ -2101,7 +2161,7 @@ function deleteCustomer(customerId) {
 
 // Save customer changes
 function saveCustomer() {
-  const id = parseInt(document.getElementById('customerId').value);
+  const id = parseInt(document.getElementById('customerId').value) || 0;
   const name = document.getElementById('customerName').value.trim();
   const phone = document.getElementById('customerPhone').value.trim();
   const email = document.getElementById('customerEmail').value.trim();
@@ -2144,6 +2204,7 @@ function saveCustomer() {
 }
 
 // Initialize application
+// Initialize application
 document.addEventListener('DOMContentLoaded', function() {
   // Load demo data
   loadDemoData();
@@ -2152,57 +2213,616 @@ document.addEventListener('DOMContentLoaded', function() {
   setupTabs();
   
   // Set up event listeners for modals
-  document.querySelectorAll('.modal .close').forEach(closeBtn => {
-    closeBtn.addEventListener('click', function() {
-      this.closest('.modal').style.display = 'none';
-    });
-  });
+  setupModalEventListeners();
   
-  // Set up event listeners for discount inputs
-  document.getElementById('discountType').addEventListener('change', updateCart);
-  document.getElementById('discountAmount').addEventListener('input', updateCart);
+  // Set up discount input event listeners
+  setupDiscountListeners();
   
-  // Setup add new item button
-  document.getElementById('addNewItem').addEventListener('click', () => {
+  // Add event listener to "Add Item" button
+  document.getElementById('addItemBtn')?.addEventListener('click', () => {
     // Reset form
-    document.getElementById('itemForm').reset();
     document.getElementById('itemId').value = '';
+    document.getElementById('itemName').value = '';
+    document.getElementById('itemPrice').value = '';
+    document.getElementById('itemCost').value = '';
+    document.getElementById('itemTax').value = '';
+    document.getElementById('itemStock').value = '';
+    document.getElementById('itemCategory').value = data.categories[0];
     
     // Show modal
     document.getElementById('itemModal').style.display = 'block';
   });
   
-  // Setup add new customer button
-  document.getElementById('addNewCustomer').addEventListener('click', () => {
+  // Add event listener to "Add Customer" button
+  document.getElementById('addCustomerBtn')?.addEventListener('click', () => {
     // Reset form
-    document.getElementById('customerForm').reset();
     document.getElementById('customerId').value = '';
+    document.getElementById('customerName').value = '';
+    document.getElementById('customerPhone').value = '';
+    document.getElementById('customerEmail').value = '';
+    document.getElementById('customerCreditLimit').value = '';
     
     // Show modal
     document.getElementById('customerModal').style.display = 'block';
   });
   
-  // Setup form submit handlers
-  document.getElementById('itemForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    saveItem();
+  // Add event listener to "Save Item" button
+  document.getElementById('saveItemBtn')?.addEventListener('click', saveItem);
+  
+  // Add event listener to "Save Customer" button
+  document.getElementById('saveCustomerBtn')?.addEventListener('click', saveCustomer);
+  
+  // Add event listener to "Complete Purchase" button
+  document.getElementById('completePurchase')?.addEventListener('click', completePurchase);
+});
+
+// Setup modal event listeners
+function setupModalEventListeners() {
+  // Get all modals
+  const modals = document.querySelectorAll('.modal');
+  
+  // Add event listeners to close buttons
+  document.querySelectorAll('.modal .close').forEach(closeBtn => {
+    closeBtn.addEventListener('click', () => {
+      modals.forEach(modal => {
+        modal.style.display = 'none';
+      });
+    });
   });
   
-  document.getElementById('customerForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    saveCustomer();
-  });
-  
-  // Setup complete purchase button
-  document.getElementById('completePurchase').addEventListener('click', completePurchase);
-  
-  // When clicked outside of modal, close it
-  window.addEventListener('click', function(event) {
-    document.querySelectorAll('.modal').forEach(modal => {
+  // Close modal when clicking outside of it
+  window.addEventListener('click', (event) => {
+    modals.forEach(modal => {
       if (event.target === modal) {
         modal.style.display = 'none';
       }
     });
+  });
+}
+
+// Setup discount type and amount event listeners
+function setupDiscountListeners() {
+  const discountType = document.getElementById('discountType');
+  const discountAmount = document.getElementById('discountAmount');
+  
+  if (discountType && discountAmount) {
+    discountType.addEventListener('change', updateCart);
+    discountAmount.addEventListener('input', updateCart);
+  }
+}
+
+// Apply filter to transactions table
+function filterTransactions() {
+  const filterType = document.getElementById('transactionTypeFilter').value;
+  const filterStatus = document.getElementById('transactionStatusFilter').value;
+  const startDate = document.getElementById('startDate').value;
+  const endDate = document.getElementById('endDate').value;
+  
+  const transactionsBody = document.getElementById('transactionsBody');
+  if (!transactionsBody) return;
+  
+  transactionsBody.innerHTML = '';
+  
+  let filteredTransactions = data.transactions;
+  
+  // Filter by type
+  if (filterType !== 'all') {
+    filteredTransactions = filteredTransactions.filter(t => t.type === filterType);
+  }
+  
+  // Filter by status
+  if (filterStatus !== 'all') {
+    filteredTransactions = filteredTransactions.filter(t => t.status === filterStatus);
+  }
+  
+  // Filter by date range
+  if (startDate) {
+    filteredTransactions = filteredTransactions.filter(t => t.date >= startDate);
+  }
+  
+  if (endDate) {
+    filteredTransactions = filteredTransactions.filter(t => t.date <= endDate);
+  }
+  
+  // Populate table with filtered transactions
+  filteredTransactions.forEach(transaction => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${formatDate(transaction.date)}</td>
+      <td>${transaction.type}</td>
+      <td>${transaction.customer.name}</td>
+      <td>${transaction.items.length} items</td>
+      <td>${formatCurrency(transaction.total)}</td>
+      <td><span class="badge badge-${transaction.status === 'paid' ? 'green' : 'blue'}">${transaction.status}</span></td>
+      <td>
+        <button class="sm view-transaction" data-id="${transaction.id}">View</button>
+      </td>
+    `;
+    
+    transactionsBody.appendChild(row);
+  });
+  
+  // Add event listeners to view buttons
+  document.querySelectorAll('.view-transaction').forEach(button => {
+    button.addEventListener('click', () => {
+      const transactionId = parseInt(button.dataset.id);
+      viewTransaction(transactionId);
+    });
+  });
+}
+
+// Generate reports
+function generateReports() {
+  const reportType = document.getElementById('reportType').value;
+  const reportStartDate = document.getElementById('reportStartDate').value;
+  const reportEndDate = document.getElementById('reportEndDate').value;
+  
+  const reportContent = document.getElementById('reportContent');
+  if (!reportContent) return;
+  
+  if (!reportStartDate || !reportEndDate) {
+    showToast('error', 'Please select date range for report');
+    return;
+  }
+  
+  // Filter transactions by date range
+  const reportTransactions = data.transactions.filter(t => 
+    t.date >= reportStartDate && t.date <= reportEndDate
+  );
+  
+  // Generate report based on type
+  switch (reportType) {
+    case 'sales':
+      generateSalesReport(reportTransactions, reportContent);
+      break;
+    case 'inventory':
+      generateInventoryReport(reportContent);
+      break;
+    case 'customers':
+      generateCustomersReport(reportTransactions, reportContent);
+      break;
+    default:
+      reportContent.innerHTML = '<p>Please select a report type</p>';
+  }
+}
+
+// Generate sales report
+function generateSalesReport(transactions, container) {
+  // Calculate total sales, averages, etc.
+  const totalSales = transactions.reduce((sum, t) => sum + t.total, 0);
+  const totalItems = transactions.reduce((sum, t) => {
+    return sum + t.items.reduce((itemSum, item) => itemSum + item.quantity, 0);
+  }, 0);
+  const averageSale = transactions.length > 0 ? totalSales / transactions.length : 0;
+  
+  // Group sales by category
+  const salesByCategory = {};
+  transactions.forEach(transaction => {
+    transaction.items.forEach(item => {
+      const category = item.item.category;
+      if (!salesByCategory[category]) {
+        salesByCategory[category] = 0;
+      }
+      salesByCategory[category] += item.price * item.quantity;
+    });
+  });
+  
+  // Create report HTML
+  container.innerHTML = `
+    <div class="report-header">
+      <h2>Sales Report</h2>
+      <p>Period: ${formatDate(document.getElementById('reportStartDate').value)} to ${formatDate(document.getElementById('reportEndDate').value)}</p>
+    </div>
+    
+    <div class="report-summary">
+      <div class="report-card">
+        <h3>Total Sales</h3>
+        <p>${formatCurrency(totalSales)}</p>
+      </div>
+      <div class="report-card">
+        <h3>Total Transactions</h3>
+        <p>${transactions.length}</p>
+      </div>
+      <div class="report-card">
+        <h3>Items Sold</h3>
+        <p>${totalItems}</p>
+      </div>
+      <div class="report-card">
+        <h3>Average Sale</h3>
+        <p>${formatCurrency(averageSale)}</p>
+      </div>
+    </div>
+    
+    <h3>Sales by Category</h3>
+    <table class="report-table">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Sales Amount</th>
+          <th>Percentage</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${Object.entries(salesByCategory).map(([category, amount]) => `
+          <tr>
+            <td>${category}</td>
+            <td>${formatCurrency(amount)}</td>
+            <td>${(amount / totalSales * 100).toFixed(1)}%</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    
+    <h3>Top Selling Items</h3>
+    <table class="report-table">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Quantity Sold</th>
+          <th>Sales Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${getTopSellingItems(transactions, 5).map(item => `
+          <tr>
+            <td>${item.name}</td>
+            <td>${item.quantity}</td>
+            <td>${formatCurrency(item.total)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    
+    <button id="printReportBtn" class="outline">Print Report</button>
+  `;
+  
+  // Add event listener to print button
+  document.getElementById('printReportBtn').addEventListener('click', () => {
+    printReport('Sales Report');
+  });
+}
+
+// Generate inventory report
+function generateInventoryReport(container) {
+  // Calculate total inventory value, low stock items, etc.
+  const totalStock = data.inventory.reduce((sum, item) => sum + item.stock, 0);
+  const totalValue = data.inventory.reduce((sum, item) => sum + (item.price * item.stock), 0);
+  const totalCost = data.inventory.reduce((sum, item) => sum + (item.cost * item.stock), 0);
+  const potentialProfit = totalValue - totalCost;
+  
+  const lowStockItems = data.inventory.filter(item => item.stock <= 5 && item.stock > 0);
+  const outOfStockItems = data.inventory.filter(item => item.stock === 0);
+  
+  // Create report HTML
+  container.innerHTML = `
+    <div class="report-header">
+      <h2>Inventory Report</h2>
+      <p>As of ${formatDate(new Date().toISOString().split('T')[0])}</p>
+    </div>
+    
+    <div class="report-summary">
+      <div class="report-card">
+        <h3>Total Items</h3>
+        <p>${data.inventory.length}</p>
+      </div>
+      <div class="report-card">
+        <h3>Total Stock</h3>
+        <p>${totalStock}</p>
+      </div>
+      <div class="report-card">
+        <h3>Inventory Value</h3>
+        <p>${formatCurrency(totalValue)}</p>
+      </div>
+      <div class="report-card">
+        <h3>Potential Profit</h3>
+        <p>${formatCurrency(potentialProfit)}</p>
+      </div>
+    </div>
+    
+    <h3>Inventory by Category</h3>
+    <table class="report-table">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Item Count</th>
+          <th>Stock Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${getInventoryByCategory().map(cat => `
+          <tr>
+            <td>${cat.name}</td>
+            <td>${cat.count}</td>
+            <td>${formatCurrency(cat.value)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    
+    <h3>Low Stock Items (5 or fewer)</h3>
+    <table class="report-table">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Current Stock</th>
+          <th>Category</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${lowStockItems.length > 0 ? 
+          lowStockItems.map(item => `
+            <tr>
+              <td>${item.name}</td>
+              <td>${item.stock}</td>
+              <td>${item.category}</td>
+            </tr>
+          `).join('') : 
+          '<tr><td colspan="3">No low stock items</td></tr>'
+        }
+      </tbody>
+    </table>
+    
+    <h3>Out of Stock Items</h3>
+    <table class="report-table">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Category</th>
+          <th>Price</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${outOfStockItems.length > 0 ? 
+          outOfStockItems.map(item => `
+            <tr>
+              <td>${item.name}</td>
+              <td>${item.category}</td>
+              <td>${formatCurrency(item.price)}</td>
+            </tr>
+          `).join('') : 
+          '<tr><td colspan="3">No out of stock items</td></tr>'
+        }
+      </tbody>
+    </table>
+    
+    <button id="printReportBtn" class="outline">Print Report</button>
+  `;
+  
+  // Add event listener to print button
+  document.getElementById('printReportBtn').addEventListener('click', () => {
+    printReport('Inventory Report');
+  });
+}
+
+// Generate customers report
+function generateCustomersReport(transactions, container) {
+  // Calculate total customer count, credit usage, etc.
+  const totalCustomers = data.customers.length;
+  const totalCreditLimit = data.customers.reduce((sum, c) => sum + c.creditLimit, 0);
+  const totalCreditUsed = data.customers.reduce((sum, c) => sum + c.creditUsed, 0);
+  
+  // Group customers by purchase amount
+  const customerPurchases = {};
+  transactions.forEach(transaction => {
+    const customerId = transaction.customer.id;
+    if (!customerPurchases[customerId]) {
+      customerPurchases[customerId] = {
+        name: transaction.customer.name,
+        total: 0,
+        transactions: 0
+      };
+    }
+    customerPurchases[customerId].total += transaction.total;
+    customerPurchases[customerId].transactions++;
+  });
+  
+  // Sort customers by purchase amount
+  const topCustomers = Object.values(customerPurchases)
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 5);
+  
+  // Create report HTML
+  container.innerHTML = `
+    <div class="report-header">
+      <h2>Customer Report</h2>
+      <p>Period: ${formatDate(document.getElementById('reportStartDate').value)} to ${formatDate(document.getElementById('reportEndDate').value)}</p>
+    </div>
+    
+    <div class="report-summary">
+      <div class="report-card">
+        <h3>Total Customers</h3>
+        <p>${totalCustomers}</p>
+      </div>
+      <div class="report-card">
+        <h3>Credit Limit</h3>
+        <p>${formatCurrency(totalCreditLimit)}</p>
+      </div>
+      <div class="report-card">
+        <h3>Credit Used</h3>
+        <p>${formatCurrency(totalCreditUsed)}</p>
+      </div>
+      <div class="report-card">
+        <h3>Credit Usage</h3>
+        <p>${(totalCreditUsed / totalCreditLimit * 100).toFixed(1)}%</p>
+      </div>
+    </div>
+    
+    <h3>Top Customers by Purchase</h3>
+    <table class="report-table">
+      <thead>
+        <tr>
+          <th>Customer</th>
+          <th>Transactions</th>
+          <th>Total Spent</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${topCustomers.map(customer => `
+          <tr>
+            <td>${customer.name}</td>
+            <td>${customer.transactions}</td>
+            <td>${formatCurrency(customer.total)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    
+    <h3>Customers with High Credit Usage (>75%)</h3>
+    <table class="report-table">
+      <thead>
+        <tr>
+          <th>Customer</th>
+          <th>Credit Limit</th>
+          <th>Credit Used</th>
+          <th>Usage %</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${data.customers
+          .filter(c => c.creditUsed / c.creditLimit > 0.75)
+          .map(customer => `
+            <tr>
+              <td>${customer.name}</td>
+              <td>${formatCurrency(customer.creditLimit)}</td>
+              <td>${formatCurrency(customer.creditUsed)}</td>
+              <td>${(customer.creditUsed / customer.creditLimit * 100).toFixed(1)}%</td>
+            </tr>
+          `).join('')}
+      </tbody>
+    </table>
+    
+    <button id="printReportBtn" class="outline">Print Report</button>
+  `;
+  
+  // Add event listener to print button
+  document.getElementById('printReportBtn').addEventListener('click', () => {
+    printReport('Customer Report');
+  });
+}
+
+// Get top selling items for reports
+function getTopSellingItems(transactions, limit) {
+  const itemSales = {};
+  
+  transactions.forEach(transaction => {
+    transaction.items.forEach(item => {
+      const itemId = item.item.id;
+      if (!itemSales[itemId]) {
+        itemSales[itemId] = {
+          name: item.item.name,
+          quantity: 0,
+          total: 0
+        };
+      }
+      itemSales[itemId].quantity += item.quantity;
+      itemSales[itemId].total += item.price * item.quantity;
+    });
+  });
+  
+  return Object.values(itemSales)
+    .sort((a, b) => b.quantity - a.quantity)
+    .slice(0, limit);
+}
+
+// Get inventory grouped by category
+function getInventoryByCategory() {
+  const categories = {};
+  
+  data.inventory.forEach(item => {
+    const category = item.category;
+    if (!categories[category]) {
+      categories[category] = {
+        name: category,
+        count: 0,
+        value: 0
+      };
+    }
+    categories[category].count++;
+    categories[category].value += item.price * item.stock;
+  });
+  
+  return Object.values(categories);
+}
+
+// Print report
+function printReport(title) {
+  const reportContent = document.getElementById('reportContent').innerHTML;
+  const printWindow = window.open('', '_blank');
+  
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>${title}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; }
+          .report-header { text-align: center; margin-bottom: 20px; }
+          .report-summary { display: flex; justify-content: space-between; margin-bottom: 20px; }
+          .report-card { border: 1px solid #ddd; padding: 15px; text-align: center; width: 22%; }
+          .report-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+          .report-table th, .report-table td { padding: 8px; border: 1px solid #ddd; text-align: left; }
+          h3 { margin-top: 20px; }
+          button { display: none; }
+        </style>
+      </head>
+      <body>
+        ${reportContent}
+      </body>
+    </html>
+  `);
+  
+  printWindow.document.close();
+  printWindow.print();
+}
+
+// Export data to CSV
+function exportData(type) {
+  let csv = '';
+  let fileName = '';
+  
+  switch (type) {
+    case 'inventory':
+      csv = 'ID,Name,Category,Price,Cost,Margin,Tax,Stock\n';
+      data.inventory.forEach(item => {
+        csv += `${item.id},"${item.name}","${item.category}",${item.price},${item.cost},${item.price - item.cost},${item.tax},${item.stock}\n`;
+      });
+      fileName = 'inventory.csv';
+      break;
+    case 'customers':
+      csv = 'ID,Name,Phone,Email,Credit Limit,Credit Used\n';
+      data.customers.forEach(customer => {
+        csv += `${customer.id},"${customer.name}","${customer.phone}","${customer.email}",${customer.creditLimit},${customer.creditUsed}\n`;
+      });
+      fileName = 'customers.csv';
+      break;
+    case 'transactions':
+      csv = 'ID,Date,Customer,Items,Subtotal,Discount,Tax,Total,Status,Type\n';
+      data.transactions.forEach(transaction => {
+        csv += `${transaction.id},"${transaction.date}","${transaction.customer.name}",${transaction.items.length},${transaction.subtotal},${transaction.discount},${transaction.tax},${transaction.total},"${transaction.status}","${transaction.type}"\n`;
+      });
+      fileName = 'transactions.csv';
+      break;
+  }
+  
+  // Create download link
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.setAttribute('href', url);
+  a.setAttribute('download', fileName);
+  a.click();
+}
+
+// Initialize report generation buttons
+document.getElementById('generateReportBtn')?.addEventListener('click', generateReports);
+
+// Initialize transaction filter buttons
+document.getElementById('applyFiltersBtn')?.addEventListener('click', filterTransactions);
+
+// Initialize export buttons
+document.querySelectorAll('.export-btn').forEach(button => {
+  button.addEventListener('click', () => {
+    const type = button.dataset.type;
+    exportData(type);
   });
 });
   </script>
