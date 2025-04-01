@@ -9,7 +9,7 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f5f5f5;
+            background-color: #f7f7f7;
         }
         .container {
             max-width: 1200px;
@@ -17,7 +17,7 @@
             padding: 20px;
         }
         .header {
-            background-color: #3498db;
+            background-color: #555555;
             color: white;
             padding: 15px;
             border-radius: 5px;
@@ -62,7 +62,7 @@
             resize: vertical;
         }
         button {
-            background-color: #3498db;
+            background-color: #666666;
             color: white;
             border: none;
             padding: 10px 15px;
@@ -71,7 +71,7 @@
             margin-right: 10px;
         }
         button:hover {
-            background-color: #2980b9;
+            background-color: #444444;
         }
         table {
             width: 100%;
@@ -103,10 +103,10 @@
             font-size: 12px;
         }
         .remove-btn {
-            background-color: #e74c3c;
+            background-color: #cc5555;
         }
         .remove-btn:hover {
-            background-color: #c0392b;
+            background-color: #aa4444;
         }
         .print-preview {
             background-color: white;
@@ -118,7 +118,7 @@
         .bill-header {
             display: flex;
             justify-content: space-between;
-            border-bottom: 2px solid #3498db;
+            border-bottom: 2px solid #555555;
             padding-bottom: 10px;
             margin-bottom: 20px;
         }
@@ -128,7 +128,7 @@
         .company-name {
             font-size: 20px;
             font-weight: bold;
-            color: #3498db;
+            color: #555555;
         }
         .bill-title {
             text-align: center;
@@ -195,6 +195,46 @@
             border-top: 1px dashed #ddd;
             margin-top: 20px;
             padding-top: 10px;
+        }
+        /* Additional styling for new color scheme */
+        .header {
+            background: linear-gradient(to right, #555555, #777777);
+        }
+        #generate-bill {
+            background-color: #4a7c59;
+        }
+        #generate-bill:hover {
+            background-color: #3d6b4c;
+        }
+        #print-bill {
+            background-color: #746c70;
+        }
+        #print-bill:hover {
+            background-color: #635b5f;
+        }
+        #save-pdf {
+            background-color: #7a754e;
+        }
+        #save-pdf:hover {
+            background-color: #68643e;
+        }
+        #reset-bill {
+            background-color: #a15e49;
+        }
+        #reset-bill:hover {
+            background-color: #8d4e3a;
+        }
+        #save-settings {
+            background-color: #4f6d7a;
+        }
+        #save-settings:hover {
+            background-color: #3e5c69;
+        }
+        #add-item {
+            background-color: #666666;
+        }
+        #add-item:hover {
+            background-color: #444444;
         }
         /* Fixed print styles */
         @media print {
@@ -784,17 +824,29 @@
             document.getElementById('item-description').value = '';
             document.getElementById('item-quantity').value = '1';
             document.getElementById('item-price').value = '';
+            document.getElementById('item-price').value = '';
             document.getElementById('item-tax').value = document.getElementById('default-tax').value;
             document.getElementById('item-warranty').value = '0';
             document.getElementById('item-serial').value = '';
-            
-            // Clear items
-            items = [];
-            updateItemsTable();
-            
-            // Hide print area
-            document.getElementById('print-area').style.display = 'none';
-        });
-    </script>
+
+// Reset items array and table
+    items = [];
+    updateItemsTable();
+
+// Hide print preview
+    document.getElementById('print-area').style.display = 'none';
+
+    alert('Bill has been reset.');
+});
+
+// Set default tax value for new items
+    document.getElementById('item-tax').value = document.getElementById('default-tax').value;
+
+// Generate a random invoice number by default
+    document.getElementById('bill-number').value = 'INV-' + Math.floor(100000 + Math.random() * 900000);
+
+// Initialize the app by showing the customer tab
+    document.querySelector('.tab[data-tab="customer"]').click();
+</script>
 </body>
 </html>
