@@ -196,9 +196,13 @@
             margin-top: 20px;
             padding-top: 10px;
         }
+        /* Fixed print styles */
         @media print {
-            .container, .header, .dashboard, .panel:not(.print-preview) {
-                display: none;
+            body * {
+                visibility: hidden;
+            }
+            .print-preview, .print-preview * {
+                visibility: visible;
             }
             .print-preview {
                 display: block !important;
@@ -206,6 +210,8 @@
                 top: 0;
                 left: 0;
                 width: 100%;
+                margin: 0;
+                padding: 15px;
             }
         }
     </style>
@@ -426,24 +432,21 @@
                         <tbody id="bill-items-body">
                             <!-- Items will be added here dynamically -->
                         </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="6" style="text-align: right;"><strong>Subtotal:</strong></td>
+                                <td colspan="2" id="bill-subtotal">0.00</td>
+                            </tr>
+                            <tr>
+                                <td colspan="6" style="text-align: right;"><strong>Tax Amount:</strong></td>
+                                <td colspan="2" id="bill-tax">0.00</td>
+                            </tr>
+                            <tr>
+                                <td colspan="6" style="text-align: right;"><strong>Grand Total:</strong></td>
+                                <td colspan="2" id="bill-total">0.00</td>
+                            </tr>
+                        </tfoot>
                     </table>
-                    
-                    <div class="summary">
-                        <table class="summary-table">
-                            <tr>
-                                <td><strong>Subtotal:</strong></td>
-                                <td id="bill-subtotal">0.00</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Tax Amount:</strong></td>
-                                <td id="bill-tax">0.00</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Grand Total:</strong></td>
-                                <td id="bill-total">0.00</td>
-                            </tr>
-                        </table>
-                    </div>
                     
                     <div class="warranty-info">
                         <h4>Terms and Conditions:</h4>
@@ -722,16 +725,30 @@
             
             // Show the print preview
             document.getElementById('print-area').style.display = 'block';
+            
+            // Scroll to the print preview
+            document.getElementById('print-area').scrollIntoView({behavior: 'smooth'});
+            
+            alert('Bill generated successfully! You can now print or save as PDF.');
         });
         
-        // Print bill button
+        // Print bill button - FIXED
         document.getElementById('print-bill').addEventListener('click', function() {
             if (items.length === 0) {
                 alert('Please generate a bill first.');
                 return;
             }
             
-            window.print();
+            // Ensure print preview is visible
+            const printArea = document.getElementById('print-area');
+            if (printArea.style.display !== 'block') {
+                document.getElementById('generate-bill').click();
+            }
+            
+            // Short delay to ensure rendering before print
+            setTimeout(function() {
+                window.print();
+            }, 500);
         });
         
         // Save as PDF (simulated)
@@ -741,8 +758,18 @@
                 return;
             }
             
+            // Ensure print preview is visible
+            const printArea = document.getElementById('print-area');
+            if (printArea.style.display !== 'block') {
+                document.getElementById('generate-bill').click();
+            }
+            
             alert('To save as PDF, please use the Print function and select "Save as PDF" as the printer option.');
-            window.print();
+            
+            // Short delay to ensure rendering before print
+            setTimeout(function() {
+                window.print();
+            }, 500);
         });
         
         // Reset button
