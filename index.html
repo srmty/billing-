@@ -1177,8 +1177,7 @@
     </div>
   </div>
   <script>
-
-  // DOM Ready event
+// DOM Ready event
 document.addEventListener('DOMContentLoaded', function() {
   // Tab switching functionality
   const tabs = document.querySelectorAll('.tab');
@@ -1222,9 +1221,10 @@ document.addEventListener('DOMContentLoaded', function() {
   // Close modals
   closeButtons.forEach(button => {
     button.addEventListener('click', function() {
-      modals.forEach(modal => {
+      const modal = this.closest('.modal');
+      if (modal) {
         modal.style.display = 'none';
-      });
+      }
     });
   });
   
@@ -1281,197 +1281,324 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Recent transactions table
   const transactionsBody = document.getElementById('recentTransactionsBody');
-  sampleData.recentTransactions.forEach(transaction => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${transaction.date}</td>
-      <td>${transaction.customer}</td>
-      <td>${transaction.items}</td>
-      <td>$${transaction.total.toFixed(2)}</td>
-      <td><span class="badge ${transaction.status === 'Completed' ? 'badge-green' : 'badge-yellow'}">${transaction.status}</span></td>
-    `;
-    transactionsBody.appendChild(row);
-  });
+  if (transactionsBody) {
+    transactionsBody.innerHTML = ''; // Clear existing content
+    sampleData.recentTransactions.forEach(transaction => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${transaction.date}</td>
+        <td>${transaction.customer}</td>
+        <td>${transaction.items}</td>
+        <td>$${transaction.total.toFixed(2)}</td>
+        <td><span class="badge ${transaction.status === 'Completed' ? 'badge-green' : 'badge-yellow'}">${transaction.status}</span></td>
+      `;
+      transactionsBody.appendChild(row);
+    });
+  }
   
   // Top selling items table
   const topSellingBody = document.getElementById('topSellingBody');
-  sampleData.topSelling.forEach(item => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${item.item}</td>
-      <td>${item.quantity}</td>
-      <td>$${item.revenue.toFixed(2)}</td>
-      <td>${item.stock} ${item.stock < 20 ? '<span class="text-danger">(Low)</span>' : ''}</td>
-    `;
-    topSellingBody.appendChild(row);
-  });
+  if (topSellingBody) {
+    topSellingBody.innerHTML = ''; // Clear existing content
+    sampleData.topSelling.forEach(item => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${item.item}</td>
+        <td>${item.quantity}</td>
+        <td>$${item.revenue.toFixed(2)}</td>
+        <td>${item.stock} ${item.stock < 20 ? '<span class="text-danger">(Low)</span>' : ''}</td>
+      `;
+      topSellingBody.appendChild(row);
+    });
+  }
   
   // Inventory table in Billing tab
   const inventoryBody = document.getElementById('inventoryBody');
-  sampleData.inventory.forEach(item => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${item.name}</td>
-      <td>$${item.price.toFixed(2)}</td>
-      <td>${item.tax}%</td>
-      <td>${item.stock} ${item.stock < 20 ? '<span class="text-danger">(Low)</span>' : ''}</td>
-      <td class="text-right">
-        <button class="sm add-to-cart" data-id="${item.id}">Add to Cart</button>
-      </td>
-    `;
-    inventoryBody.appendChild(row);
-  });
+  if (inventoryBody) {
+    populateInventoryBillingTable();
+  }
   
-  // Full inventory table
-  const fullInventoryBody = document.getElementById('fullInventoryBody');
-  sampleData.inventory.forEach(item => {
-    const profit = item.price - item.cost;
-    const profitMargin = (profit / item.price) * 100;
+  // Function to populate inventory table in billing tab
+  function populateInventoryBillingTable() {
+    if (!inventoryBody) return;
     
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td><input type="checkbox" class="inventory-select" data-id="${item.id}"></td>
-      <td>${item.name}</td>
-      <td>${item.category}</td>
-      <td>$${item.price.toFixed(2)}</td>
-      <td>$${item.cost.toFixed(2)}</td>
-      <td>$${profit.toFixed(2)} (${profitMargin.toFixed(1)}%)</td>
-      <td>${item.tax}%</td>
-      <td>${item.stock} ${item.stock < 20 ? '<span class="text-danger">(Low)</span>' : ''}</td>
-      <td>
-        <button class="sm outline edit-item" data-id="${item.id}">Edit</button>
-        <button class="sm danger delete-item" data-id="${item.id}">Delete</button>
-      </td>
-    `;
-    fullInventoryBody.appendChild(row);
-  });
+    inventoryBody.innerHTML = ''; // Clear existing content
+    sampleData.inventory.forEach(item => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${item.name}</td>
+        <td>$${item.price.toFixed(2)}</td>
+        <td>${item.tax}%</td>
+        <td>${item.stock} ${item.stock < 20 ? '<span class="text-danger">(Low)</span>' : ''}</td>
+        <td class="text-right">
+          <button class="sm add-to-cart" data-id="${item.id}">Add to Cart</button>
+        </td>
+      `;
+      inventoryBody.appendChild(row);
+    });
+    
+    // Setup Add to Cart buttons after populating
+    setupAddToCartButtons();
+  }
+  
+  // Full inventory table 
+  const fullInventoryBody = document.getElementById('fullInventoryBody');
+  if (fullInventoryBody) {
+    populateInventoryTable();
+  }
+  
+  // Function to populate inventory table
+  function populateInventoryTable() {
+    if (!fullInventoryBody) return;
+    
+    fullInventoryBody.innerHTML = ''; // Clear existing content
+    sampleData.inventory.forEach(item => {
+      const profit = item.price - item.cost;
+      const profitMargin = (profit / item.price) * 100;
+      
+      const row = document.createElement('tr');
+      row.setAttribute('data-id', item.id);
+      row.innerHTML = `
+        <td><input type="checkbox" class="inventory-select" data-id="${item.id}"></td>
+        <td>${item.name}</td>
+        <td>${item.category}</td>
+        <td>$${item.price.toFixed(2)}</td>
+        <td>$${item.cost.toFixed(2)}</td>
+        <td>$${profit.toFixed(2)} (${profitMargin.toFixed(1)}%)</td>
+        <td>${item.tax}%</td>
+        <td>${item.stock} ${item.stock < 20 ? '<span class="text-danger">(Low)</span>' : ''}</td>
+        <td>
+          <button class="sm outline edit-item" data-id="${item.id}">Edit</button>
+          <button class="sm danger delete-item" data-id="${item.id}">Delete</button>
+        </td>
+      `;
+      fullInventoryBody.appendChild(row);
+    });
+    
+    setupDeleteItemButtons();
+    setupEditItemButtons();
+  }
+  
+  // Setup delete item buttons
+  function setupDeleteItemButtons() {
+    const deleteButtons = document.querySelectorAll('.delete-item');
+    deleteButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const itemId = parseInt(this.getAttribute('data-id'));
+        
+        // Filter out the item with the matching ID
+        sampleData.inventory = sampleData.inventory.filter(item => item.id !== itemId);
+        
+        // Update both inventory tables
+        populateInventoryTable();
+        populateInventoryBillingTable();
+        
+        // Update low stock count
+        updateLowStockCount();
+        
+        alert('Item deleted successfully!');
+      });
+    });
+  }
+  
+  // Setup edit item buttons
+  function setupEditItemButtons() {
+    const editButtons = document.querySelectorAll('.edit-item');
+    editButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const itemId = parseInt(this.getAttribute('data-id'));
+        const item = sampleData.inventory.find(i => i.id === itemId);
+        
+        if (item) {
+          // Populate the form with item data
+          document.getElementById('itemId').value = item.id;
+          document.getElementById('itemName').value = item.name;
+          document.getElementById('itemCategory').value = item.category;
+          document.getElementById('itemPrice').value = item.price;
+          document.getElementById('itemCost').value = item.cost;
+          document.getElementById('itemTax').value = item.tax;
+          document.getElementById('itemStock').value = item.stock;
+          
+          // Show the modal
+          document.getElementById('itemModal').style.display = 'block';
+        }
+      });
+    });
+  }
+  
+  // Update low stock count
+  function updateLowStockCount() {
+    const lowStockCount = sampleData.inventory.filter(item => item.stock < 20).length;
+    document.getElementById('lowStockItems').textContent = lowStockCount;
+  }
   
   // Customers table
   const customersBody = document.getElementById('customersBody');
-  sampleData.customers.forEach(customer => {
-    const availableCredit = customer.creditLimit - customer.creditUsed;
+  if (customersBody) {
+    populateCustomersTable();
+  }
+  
+  // Function to populate customers table
+  function populateCustomersTable() {
+    if (!customersBody) return;
     
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${customer.name}</td>
-      <td>${customer.phone}</td>
-      <td>${customer.email}</td>
-      <td>$${customer.creditLimit.toFixed(2)}</td>
-      <td>$${customer.creditUsed.toFixed(2)}</td>
-      <td>$${availableCredit.toFixed(2)}</td>
-      <td>
-        <button class="sm outline view-customer" data-id="${customer.id}">View</button>
-        <button class="sm outline edit-customer" data-id="${customer.id}">Edit</button>
-      </td>
-    `;
-    customersBody.appendChild(row);
-  });
+    customersBody.innerHTML = ''; // Clear existing content
+    sampleData.customers.forEach(customer => {
+      const availableCredit = customer.creditLimit - customer.creditUsed;
+      
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${customer.name}</td>
+        <td>${customer.phone}</td>
+        <td>${customer.email}</td>
+        <td>$${customer.creditLimit.toFixed(2)}</td>
+        <td>$${customer.creditUsed.toFixed(2)}</td>
+        <td>$${availableCredit.toFixed(2)}</td>
+        <td>
+          <button class="sm outline view-customer" data-id="${customer.id}">View</button>
+          <button class="sm outline edit-customer" data-id="${customer.id}">Edit</button>
+        </td>
+      `;
+      customersBody.appendChild(row);
+    });
+    
+    setupEditCustomerButtons();
+  }
   
   // Customer dropdown in billing section
   const customerSelect = document.getElementById('customerSelect');
-  sampleData.customers.forEach(customer => {
-    const option = document.createElement('option');
-    option.value = customer.id;
-    option.textContent = customer.name;
-    customerSelect.appendChild(option);
-  });
+  if (customerSelect) {
+    updateCustomerDropdown();
+  }
+  
+  // Function to update customer dropdown
+  function updateCustomerDropdown() {
+    if (!customerSelect) return;
+    
+    customerSelect.innerHTML = '<option value="">Select Customer</option>'; // Clear and add default option
+    sampleData.customers.forEach(customer => {
+      const option = document.createElement('option');
+      option.value = customer.id;
+      option.textContent = customer.name;
+      customerSelect.appendChild(option);
+    });
+  }
   
   // Show customer info when selected
-  customerSelect.addEventListener('change', function() {
-    const customerId = this.value;
-    const customerInfo = document.getElementById('customerInfo');
-    
-    if (customerId) {
-      const customer = sampleData.customers.find(c => c.id == customerId);
-      customerInfo.style.display = 'block';
-      customerInfo.innerHTML = `
-        <div><strong>Name:</strong> ${customer.name}</div>
-        <div><strong>Phone:</strong> ${customer.phone}</div>
-        <div><strong>Email:</strong> ${customer.email}</div>
-        <div class="flex justify-between mt-10">
-          <div><strong>Credit Limit:</strong> $${customer.creditLimit.toFixed(2)}</div>
-          <div><strong>Available Credit:</strong> $${(customer.creditLimit - customer.creditUsed).toFixed(2)}</div>
-        </div>
-      `;
-    } else {
-      customerInfo.style.display = 'none';
-    }
-  });
-  
-  // Add to cart buttons
-  const addToCartButtons = document.querySelectorAll('.add-to-cart');
-  addToCartButtons.forEach(button => {
-    button.addEventListener('click', function() {
-      const itemId = this.getAttribute('data-id');
-      const item = sampleData.inventory.find(i => i.id == itemId);
+  if (customerSelect) {
+    customerSelect.addEventListener('change', function() {
+      const customerId = parseInt(this.value);
+      const customerInfo = document.getElementById('customerInfo');
       
-      // Add item to cart (simplified)
-      const cartBody = document.getElementById('cartBody');
-      const emptyCart = document.getElementById('emptyCart');
-      
-      // Hide empty cart message
-      emptyCart.style.display = 'none';
-      
-      // Check if item already in cart
-      const existingRow = document.querySelector(`#cartBody tr[data-id="${itemId}"]`);
-      
-      if (existingRow) {
-        // Increment quantity if already in cart
-        const qtyInput = existingRow.querySelector('.item-qty');
-        const currentQty = parseInt(qtyInput.value);
-        qtyInput.value = currentQty + 1;
-        
-        // Update subtotal
-        const price = parseFloat(existingRow.querySelector('.item-price').textContent.replace('$', ''));
-        const subtotalCell = existingRow.querySelector('.item-subtotal');
-        subtotalCell.textContent = '$' + ((currentQty + 1) * price).toFixed(2);
+      if (customerId) {
+        const customer = sampleData.customers.find(c => c.id === customerId);
+        if (customer) {
+          customerInfo.style.display = 'block';
+          customerInfo.innerHTML = `
+            <div><strong>Name:</strong> ${customer.name}</div>
+            <div><strong>Phone:</strong> ${customer.phone}</div>
+            <div><strong>Email:</strong> ${customer.email}</div>
+            <div class="flex justify-between mt-10">
+              <div><strong>Credit Limit:</strong> $${customer.creditLimit.toFixed(2)}</div>
+              <div><strong>Available Credit:</strong> $${(customer.creditLimit - customer.creditUsed).toFixed(2)}</div>
+            </div>
+          `;
+        }
       } else {
-        // Add new row if not in cart
-        const row = document.createElement('tr');
-        row.setAttribute('data-id', itemId);
-        row.innerHTML = `
-          <td>${item.name}</td>
-          <td class="item-price">$${item.price.toFixed(2)}</td>
-          <td><input type="number" class="item-qty" value="1" min="1" max="${item.stock}" style="width: 50px;"></td>
-          <td>${item.tax}%</td>
-          <td class="item-subtotal">$${item.price.toFixed(2)}</td>
-          <td class="text-right">
-            <button class="sm danger remove-from-cart">Remove</button>
-          </td>
-        `;
-        cartBody.appendChild(row);
+        customerInfo.style.display = 'none';
+      }
+    });
+  }
+  
+  // Add to cart functionality - FIX HERE
+  function setupAddToCartButtons() {
+    const addToCartButtons = document.querySelectorAll('.add-to-cart');
+    addToCartButtons.forEach(button => {
+      // Remove existing event listeners (to prevent duplicates)
+      const newButton = button.cloneNode(true);
+      button.parentNode.replaceChild(newButton, button);
+      
+      newButton.addEventListener('click', function() {
+        const itemId = parseInt(this.getAttribute('data-id'));
+        const item = sampleData.inventory.find(i => i.id === itemId);
         
-        // Add remove button functionality
-        const removeBtn = row.querySelector('.remove-from-cart');
-        removeBtn.addEventListener('click', function() {
-          row.remove();
+        if (item) {
+          // Add item to cart
+          const cartBody = document.getElementById('cartBody');
+          const emptyCart = document.getElementById('emptyCart');
           
-          // Show empty cart message if cart is empty
-          if (cartBody.children.length === 0) {
-            emptyCart.style.display = 'block';
+          if (!cartBody) return;
+          
+          // Hide empty cart message
+          if (emptyCart) {
+            emptyCart.style.display = 'none';
+          }
+          
+          // Check if item already in cart
+          const existingRow = cartBody.querySelector(`tr[data-id="${itemId}"]`);
+          
+          if (existingRow) {
+            // Increment quantity if already in cart
+            const qtyInput = existingRow.querySelector('.item-qty');
+            const currentQty = parseInt(qtyInput.value);
+            qtyInput.value = currentQty + 1;
+            
+            // Update subtotal
+            const price = parseFloat(existingRow.querySelector('.item-price').textContent.replace('$', ''));
+            const subtotalCell = existingRow.querySelector('.item-subtotal');
+            subtotalCell.textContent = '$' + ((currentQty + 1) * price).toFixed(2);
+          } else {
+            // Add new row if not in cart
+            const row = document.createElement('tr');
+            row.setAttribute('data-id', itemId);
+            row.innerHTML = `
+              <td>${item.name}</td>
+              <td class="item-price">$${item.price.toFixed(2)}</td>
+              <td><input type="number" class="item-qty" value="1" min="1" max="${item.stock}" style="width: 50px;"></td>
+              <td>${item.tax}%</td>
+              <td class="item-subtotal">$${item.price.toFixed(2)}</td>
+              <td class="text-right">
+                <button class="sm danger remove-from-cart">Remove</button>
+              </td>
+            `;
+            cartBody.appendChild(row);
+            
+            // Add remove button functionality
+            const removeBtn = row.querySelector('.remove-from-cart');
+            removeBtn.addEventListener('click', function() {
+              row.remove();
+              
+              // Show empty cart message if cart is empty
+              if (cartBody.children.length === 0 && emptyCart) {
+                emptyCart.style.display = 'block';
+              }
+              
+              updateCartTotals();
+            });
+            
+            // Add quantity change event
+            const qtyInput = row.querySelector('.item-qty');
+            qtyInput.addEventListener('change', function() {
+              const qty = parseInt(this.value);
+              const price = parseFloat(row.querySelector('.item-price').textContent.replace('$', ''));
+              const subtotalCell = row.querySelector('.item-subtotal');
+              subtotalCell.textContent = '$' + (qty * price).toFixed(2);
+              
+              updateCartTotals();
+            });
           }
           
           updateCartTotals();
-        });
-        
-        // Add quantity change event
-        const qtyInput = row.querySelector('.item-qty');
-        qtyInput.addEventListener('change', function() {
-          const qty = parseInt(this.value);
-          const price = parseFloat(row.querySelector('.item-price').textContent.replace('$', ''));
-          const subtotalCell = row.querySelector('.item-subtotal');
-          subtotalCell.textContent = '$' + (qty * price).toFixed(2);
           
-          updateCartTotals();
-        });
-      }
-      
-      updateCartTotals();
-      
-      // Enable complete purchase button
-      document.getElementById('completePurchase').disabled = false;
+          // Enable complete purchase button
+          const completePurchaseBtn = document.getElementById('completePurchase');
+          if (completePurchaseBtn) {
+            completePurchaseBtn.disabled = false;
+          }
+        }
+      });
     });
-  });
+  }
   
   // Function to update cart totals
   function updateCartTotals() {
@@ -1492,60 +1619,218 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Get discount
-    const discountType = document.getElementById('discountType').value;
-    const discountAmount = parseFloat(document.getElementById('discountAmount').value || 0);
+    const discountType = document.getElementById('discountType');
+    const discountAmount = document.getElementById('discountAmount');
+    
     let discountValue = 0;
     
-    if (discountType === 'percentage') {
-      discountValue = subtotal * (discountAmount / 100);
-    } else {
-      discountValue = discountAmount;
+    if (discountType && discountAmount) {
+      const discountTypeValue = discountType.value;
+      const discountAmountValue = parseFloat(discountAmount.value || 0);
+      
+      if (discountTypeValue === 'percentage') {
+        discountValue = subtotal * (discountAmountValue / 100);
+      } else {
+        discountValue = discountAmountValue;
+      }
     }
     
     const total = subtotal - discountValue + taxTotal;
     
     // Update totals display
-    document.getElementById('subtotal').textContent = '$' + subtotal.toFixed(2);
-    document.getElementById('discount').textContent = '$' + discountValue.toFixed(2);
-    document.getElementById('tax').textContent = '$' + taxTotal.toFixed(2);
-    document.getElementById('total').textContent = '$' + total.toFixed(2);
+    const subtotalElement = document.getElementById('subtotal');
+    const discountElement = document.getElementById('discount');
+    const taxElement = document.getElementById('tax');
+    const totalElement = document.getElementById('total');
+    
+    if (subtotalElement) subtotalElement.textContent = '$' + subtotal.toFixed(2);
+    if (discountElement) discountElement.textContent = '$' + discountValue.toFixed(2);
+    if (taxElement) taxElement.textContent = '$' + taxTotal.toFixed(2);
+    if (totalElement) totalElement.textContent = '$' + total.toFixed(2);
   }
   
   // Add discount input events
-  document.getElementById('discountAmount').addEventListener('input', updateCartTotals);
-  document.getElementById('discountType').addEventListener('change', updateCartTotals);
+  const discountAmount = document.getElementById('discountAmount');
+  const discountType = document.getElementById('discountType');
+  
+  if (discountAmount) {
+    discountAmount.addEventListener('input', updateCartTotals);
+  }
+  
+  if (discountType) {
+    discountType.addEventListener('change', updateCartTotals);
+  }
   
   // Complete purchase button
-  document.getElementById('completePurchase').addEventListener('click', function() {
-    alert('Purchase completed successfully!');
-    
-    // Clear cart
-    document.getElementById('cartBody').innerHTML = '';
-    document.getElementById('emptyCart').style.display = 'block';
-    document.getElementById('customerSelect').value = '';
-    document.getElementById('customerInfo').style.display = 'none';
-    document.getElementById('discountAmount').value = '';
-    
-    // Update totals
-    document.getElementById('subtotal').textContent = '$0.00';
-    document.getElementById('discount').textContent = '$0.00';
-    document.getElementById('tax').textContent = '$0.00';
-    document.getElementById('total').textContent = '$0.00';
-    
-    // Disable button
-    this.disabled = true;
-  });
+  const completePurchaseBtn = document.getElementById('completePurchase');
+  if (completePurchaseBtn) {
+    completePurchaseBtn.addEventListener('click', function() {
+      alert('Purchase completed successfully!');
+      
+      // Clear cart
+      const cartBody = document.getElementById('cartBody');
+      const emptyCart = document.getElementById('emptyCart');
+      const customerInfo = document.getElementById('customerInfo');
+      
+      if (cartBody) cartBody.innerHTML = '';
+      if (emptyCart) emptyCart.style.display = 'block';
+      if (customerSelect) customerSelect.value = '';
+      if (customerInfo) customerInfo.style.display = 'none';
+      if (discountAmount) discountAmount.value = '';
+      
+      // Update totals
+      updateCartTotals();
+      
+      // Disable button
+      this.disabled = true;
+    });
+  }
   
   // Form submission handlers
-  document.getElementById('saveItem').addEventListener('click', function() {
-    alert('Item saved successfully!');
-    document.getElementById('itemModal').style.display = 'none';
-  });
+  // Add new item functionality
+  const saveItemBtn = document.getElementById('saveItem');
+  if (saveItemBtn) {
+    saveItemBtn.addEventListener('click', function() {
+      const itemIdField = document.getElementById('itemId');
+      const itemName = document.getElementById('itemName').value;
+      const itemCategory = document.getElementById('itemCategory').value;
+      const itemPrice = parseFloat(document.getElementById('itemPrice').value);
+      const itemCost = parseFloat(document.getElementById('itemCost').value);
+      const itemTax = parseFloat(document.getElementById('itemTax').value);
+      const itemStock = parseInt(document.getElementById('itemStock').value);
+      
+      if (!itemName || isNaN(itemPrice) || isNaN(itemCost) || isNaN(itemTax) || isNaN(itemStock)) {
+        alert('Please fill all fields with valid data.');
+        return;
+      }
+      
+      const itemId = itemIdField.value ? parseInt(itemIdField.value) : Math.max(...sampleData.inventory.map(item => item.id), 0) + 1;
+      
+      // Check if it's an edit or new item
+      const existingItemIndex = sampleData.inventory.findIndex(item => item.id === itemId);
+      
+      if (existingItemIndex >= 0) {
+        // Update existing item
+        sampleData.inventory[existingItemIndex] = {
+          id: itemId,
+          name: itemName,
+          category: itemCategory,
+          price: itemPrice,
+          cost: itemCost,
+          tax: itemTax,
+          stock: itemStock
+        };
+      } else {
+        // Add new item
+        sampleData.inventory.push({
+          id: itemId,
+          name: itemName,
+          category: itemCategory,
+          price: itemPrice,
+          cost: itemCost,
+          tax: itemTax,
+          stock: itemStock
+        });
+      }
+      
+      // Update inventory tables
+      populateInventoryTable();
+      populateInventoryBillingTable();
+      
+      // Update low stock count
+      updateLowStockCount();
+      
+      // Reset form
+      document.getElementById('itemForm').reset();
+      document.getElementById('itemId').value = '';
+      
+      alert('Item saved successfully!');
+      document.getElementById('itemModal').style.display = 'none';
+    });
+  }
   
-  document.getElementById('saveCustomer').addEventListener('click', function() {
-    alert('Customer saved successfully!');
-    document.getElementById('customerModal').style.display = 'none';
-  });
+  // Add new customer functionality
+  const saveCustomerBtn = document.getElementById('saveCustomer');
+  if (saveCustomerBtn) {
+    saveCustomerBtn.addEventListener('click', function() {
+      const customerIdField = document.getElementById('customerId');
+      const customerName = document.getElementById('customerName').value;
+      const customerPhone = document.getElementById('customerPhone').value;
+      const customerEmail = document.getElementById('customerEmail').value;
+      const customerCreditLimit = parseFloat(document.getElementById('customerCreditLimit').value);
+      
+      if (!customerName || !customerPhone || !customerEmail || isNaN(customerCreditLimit)) {
+        alert('Please fill all fields with valid data.');
+        return;
+      }
+      
+      const customerId = customerIdField.value ? parseInt(customerIdField.value) : Math.max(...sampleData.customers.map(customer => customer.id), 0) + 1;
+      
+      // Check if it's an edit or new customer
+      const existingCustomerIndex = sampleData.customers.findIndex(customer => customer.id === customerId);
+      
+      if (existingCustomerIndex >= 0) {
+        // Update existing customer
+        sampleData.customers[existingCustomerIndex] = {
+          id: customerId,
+          name: customerName,
+          phone: customerPhone,
+          email: customerEmail,
+          creditLimit: customerCreditLimit,
+          creditUsed: sampleData.customers[existingCustomerIndex].creditUsed || 0
+        };
+      } else {
+        // Add new customer
+        sampleData.customers.push({
+          id: customerId,
+          name: customerName,
+          phone: customerPhone,
+          email: customerEmail,
+          creditLimit: customerCreditLimit,
+          creditUsed: 0
+        });
+      }
+      
+      // Update customers table
+      populateCustomersTable();
+      
+      // Update customer dropdown
+      updateCustomerDropdown();
+      
+      // Update active customers count
+      document.getElementById('activeCustomers').textContent = sampleData.customers.length;
+      
+      // Reset form
+      document.getElementById('customerForm').reset();
+      document.getElementById('customerId').value = '';
+      
+      alert('Customer saved successfully!');
+      document.getElementById('customerModal').style.display = 'none';
+    });
+  }
+  
+  // Setup edit customer buttons
+  function setupEditCustomerButtons() {
+    const editCustomerButtons = document.querySelectorAll('.edit-customer');
+    editCustomerButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const customerId = parseInt(this.getAttribute('data-id'));
+        const customer = sampleData.customers.find(c => c.id === customerId);
+        
+        if (customer) {
+          // Populate the form with customer data
+          document.getElementById('customerId').value = customer.id;
+          document.getElementById('customerName').value = customer.name;
+          document.getElementById('customerPhone').value = customer.phone;
+          document.getElementById('customerEmail').value = customer.email;
+          document.getElementById('customerCreditLimit').value = customer.creditLimit;
+          
+          // Show the modal
+          document.getElementById('customerModal').style.display = 'block';
+        }
+      });
+    });
+  }
 });
   </script>
 </body>
