@@ -543,9 +543,8 @@
     
     <script>
 
-
-        // Define common items for quick adding
-const commonItems = [
+// Define common items for selection dropdown
+const inventoryItems = [
     {
         name: "Laptop",
         description: "Standard business laptop",
@@ -604,93 +603,61 @@ const commonItems = [
     }
 ];
 
-// Function to create the common items list
-function createQuickAddItemList() {
-    const container = document.createElement("div");
-    container.className = "quick-add-container";
-    container.innerHTML = `
-        <h3>Quick Add Items</h3>
-        <div class="quick-add-list"></div>
-    `;
+// Function to add the item selection dropdown
+function addItemSelectionDropdown() {
+    // Create a container for the dropdown
+    const itemSelectionContainer = document.createElement('div');
+    itemSelectionContainer.className = 'item-selection-container';
     
-    const quickAddList = container.querySelector('.quick-add-list');
+    // Create the label and select elements
+    const label = document.createElement('label');
+    label.textContent = 'Select from inventory:';
+    label.htmlFor = 'item-selection';
     
-    commonItems.forEach((item, index) => {
-        const itemButton = document.createElement('button');
-        itemButton.className = 'quick-add-item';
-        itemButton.textContent = item.name;
-        itemButton.title = `${item.description} - $${item.price.toFixed(2)}`;
-        
-        itemButton.addEventListener('click', function() {
-            // Populate the form with this item's details
-            document.getElementById('item-name').value = item.name;
-            document.getElementById('item-description').value = item.description;
-            document.getElementById('item-price').value = item.price;
-            document.getElementById('item-tax').value = item.taxRate;
-            document.getElementById('item-warranty').value = item.warranty;
+    const select = document.createElement('select');
+    select.id = 'item-selection';
+    select.className = 'item-selection';
+    
+    // Add default option
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = '-- Select an item --';
+    select.appendChild(defaultOption);
+    
+    // Add inventory items as options
+    inventoryItems.forEach((item, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = `${item.name} - $${item.price.toFixed(2)}`;
+        select.appendChild(option);
+    });
+    
+    // Event listener for selection
+    select.addEventListener('change', function() {
+        const selectedIndex = this.value;
+        if (selectedIndex !== '') {
+            const selectedItem = inventoryItems[selectedIndex];
+            
+            // Populate the form with selected item details
+            document.getElementById('item-name').value = selectedItem.name;
+            document.getElementById('item-description').value = selectedItem.description;
+            document.getElementById('item-price').value = selectedItem.price;
+            document.getElementById('item-tax').value = selectedItem.taxRate;
+            document.getElementById('item-warranty').value = selectedItem.warranty;
             
             // Focus on the quantity field for quick editing
             document.getElementById('item-quantity').focus();
-        });
-        
-        quickAddList.appendChild(itemButton);
-    });
-    
-    // Add the option to add a custom item to the list
-    const addCustomItemBtn = document.createElement('button');
-    addCustomItemBtn.className = 'add-custom-item-btn';
-    addCustomItemBtn.textContent = '+ Add Current to List';
-    addCustomItemBtn.title = 'Add current item details to quick add list';
-    
-    addCustomItemBtn.addEventListener('click', function() {
-        const name = document.getElementById('item-name').value;
-        const description = document.getElementById('item-description').value;
-        const price = parseFloat(document.getElementById('item-price').value);
-        const taxRate = parseFloat(document.getElementById('item-tax').value);
-        const warranty = parseInt(document.getElementById('item-warranty').value);
-        
-        if (!name || isNaN(price)) {
-            alert('Please add a name and price before saving to the quick add list.');
-            return;
         }
-        
-        // Add to common items
-        commonItems.push({
-            name: name,
-            description: description,
-            price: price,
-            taxRate: taxRate,
-            warranty: warranty
-        });
-        
-        // Refresh the quick add list
-        const parent = container.parentNode;
-        parent.removeChild(container);
-        parent.appendChild(createQuickAddItemList());
-        
-        alert(`"${name}" added to quick items list!`);
     });
     
-    container.appendChild(addCustomItemBtn);
+    // Append elements to container
+    itemSelectionContainer.appendChild(label);
+    itemSelectionContainer.appendChild(select);
     
-    return container;
-}
-
-// Add the quick items list to the page when loaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Previous initialization code...
-    
-    // Add quick items to the items tab
-    const itemsTabContent = document.getElementById('items-tab');
-    const itemFormSection = document.querySelector('#items-tab form') || document.querySelector('#items-tab div');
-    
-    // Insert quick add items before the form
-    itemsTabContent.insertBefore(createQuickAddItemList(), itemFormSection);
-    
-    // Add some styling for the quick add items
+    // Add CSS for styling
     const style = document.createElement('style');
     style.textContent = `
-        .quick-add-container {
+        .item-selection-container {
             margin-bottom: 20px;
             padding: 15px;
             background-color: #f9f9f9;
@@ -698,48 +665,48 @@ document.addEventListener('DOMContentLoaded', function() {
             border: 1px solid #ddd;
         }
         
-        .quick-add-container h3 {
-            margin-top: 0;
-            margin-bottom: 10px;
-            color: #333;
+        .item-selection-container label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
         }
         
-        .quick-add-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-        
-        .quick-add-item {
-            padding: 6px 12px;
-            background-color: #e9e9e9;
+        .item-selection {
+            width: 100%;
+            padding: 8px;
             border: 1px solid #ccc;
             border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        
-        .quick-add-item:hover {
-            background-color: #d9d9d9;
-        }
-        
-        .add-custom-item-btn {
-            margin-top: 10px;
-            padding: 6px 12px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        
-        .add-custom-item-btn:hover {
-            background-color: #45a049;
+            font-size: 16px;
         }
     `;
-    
     document.head.appendChild(style);
+    
+    return itemSelectionContainer;
+}
+
+// Initialize the feature when the document is ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Get the items tab content
+    const itemsTabContent = document.getElementById('items-tab');
+    
+    // Find where to insert the dropdown (before the form)
+    const itemForm = document.querySelector('#items-tab form') || 
+                     document.querySelector('#items-tab #item-form') || 
+                     document.querySelector('#items-tab .form-container');
+    
+    // Insert the dropdown before the form
+    if (itemForm) {
+        itemsTabContent.insertBefore(addItemSelectionDropdown(), itemForm);
+    } else {
+        // If we can't find the form, just append to the tab content
+        itemsTabContent.appendChild(addItemSelectionDropdown());
+    }
+    
+    // Make sure the dropdown is at the top of the items tab
+    const itemSelectionContainer = document.querySelector('.item-selection-container');
+    if (itemSelectionContainer) {
+        itemsTabContent.insertBefore(itemSelectionContainer, itemsTabContent.firstChild);
+    }
 });
 // Initialize items array
 let items = [];
