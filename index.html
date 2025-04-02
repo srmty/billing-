@@ -542,87 +542,214 @@
     </div>
     
     <script>
+// Define the inventory items array globally
+let inventoryItems = [];
+// Initialize items array
+let items = [];
+let subtotal = 0;
+let taxTotal = 0;
+let grandTotal = 0;
+let editingItemIndex = -1;
 
-// Define common items for selection dropdown
-const inventoryItems = [
-    {
-        name: "Laptop",
-        description: "Standard business laptop",
-        price: 799.99,
-        taxRate: 10,
-        warranty: 12
-    },
-    {
-        name: "Desktop PC",
-        description: "Desktop computer workstation",
-        price: 999.99,
-        taxRate: 10,
-        warranty: 24
-    },
-    {
-        name: "Monitor",
-        description: "24-inch LCD monitor",
-        price: 249.99,
-        taxRate: 10,
-        warranty: 12
-    },
-    {
-        name: "Keyboard",
-        description: "Ergonomic wireless keyboard",
-        price: 59.99,
-        taxRate: 10,
-        warranty: 6
-    },
-    {
-        name: "Mouse",
-        description: "Wireless optical mouse",
-        price: 29.99,
-        taxRate: 10,
-        warranty: 6
-    },
-    {
-        name: "Printer",
-        description: "Multifunction laser printer",
-        price: 349.99,
-        taxRate: 10,
-        warranty: 12
-    },
-    {
-        name: "External Hard Drive",
-        description: "1TB portable hard drive",
-        price: 79.99,
-        taxRate: 10,
-        warranty: 12
-    },
-    {
-        name: "Software License",
-        description: "Annual software subscription",
-        price: 199.99,
-        taxRate: 10,
-        warranty: 0
+// Function to parse CSV data into inventory items
+function parseCSVInventory(csvText) {
+    // Split the CSV text into lines
+    const lines = csvText.trim().split('\n');
+    
+    // Extract headers from the first line
+    const headers = lines[0].split(',').map(header => header.trim());
+    
+    // Process each line (skipping the header)
+    const items = [];
+    for (let i = 1; i < lines.length; i++) {
+        const line = lines[i];
+        // Skip empty lines
+        if (line.trim() === '') continue;
+        
+        // Split the line by comma, but handle cases where commas are within quotes
+        const values = [];
+        let currentValue = '';
+        let inQuotes = false;
+        
+        for (let j = 0; j < line.length; j++) {
+            const char = line[j];
+            
+            if (char === '"' && (j === 0 || line[j-1] !== '\\')) {
+                inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+                values.push(currentValue.trim());
+                currentValue = '';
+            } else {
+                currentValue += char;
+            }
+        }
+        
+        // Add the last value
+        values.push(currentValue.trim());
+        
+        // Create an object from the headers and values
+        const item = {};
+        for (let j = 0; j < headers.length; j++) {
+            // Remove quotes if present
+            let value = values[j] || '';
+            if (value.startsWith('"') && value.endsWith('"')) {
+                value = value.slice(1, -1);
+            }
+            
+            // Convert numeric values
+            if (headers[j] === 'price' || headers[j] === 'taxRate') {
+                item[headers[j]] = parseFloat(value) || 0;
+            } else if (headers[j] === 'warranty') {
+                item[headers[j]] = parseInt(value) || 0;
+            } else {
+                item[headers[j]] = value;
+            }
+        }
+        
+        items.push(item);
     }
-];
+    
+    return items;
+}
 
-// Function to add the item selection dropdown
-function addItemSelectionDropdown() {
-    // Create a container for the dropdown
-    const itemSelectionContainer = document.createElement('div');
-    itemSelectionContainer.className = 'item-selection-container';
+// Function to add a CSV import button and interface
+function addCSVImportFeature() {
+    // Create the import container
+    const importContainer = document.createElement('div');
+    importContainer.className = 'csv-import-container';
     
-    // Create the label and select elements
-    const label = document.createElement('label');
-    label.textContent = 'Select from inventory:';
-    label.htmlFor = 'item-selection';
+    // Create the input and button elements
+    importContainer.innerHTML = `
+        <h3>Import Inventory from CSV</h3>
+        <p class="csv-format-info">CSV Format: name,description,price,taxRate,warranty</p>
+        <div class="csv-input-group">
+            <input type="file" id="csv-file-input" accept=".csv" />
+            <button id="upload-csv" class="csv-upload-btn">Upload CSV</button>
+        </div>
+        <div id="csv-preview" class="csv-preview" style="display: none;">
+            <h4>Preview of Imported Items (<span id="preview-count">0</span>)</h4>
+            <div id="preview-content" class="preview-content"></div>
+            <button id="confirm-import" class="confirm-import-btn">Confirm Import</button>
+            <button id="cancel-import" class="cancel-import-btn">Cancel</button>
+        </div>
+    `;
     
-    const select = document.createElement('select');
-    select.id = 'item-selection';
-    select.className = 'item-selection';
+    // Add CSS styles
+    const style = document.createElement('style');
+    style.textContent = `
+        .csv-import-container {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f0f7ff;
+            border-radius: 5px;
+            border: 1px solid #cce0ff;
+        }
+        
+        .csv-import-container h3 {
+            margin-top: 0;
+            color: #0066cc;
+        }
+        
+        .csv-format-info {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .csv-input-group {
+            display: flex;
+            margin-bottom: 15px;
+        }
+        
+        .csv-input-group input[type="file"] {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px 0 0 4px;
+        }
+        
+        .csv-upload-btn {
+            padding: 8px 15px;
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+        }
+        
+        .csv-upload-btn:hover {
+            background-color: #0052a3;
+        }
+        
+        .csv-preview {
+            margin-top: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            background-color: white;
+        }
+        
+        .csv-preview h4 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .preview-content {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+        
+        .preview-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .preview-item:last-child {
+            border-bottom: none;
+        }
+        
+        .confirm-import-btn, .cancel-import-btn {
+            padding: 8px 15px;
+            margin-right: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .confirm-import-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .confirm-import-btn:hover {
+            background-color: #45a049;
+        }
+        
+        .cancel-import-btn {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .cancel-import-btn:hover {
+            background-color: #d32f2f;
+        }
+    `;
+    document.head.appendChild(style);
     
-    // Add default option
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.textContent = '-- Select an item --';
-    select.appendChild(defaultOption);
+    return importContainer;
+}
+
+// Function to update the item selection dropdown with current inventory
+function updateItemSelectionDropdown() {
+    const select = document.getElementById('item-selection');
+    if (!select) return;
+    
+    // Clear current options except the first (default) option
+    while (select.options.length > 1) {
+        select.remove(1);
+    }
     
     // Add inventory items as options
     inventoryItems.forEach((item, index) => {
@@ -631,254 +758,461 @@ function addItemSelectionDropdown() {
         option.textContent = `${item.name} - $${item.price.toFixed(2)}`;
         select.appendChild(option);
     });
-    
-    // Event listener for selection
-    select.addEventListener('change', function() {
-        const selectedIndex = this.value;
-        if (selectedIndex !== '') {
-            const selectedItem = inventoryItems[selectedIndex];
-            
-            // Populate the form with selected item details
-            document.getElementById('item-name').value = selectedItem.name;
-            document.getElementById('item-description').value = selectedItem.description;
-            document.getElementById('item-price').value = selectedItem.price;
-            document.getElementById('item-tax').value = selectedItem.taxRate;
-            document.getElementById('item-warranty').value = selectedItem.warranty;
-            
-            // Focus on the quantity field for quick editing
-            document.getElementById('item-quantity').focus();
-        }
-    });
-    
-    // Append elements to container
-    itemSelectionContainer.appendChild(label);
-    itemSelectionContainer.appendChild(select);
-    
-    // Add CSS for styling
-    const style = document.createElement('style');
-    style.textContent = `
-        .item-selection-container {
-            margin-bottom: 20px;
-            padding: 15px;
-            background-color: #f9f9f9;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-        }
-        
-        .item-selection-container label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-        
-        .item-selection {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-    `;
-    document.head.appendChild(style);
-    
-    return itemSelectionContainer;
 }
 
-// Initialize the feature when the document is ready
-document.addEventListener('DOMContentLoaded', function() {
-    // Get the items tab content
-    const itemsTabContent = document.getElementById('items-tab');
-    
-    // Find where to insert the dropdown (before the form)
-    const itemForm = document.querySelector('#items-tab form') || 
-                     document.querySelector('#items-tab #item-form') || 
-                     document.querySelector('#items-tab .form-container');
-    
-    // Insert the dropdown before the form
-    if (itemForm) {
-        itemsTabContent.insertBefore(addItemSelectionDropdown(), itemForm);
-    } else {
-        // If we can't find the form, just append to the tab content
-        itemsTabContent.appendChild(addItemSelectionDropdown());
-    }
-    
-    // Make sure the dropdown is at the top of the items tab
-    const itemSelectionContainer = document.querySelector('.item-selection-container');
-    if (itemSelectionContainer) {
-        itemsTabContent.insertBefore(itemSelectionContainer, itemsTabContent.firstChild);
-    }
-});
-// Initialize items array
-let items = [];
-let subtotal = 0;
-let taxTotal = 0;
-let grandTotal = 0;
-let editingItemIndex = -1;
-
 // Display current date
-const today = new Date();
-const formattedDate = today.toLocaleDateString('en-US', {
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric'
-});
-document.getElementById('current-date').textContent = formattedDate;
+function setCurrentDate() {
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString('en-US', {
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric'
+    });
+    const dateElement = document.getElementById('current-date');
+    if (dateElement) {
+        dateElement.textContent = formattedDate;
+    }
+    return formattedDate;
+}
 
-// Tab switching
-const tabs = document.querySelectorAll('.tab');
-tabs.forEach(tab => {
-    tab.addEventListener('click', function() {
-        // Remove active class from all tabs
-        tabs.forEach(t => t.classList.remove('active'));
-        // Add active class to clicked tab
-        this.classList.add('active');
+// Setup event listeners for CSV import
+function setupCSVImportListeners() {
+    const fileInput = document.getElementById('csv-file-input');
+    const uploadButton = document.getElementById('upload-csv');
+    const previewDiv = document.getElementById('csv-preview');
+    const previewContent = document.getElementById('preview-content');
+    const previewCount = document.getElementById('preview-count');
+    const confirmButton = document.getElementById('confirm-import');
+    const cancelButton = document.getElementById('cancel-import');
+    
+    let parsedItems = [];
+    
+    uploadButton.addEventListener('click', function() {
+        const file = fileInput.files[0];
+        if (!file) {
+            alert('Please select a CSV file first.');
+            return;
+        }
         
-        // Hide all tab content
-        document.querySelectorAll('.tab-content').forEach(content => {
-            content.style.display = 'none';
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const csvText = e.target.result;
+            try {
+                parsedItems = parseCSVInventory(csvText);
+                
+                // Display preview
+                previewContent.innerHTML = '';
+                parsedItems.forEach((item, index) => {
+                    if (index < 5) { // Show only first 5 items in preview
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'preview-item';
+                        itemDiv.innerHTML = `
+                            <strong>${item.name}</strong> - $${item.price.toFixed(2)}<br>
+                            ${item.description}<br>
+                            Tax: ${item.taxRate}%, Warranty: ${item.warranty} months
+                        `;
+                        previewContent.appendChild(itemDiv);
+                    }
+                });
+                
+                if (parsedItems.length > 5) {
+                    const moreDiv = document.createElement('div');
+                    moreDiv.className = 'preview-item';
+                    moreDiv.innerHTML = `<em>...and ${parsedItems.length - 5} more items</em>`;
+                    previewContent.appendChild(moreDiv);
+                }
+                
+                previewCount.textContent = parsedItems.length;
+                previewDiv.style.display = 'block';
+                
+            } catch (error) {
+                alert('Error parsing the CSV file: ' + error.message);
+            }
+        };
+        reader.readAsText(file);
+    });
+    
+    confirmButton.addEventListener('click', function() {
+        if (parsedItems.length > 0) {
+            // Add the parsed items to the inventory
+            inventoryItems.push(...parsedItems);
+            
+            // Refresh the item selection dropdown
+            updateItemSelectionDropdown();
+            
+            alert(`Successfully imported ${parsedItems.length} items to inventory.`);
+            previewDiv.style.display = 'none';
+            fileInput.value = '';
+        }
+    });
+    
+    cancelButton.addEventListener('click', function() {
+        previewDiv.style.display = 'none';
+        fileInput.value = '';
+    });
+}
+
+// Initialize the app when the document is ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Set current date
+    const formattedDate = setCurrentDate();
+    
+    // Set up tab switching
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            // Remove active class from all tabs
+            tabs.forEach(t => t.classList.remove('active'));
+            // Add active class to clicked tab
+            this.classList.add('active');
+            
+            // Hide all tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            // Show selected tab content
+            const tabId = this.getAttribute('data-tab');
+            document.getElementById(tabId + '-tab').style.display = 'block';
         });
+    });
+    
+    // Add the CSV import feature to settings tab
+    const settingsTab = document.getElementById('settings-tab');
+    if (settingsTab) {
+        settingsTab.appendChild(addCSVImportFeature());
+        // Set up CSV import listeners after adding the feature to DOM
+        setTimeout(setupCSVImportListeners, 0);
+    }
+    
+    // Set the default tax rate in the item form
+    const defaultTaxInput = document.getElementById('default-tax');
+    if (defaultTaxInput) {
+        const defaultTax = defaultTaxInput.value;
+        const itemTaxInput = document.getElementById('item-tax');
+        if (itemTaxInput) {
+            itemTaxInput.value = defaultTax;
+        }
         
-        // Show selected tab content
-        const tabId = this.getAttribute('data-tab');
-        document.getElementById(tabId + '-tab').style.display = 'block';
-    });
-});
-
-// Set default tax rate for new items
-document.getElementById('default-tax').addEventListener('change', function() {
-    document.getElementById('item-tax').value = this.value;
-});
-
-// Save settings
-document.getElementById('save-settings').addEventListener('click', function() {
-    const companyName = document.getElementById('company-name').value;
-    const street = document.getElementById('company-street').value;
-    const city = document.getElementById('company-city').value;
-    const phone = document.getElementById('company-phone').value;
-    const email = document.getElementById('company-email').value;
-    const website = document.getElementById('company-website').value;
-    const terms = document.getElementById('terms-conditions').value;
-    
-    // Update company info in bill
-    document.getElementById('bill-company-name').textContent = companyName;
-    document.getElementById('company-address').innerHTML = 
-        `${street}, ${city}<br>
-        Phone: ${phone}<br>
-        Email: ${email}<br>
-        Website: ${website}`;
-    
-    document.getElementById('bill-terms').innerHTML = terms.replace(/\n/g, '<br>');
-    
-    alert('Settings saved successfully!');
-});
-
-// Add item button
-document.getElementById('add-item').addEventListener('click', function() {
-    const itemName = document.getElementById('item-name').value;
-    const itemDesc = document.getElementById('item-description').value;
-    const quantity = parseInt(document.getElementById('item-quantity').value);
-    const price = parseFloat(document.getElementById('item-price').value);
-    const taxRate = parseFloat(document.getElementById('item-tax').value);
-    const warranty = parseInt(document.getElementById('item-warranty').value);
-    const serialNum = document.getElementById('item-serial').value;
-    
-    if (!itemName || isNaN(quantity) || isNaN(price)) {
-        alert('Please fill in all required item details (name, quantity, price).');
-        return;
+        // Set up default tax rate event listener
+        defaultTaxInput.addEventListener('change', function() {
+            const itemTaxInput = document.getElementById('item-tax');
+            if (itemTaxInput) {
+                itemTaxInput.value = this.value;
+            }
+        });
     }
     
-    const itemTotal = quantity * price;
-    const itemTaxAmount = itemTotal * (taxRate / 100);
-    const itemTotalWithTax = itemTotal + itemTaxAmount;
-    
-    // Add to items array
-    items.push({
-        name: itemName,
-        description: itemDesc,
-        quantity: quantity,
-        price: price,
-        taxRate: taxRate,
-        taxAmount: itemTaxAmount,
-        total: itemTotalWithTax,
-        warranty: warranty,
-        serialNum: serialNum
-    });
-    
-    // Update the table
-    updateItemsTable();
-    
-    // Clear item inputs
-    clearItemForm();
-    
-});
-
-// Update item button (for editing)
-document.getElementById('update-item').addEventListener('click', function() {
-    const itemName = document.getElementById('item-name').value;
-    const itemDesc = document.getElementById('item-description').value;
-    const quantity = parseInt(document.getElementById('item-quantity').value);
-    const price = parseFloat(document.getElementById('item-price').value);
-    const taxRate = parseFloat(document.getElementById('item-tax').value);
-    const warranty = parseInt(document.getElementById('item-warranty').value);
-    const serialNum = document.getElementById('item-serial').value;
-    const editIndex = parseInt(document.getElementById('edit-item-index').value);
-    
-    if (!itemName || isNaN(quantity) || isNaN(price)) {
-        alert('Please fill in all required item details (name, quantity, price).');
-        return;
+    // Set up save settings button
+    const saveSettingsBtn = document.getElementById('save-settings');
+    if (saveSettingsBtn) {
+        saveSettingsBtn.addEventListener('click', function() {
+            const companyName = document.getElementById('company-name').value;
+            const street = document.getElementById('company-street').value;
+            const city = document.getElementById('company-city').value;
+            const phone = document.getElementById('company-phone').value;
+            const email = document.getElementById('company-email').value;
+            const website = document.getElementById('company-website').value;
+            const terms = document.getElementById('terms-conditions').value;
+            
+            // Update company info in bill
+            const billCompanyName = document.getElementById('bill-company-name');
+            if (billCompanyName) billCompanyName.textContent = companyName;
+            
+            const companyAddress = document.getElementById('company-address');
+            if (companyAddress) {
+                companyAddress.innerHTML = 
+                    `${street}, ${city}<br>
+                    Phone: ${phone}<br>
+                    Email: ${email}<br>
+                    Website: ${website}`;
+            }
+            
+            const billTerms = document.getElementById('bill-terms');
+            if (billTerms) billTerms.innerHTML = terms.replace(/\n/g, '<br>');
+            
+            alert('Settings saved successfully!');
+        });
     }
     
-    if (editIndex < 0 || editIndex >= items.length) {
-        alert('Invalid item index.');
-        return;
+    // Add item button
+    const addItemBtn = document.getElementById('add-item');
+    if (addItemBtn) {
+        addItemBtn.addEventListener('click', function() {
+            const itemName = document.getElementById('item-name').value;
+            const itemDesc = document.getElementById('item-description').value;
+            const quantity = parseInt(document.getElementById('item-quantity').value);
+            const price = parseFloat(document.getElementById('item-price').value);
+            const taxRate = parseFloat(document.getElementById('item-tax').value);
+            const warranty = parseInt(document.getElementById('item-warranty').value);
+            const serialNum = document.getElementById('item-serial').value;
+            
+            if (!itemName || isNaN(quantity) || isNaN(price)) {
+                alert('Please fill in all required item details (name, quantity, price).');
+                return;
+            }
+            
+            const itemTotal = quantity * price;
+            const itemTaxAmount = itemTotal * (taxRate / 100);
+            const itemTotalWithTax = itemTotal + itemTaxAmount;
+            
+            // Add to items array
+            items.push({
+                name: itemName,
+                description: itemDesc,
+                quantity: quantity,
+                price: price,
+                taxRate: taxRate,
+                taxAmount: itemTaxAmount,
+                total: itemTotalWithTax,
+                warranty: warranty,
+                serialNum: serialNum
+            });
+            
+            // Update the table
+            updateItemsTable();
+            
+            // Clear item inputs
+            clearItemForm();
+        });
     }
     
-    const itemTotal = quantity * price;
-    const itemTaxAmount = itemTotal * (taxRate / 100);
-    const itemTotalWithTax = itemTotal + itemTaxAmount;
+    // Update item button (for editing)
+    const updateItemBtn = document.getElementById('update-item');
+    if (updateItemBtn) {
+        updateItemBtn.addEventListener('click', function() {
+            const itemName = document.getElementById('item-name').value;
+            const itemDesc = document.getElementById('item-description').value;
+            const quantity = parseInt(document.getElementById('item-quantity').value);
+            const price = parseFloat(document.getElementById('item-price').value);
+            const taxRate = parseFloat(document.getElementById('item-tax').value);
+            const warranty = parseInt(document.getElementById('item-warranty').value);
+            const serialNum = document.getElementById('item-serial').value;
+            const editIndexInput = document.getElementById('edit-item-index');
+            const editIndex = parseInt(editIndexInput ? editIndexInput.value : -1);
+            
+            if (!itemName || isNaN(quantity) || isNaN(price)) {
+                alert('Please fill in all required item details (name, quantity, price).');
+                return;
+            }
+            
+            if (editIndex < 0 || editIndex >= items.length) {
+                alert('Invalid item index.');
+                return;
+            }
+            
+            const itemTotal = quantity * price;
+            const itemTaxAmount = itemTotal * (taxRate / 100);
+            const itemTotalWithTax = itemTotal + itemTaxAmount;
+            
+            // Update the item in the array
+            items[editIndex] = {
+                name: itemName,
+                description: itemDesc,
+                quantity: quantity,
+                price: price,
+                taxRate: taxRate,
+                taxAmount: itemTaxAmount,
+                total: itemTotalWithTax,
+                warranty: warranty,
+                serialNum: serialNum
+            };
+            
+            // Update the table
+            updateItemsTable();
+            
+            // Clear form and reset to add mode
+            clearItemForm();
+            toggleItemFormMode('add');
+        });
+    }
     
-    // Update the item in the array
-    items[editIndex] = {
-        name: itemName,
-        description: itemDesc,
-        quantity: quantity,
-        price: price,
-        taxRate: taxRate,
-        taxAmount: itemTaxAmount,
-        total: itemTotalWithTax,
-        warranty: warranty,
-        serialNum: serialNum
-    };
+    // Cancel edit button
+    const cancelEditBtn = document.getElementById('cancel-edit');
+    if (cancelEditBtn) {
+        cancelEditBtn.addEventListener('click', function() {
+            clearItemForm();
+            toggleItemFormMode('add');
+        });
+    }
     
-    // Update the table
-    updateItemsTable();
+    // Generate bill button
+    const generateBillBtn = document.getElementById('generate-bill');
+    if (generateBillBtn) {
+        generateBillBtn.addEventListener('click', function() {
+            const customerName = document.getElementById('customer-name').value;
+            const customerPhone = document.getElementById('customer-phone').value;
+            const customerEmail = document.getElementById('customer-email').value;
+            const customerAddress = document.getElementById('customer-address').value;
+            const billNumber = document.getElementById('bill-number').value;
+            const paymentMethod = document.getElementById('payment-method').value;
+            
+            if (!customerName || !billNumber) {
+                alert('Please provide customer name and bill number.');
+                return;
+            }
+            
+            if (items.length === 0) {
+                alert('Please add at least one item to the bill.');
+                return;
+            }
+            
+            // Update bill preview with customer details
+            const billCustomerName = document.getElementById('bill-customer-name');
+            if (billCustomerName) billCustomerName.textContent = customerName;
+            
+            const billCustomerPhone = document.getElementById('bill-customer-phone');
+            if (billCustomerPhone) billCustomerPhone.textContent = customerPhone;
+            
+            const billCustomerEmail = document.getElementById('bill-customer-email');
+            if (billCustomerEmail) billCustomerEmail.textContent = customerEmail;
+            
+            const billCustomerAddress = document.getElementById('bill-customer-address');
+            if (billCustomerAddress) billCustomerAddress.textContent = customerAddress;
+            
+            const billNo = document.getElementById('bill-no');
+            if (billNo) billNo.textContent = billNumber;
+            
+            const billDate = document.getElementById('bill-date');
+            if (billDate) billDate.textContent = formattedDate;
+            
+            const billPayment = document.getElementById('bill-payment');
+            if (billPayment) billPayment.textContent = paymentMethod;
+            
+            // Update bill items
+            const billItemsBody = document.getElementById('bill-items-body');
+            if (billItemsBody) {
+                billItemsBody.innerHTML = '';
+                
+                items.forEach((item, index) => {
+                    const row = document.createElement('tr');
+                    
+                    const snoCell = document.createElement('td');
+                    snoCell.textContent = index + 1;
+                    
+                    const descCell = document.createElement('td');
+                    descCell.innerHTML = `<strong>${item.name}</strong><br>${item.description}`;
+                    
+                    const serialCell = document.createElement('td');
+                    serialCell.textContent = item.serialNum || 'N/A';
+                    
+                    const warrantyCell = document.createElement('td');
+                    warrantyCell.textContent = item.warranty > 0 ? `${item.warranty} months` : 'None';
+                    
+                    const qtyCell = document.createElement('td');
+                    qtyCell.textContent = item.quantity;
+                    
+                    const priceCell = document.createElement('td');
+                    priceCell.textContent = item.price.toFixed(2);
+                    
+                    const taxCell = document.createElement('td');
+                    taxCell.textContent = item.taxRate + '%';
+                    
+                    const amountCell = document.createElement('td');
+                    amountCell.textContent = item.total.toFixed(2);
+                    
+                    row.appendChild(snoCell);
+                    row.appendChild(descCell);
+                    row.appendChild(serialCell);
+                    row.appendChild(warrantyCell);
+                    row.appendChild(qtyCell);
+                    row.appendChild(priceCell);
+                    row.appendChild(taxCell);
+                    row.appendChild(amountCell);
+                    
+                    billItemsBody.appendChild(row);
+                });
+                
+                // Update bill totals
+                const billSubtotal = document.getElementById('bill-subtotal');
+                if (billSubtotal) billSubtotal.textContent = subtotal.toFixed(2);
+                
+                const billTax = document.getElementById('bill-tax');
+                if (billTax) billTax.textContent = taxTotal.toFixed(2);
+                
+                const billTotal = document.getElementById('bill-total');
+                if (billTotal) billTotal.textContent = grandTotal.toFixed(2);
+                
+                // Show print preview
+                const printArea = document.getElementById('print-area');
+                if (printArea) printArea.style.display = 'block';
+            }
+        });
+    }
     
-    // Clear form and reset to add mode
-    clearItemForm();
-    toggleItemFormMode('add');
+    // Print bill button
+    const printBillBtn = document.getElementById('print-bill');
+    if (printBillBtn) {
+        printBillBtn.addEventListener('click', function() {
+            window.print();
+        });
+    }
     
-
+    // Save as PDF button
+    const savePdfBtn = document.getElementById('save-pdf');
+    if (savePdfBtn) {
+        savePdfBtn.addEventListener('click', function() {
+            window.print();
+        });
+    }
+    
+    // Reset button
+    const resetBillBtn = document.getElementById('reset-bill');
+    if (resetBillBtn) {
+        resetBillBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to reset the bill? All data will be cleared.')) {
+                // Clear customer info
+                const customerName = document.getElementById('customer-name');
+                if (customerName) customerName.value = '';
+                
+                const customerPhone = document.getElementById('customer-phone');
+                if (customerPhone) customerPhone.value = '';
+                
+                const customerEmail = document.getElementById('customer-email');
+                if (customerEmail) customerEmail.value = '';
+                
+                const customerAddress = document.getElementById('customer-address');
+                if (customerAddress) customerAddress.value = '';
+                
+                const billNumber = document.getElementById('bill-number');
+                if (billNumber) billNumber.value = '';
+                
+                const paymentMethod = document.getElementById('payment-method');
+                if (paymentMethod) paymentMethod.selectedIndex = 0;
+                
+                // Clear items
+                items = [];
+                updateItemsTable();
+                
+                // Clear bill preview
+                const printArea = document.getElementById('print-area');
+                if (printArea) printArea.style.display = 'none';
+            }
+        });
+    }
+    
+    // Hide the print preview initially
+    const printArea = document.getElementById('print-area');
+    if (printArea) printArea.style.display = 'none';
 });
 
-// Cancel edit button
-document.getElementById('cancel-edit').addEventListener('click', function() {
-    clearItemForm();
-    toggleItemFormMode('add');
-});
-
-// Toggle item form between add and edit modes
+// Function to toggle item form between add and edit modes
 function toggleItemFormMode(mode) {
     const addBtn = document.getElementById('add-item');
     const updateBtn = document.getElementById('update-item');
     const cancelBtn = document.getElementById('cancel-edit');
     const formTitle = document.getElementById('item-form-title');
     
+    if (!addBtn || !updateBtn || !cancelBtn || !formTitle) return;
+    
     if (mode === 'add') {
         formTitle.textContent = 'Add Item';
         addBtn.style.display = 'inline-block';
         updateBtn.style.display = 'none';
         cancelBtn.style.display = 'none';
-        document.getElementById('edit-item-index').value = '-1';
+        
+        const editItemIndex = document.getElementById('edit-item-index');
+        if (editItemIndex) editItemIndex.value = '-1';
     } else if (mode === 'edit') {
         formTitle.textContent = 'Edit Item';
         addBtn.style.display = 'none';
@@ -889,13 +1223,27 @@ function toggleItemFormMode(mode) {
 
 // Clear item form fields
 function clearItemForm() {
-    document.getElementById('item-name').value = '';
-    document.getElementById('item-description').value = '';
-    document.getElementById('item-quantity').value = '1';
-    document.getElementById('item-price').value = '';
-    document.getElementById('item-tax').value = document.getElementById('default-tax').value;
-    document.getElementById('item-warranty').value = '0';
-    document.getElementById('item-serial').value = '';
+    const itemName = document.getElementById('item-name');
+    if (itemName) itemName.value = '';
+    
+    const itemDescription = document.getElementById('item-description');
+    if (itemDescription) itemDescription.value = '';
+    
+    const itemQuantity = document.getElementById('item-quantity');
+    if (itemQuantity) itemQuantity.value = '1';
+    
+    const itemPrice = document.getElementById('item-price');
+    if (itemPrice) itemPrice.value = '';
+    
+    const defaultTax = document.getElementById('default-tax');
+    const itemTax = document.getElementById('item-tax');
+    if (defaultTax && itemTax) itemTax.value = defaultTax.value;
+    
+    const itemWarranty = document.getElementById('item-warranty');
+    if (itemWarranty) itemWarranty.value = '0';
+    
+    const itemSerial = document.getElementById('item-serial');
+    if (itemSerial) itemSerial.value = '';
 }
 
 // Edit item function
@@ -908,25 +1256,43 @@ function editItem(index) {
     const item = items[index];
     
     // Populate form with item details
-    document.getElementById('item-name').value = item.name;
-    document.getElementById('item-description').value = item.description;
-    document.getElementById('item-quantity').value = item.quantity;
-    document.getElementById('item-price').value = item.price;
-    document.getElementById('item-tax').value = item.taxRate;
-    document.getElementById('item-warranty').value = item.warranty;
-    document.getElementById('item-serial').value = item.serialNum;
-    document.getElementById('edit-item-index').value = index;
+    const itemName = document.getElementById('item-name');
+    if (itemName) itemName.value = item.name;
+    
+    const itemDescription = document.getElementById('item-description');
+    if (itemDescription) itemDescription.value = item.description;
+    
+    const itemQuantity = document.getElementById('item-quantity');
+    if (itemQuantity) itemQuantity.value = item.quantity;
+    
+    const itemPrice = document.getElementById('item-price');
+    if (itemPrice) itemPrice.value = item.price;
+    
+    const itemTax = document.getElementById('item-tax');
+    if (itemTax) itemTax.value = item.taxRate;
+    
+    const itemWarranty = document.getElementById('item-warranty');
+    if (itemWarranty) itemWarranty.value = item.warranty;
+    
+    const itemSerial = document.getElementById('item-serial');
+    if (itemSerial) itemSerial.value = item.serialNum;
+    
+    const editItemIndex = document.getElementById('edit-item-index');
+    if (editItemIndex) editItemIndex.value = index;
     
     // Switch to edit mode
     toggleItemFormMode('edit');
     
     // Switch to items tab
-    document.querySelector('.tab[data-tab="items"]').click();
+    const itemsTab = document.querySelector('.tab[data-tab="items"]');
+    if (itemsTab) itemsTab.click();
 }
 
 // Function to update the items table
 function updateItemsTable() {
     const tableBody = document.getElementById('items-body');
+    if (!tableBody) return;
+    
     tableBody.innerHTML = '';
     subtotal = 0;
     taxTotal = 0;
@@ -998,130 +1364,15 @@ function updateItemsTable() {
     });
     
     // Update summary values
-    document.getElementById('subtotal-amount').textContent = subtotal.toFixed(2);
-    document.getElementById('tax-amount').textContent = taxTotal.toFixed(2);
-    document.getElementById('total-amount').textContent = grandTotal.toFixed(2);
+    const subtotalAmount = document.getElementById('subtotal-amount');
+    if (subtotalAmount) subtotalAmount.textContent = subtotal.toFixed(2);
+    
+    const taxAmount = document.getElementById('tax-amount');
+    if (taxAmount) taxAmount.textContent = taxTotal.toFixed(2);
+    
+    const totalAmount = document.getElementById('total-amount');
+    if (totalAmount) totalAmount.textContent = grandTotal.toFixed(2);
 }
-
-// Generate bill button
-document.getElementById('generate-bill').addEventListener('click', function() {
-    const customerName = document.getElementById('customer-name').value;
-    const customerPhone = document.getElementById('customer-phone').value;
-    const customerEmail = document.getElementById('customer-email').value;
-    const customerAddress = document.getElementById('customer-address').value;
-    const billNumber = document.getElementById('bill-number').value;
-    const paymentMethod = document.getElementById('payment-method').value;
-    
-    if (!customerName || !billNumber) {
-        alert('Please provide customer name and bill number.');
-        return;
-    }
-    
-    if (items.length === 0) {
-        alert('Please add at least one item to the bill.');
-        return;
-    }
-    
-    // Update bill preview with customer details
-    document.getElementById('bill-customer-name').textContent = customerName;
-    document.getElementById('bill-customer-phone').textContent = customerPhone;
-    document.getElementById('bill-customer-email').textContent = customerEmail;
-    document.getElementById('bill-customer-address').textContent = customerAddress;
-    document.getElementById('bill-no').textContent = billNumber;
-    document.getElementById('bill-date').textContent = formattedDate;
-    document.getElementById('bill-payment').textContent = paymentMethod;
-    
-    // Update bill items
-    const billItemsBody = document.getElementById('bill-items-body');
-    billItemsBody.innerHTML = '';
-    
-    items.forEach((item, index) => {
-        const row = document.createElement('tr');
-        
-        const snoCell = document.createElement('td');
-        snoCell.textContent = index + 1;
-        
-        const descCell = document.createElement('td');
-        descCell.innerHTML = `<strong>${item.name}</strong><br>${item.description}`;
-        
-        const serialCell = document.createElement('td');
-        serialCell.textContent = item.serialNum || 'N/A';
-        
-        const warrantyCell = document.createElement('td');
-        warrantyCell.textContent = item.warranty > 0 ? `${item.warranty} months` : 'None';
-        
-        const qtyCell = document.createElement('td');
-        qtyCell.textContent = item.quantity;
-        
-        const priceCell = document.createElement('td');
-        priceCell.textContent = item.price.toFixed(2);
-        
-        const taxCell = document.createElement('td');
-        taxCell.textContent = item.taxRate + '%';
-        
-        const amountCell = document.createElement('td');
-        amountCell.textContent = item.total.toFixed(2);
-        
-        row.appendChild(snoCell);
-        row.appendChild(descCell);
-        row.appendChild(serialCell);
-        row.appendChild(warrantyCell);
-        row.appendChild(qtyCell);
-        row.appendChild(priceCell);
-        row.appendChild(taxCell);
-        row.appendChild(amountCell);
-        
-        billItemsBody.appendChild(row);
-    });
-    
-    // Update bill totals
-    document.getElementById('bill-subtotal').textContent = subtotal.toFixed(2);
-    document.getElementById('bill-tax').textContent = taxTotal.toFixed(2);
-    document.getElementById('bill-total').textContent = grandTotal.toFixed(2);
-    
-    // Show print preview
-    document.getElementById('print-area').style.display = 'block';
-});
-
-// Print bill button
-document.getElementById('print-bill').addEventListener('click', function() {
-    window.print();
-});
-
-// Save as PDF button (relies on browser print to PDF functionality)
-document.getElementById('save-pdf').addEventListener('click', function() {
-    window.print();
-});
-
-// Reset button
-document.getElementById('reset-bill').addEventListener('click', function() {
-    if (confirm('Are you sure you want to reset the bill? All data will be cleared.')) {
-        // Clear customer info
-        document.getElementById('customer-name').value = '';
-        document.getElementById('customer-phone').value = '';
-        document.getElementById('customer-email').value = '';
-        document.getElementById('customer-address').value = '';
-        document.getElementById('bill-number').value = '';
-        document.getElementById('payment-method').selectedIndex = 0;
-        
-        // Clear items
-        items = [];
-        updateItemsTable();
-        
-        // Clear bill preview
-        document.getElementById('print-area').style.display = 'none';
-    }
-});
-
-// Initialize the app when the document is ready
-document.addEventListener('DOMContentLoaded', function() {
-    // Set the default tax rate in the item form
-    const defaultTax = document.getElementById('default-tax').value;
-    document.getElementById('item-tax').value = defaultTax;
-    
-    // Hide the print preview initially
-    document.getElementById('print-area').style.display = 'none';
-});
 </script>
 </body>
 </html>
