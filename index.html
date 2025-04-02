@@ -289,7 +289,7 @@
             color: #666;
             margin-top: 5px;
         }
-/* Add these updated print styles to your existing CSS */
+/* Updated print styles to center the invoice on the page */
 @media print {
     body * {
         visibility: hidden;
@@ -302,22 +302,30 @@
         position: absolute;
         top: 0;
         left: 0;
-        width: 95%; /* Reduce width to prevent right side cutoff */
-        max-width: 850px; /* Limit maximum width */
+        right: 0; /* Add right: 0 to help with centering */
+        width: 90%; /* Reduce width to prevent right side cutoff */
+        max-width: 800px; /* Limit maximum width */
         margin: 0 auto !important; /* Center the invoice */
-        padding: 10px 20px 10px 10px; /* Add more padding on the right side */
+        padding: 15px 25px 15px 15px; /* Add more padding on the right side */
+        
+        /* Enhanced centering technique */
+        transform: translateX(0); /* Reset any transforms */
+        left: 50%; /* Position from center of page */
+        transform: translateX(-50%); /* Pull back by half width to center */
     }
     
     /* Adjust table sizing for print */
     #bill-items {
         width: 95%;
         table-layout: fixed;
-        font-size: 0.95em; /* Slightly reduce font size */
+        font-size: 0.9em; /* Slightly reduce font size */
+        margin: 0 auto; /* Center the table within its container */
     }
     
     /* Make header more compact */
     .bill-header {
         margin-bottom: 10px;
+        text-align: center; /* Center header content */
     }
     
     /* Optimize column widths */
@@ -336,6 +344,16 @@
         text-overflow: ellipsis;
         white-space: normal;
         word-wrap: break-word;
+    }
+    
+    /* Company and customer info containers */
+    .company-info, .customer-info {
+        text-align: center; /* Center these sections */
+    }
+    
+    /* Add page margin controls */
+    @page {
+        margin: 0.5cm; /* Consistent margins all around */
     }
 }
     </style>
@@ -880,7 +898,7 @@ document.getElementById('update-item').addEventListener('click', function() {
     toggleItemFormMode('add');
     
     // Switch back to customer tab
-    tabs[0].click();
+    
 });
 
 // Cancel edit button
