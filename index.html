@@ -676,6 +676,7 @@
         </div>
     </div>
     
+    
     <script>
         // Define the inventory items array globally
         let inventoryItems = [];
@@ -745,6 +746,33 @@
             }
             
             return items;
+        }
+
+        // Add function to load CSV from a GitHub URL
+        async function loadInventoryFromGitHub() {
+            const githubCsvUrl = 'https://raw.githubusercontent.com/YourUsername/YourRepository/main/inventory.csv';
+            
+            try {
+                const response = await fetch(githubCsvUrl);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch CSV: ${response.status}`);
+                }
+                
+                const csvContent = await response.text();
+                const items = parseCSVInventory(csvContent);
+                
+                // Add the parsed items to the inventory
+                inventoryItems = items;
+                
+                // Update the UI
+                updateInventoryTable();
+                updateItemSelectionDropdown();
+                
+                console.log(`Successfully loaded ${items.length} inventory items from GitHub.`);
+            } catch (error) {
+                console.error('Error loading inventory from GitHub:', error);
+                // You could show a UI notification here if desired
+            }
         }
 
         // Function to add a CSV import button and interface
@@ -899,476 +927,479 @@
                 
                 const reader = new FileReader();
                 reader.onload = function(e) {
-    const csvContent = e.target.result;
-    parsedItems = parseCSVInventory(csvContent);
-    
-    // Show preview
-    previewDiv.style.display = 'block';
-    previewContent.innerHTML = '';
-    previewCount.textContent = parsedItems.length;
-    
-    // Display first 5 items (or fewer if less exist)
-    const previewLimit = Math.min(parsedItems.length, 5);
-    for (let i = 0; i < previewLimit; i++) {
-        const item = parsedItems[i];
-        const itemDiv = document.createElement('div');
-        itemDiv.className = 'preview-item';
-        itemDiv.textContent = `${item.name} - $${item.price.toFixed(2)} (${item.taxRate}% Tax, ${item.warranty} months warranty)`;
-        previewContent.appendChild(itemDiv);
-    }
-    
-    if (parsedItems.length > 5) {
-        const moreDiv = document.createElement('div');
-        moreDiv.className = 'preview-item';
-        moreDiv.textContent = `... and ${parsedItems.length - 5} more items`;
-        previewContent.appendChild(moreDiv);
-    }
-};
+                    const csvContent = e.target.result;
+                    parsedItems = parseCSVInventory(csvContent);
+                    
+                    // Show preview
+                    previewDiv.style.display = 'block';
+                    previewContent.innerHTML = '';
+                    previewCount.textContent = parsedItems.length;
+                    
+                    // Display first 5 items (or fewer if less exist)
+                    const previewLimit = Math.min(parsedItems.length, 5);
+                    for (let i = 0; i < previewLimit; i++) {
+                        const item = parsedItems[i];
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'preview-item';
+                        itemDiv.textContent = `${item.name} - $${item.price.toFixed(2)} (${item.taxRate}% Tax, ${item.warranty} months warranty)`;
+                        previewContent.appendChild(itemDiv);
+                    }
+                    
+                    if (parsedItems.length > 5) {
+                        const moreDiv = document.createElement('div');
+                        moreDiv.className = 'preview-item';
+                        moreDiv.textContent = `... and ${parsedItems.length - 5} more items`;
+                        previewContent.appendChild(moreDiv);
+                    }
+                };
 
-reader.readAsText(file);
-});
+                reader.readAsText(file);
+            });
 
-confirmButton.addEventListener('click', function() {
-    // Add the parsed items to the inventory
-    inventoryItems = inventoryItems.concat(parsedItems);
-    
-    // Update the UI
-    updateInventoryTable();
-    updateItemSelectionDropdown();
-    
-    // Reset and hide the preview
-    previewDiv.style.display = 'none';
-    fileInput.value = '';
-    parsedItems = [];
-    
-    alert(`Successfully imported ${parsedItems.length} inventory items.`);
-});
+            confirmButton.addEventListener('click', function() {
+                // Add the parsed items to the inventory
+                inventoryItems = inventoryItems.concat(parsedItems);
+                
+                // Update the UI
+                updateInventoryTable();
+                updateItemSelectionDropdown();
+                
+                // Reset and hide the preview
+                previewDiv.style.display = 'none';
+                fileInput.value = '';
+                
+                alert(`Successfully imported ${parsedItems.length} inventory items.`);
+                parsedItems = [];
+            });
 
-cancelButton.addEventListener('click', function() {
-    // Reset and hide the preview
-    previewDiv.style.display = 'none';
-    fileInput.value = '';
-    parsedItems = [];
-});
-}
+            cancelButton.addEventListener('click', function() {
+                // Reset and hide the preview
+                previewDiv.style.display = 'none';
+                fileInput.value = '';
+                parsedItems = [];
+            });
+        }
 
-// Calculate total for an item
-function calculateItemTotal(price, quantity, taxRate) {
-    const itemSubtotal = price * quantity;
-    const itemTax = itemSubtotal * (taxRate / 100);
-    return {
-        subtotal: itemSubtotal,
-        tax: itemTax,
-        total: itemSubtotal + itemTax
-    };
-}
+        // Calculate total for an item
+        function calculateItemTotal(price, quantity, taxRate) {
+            const itemSubtotal = price * quantity;
+            const itemTax = itemSubtotal * (taxRate / 100);
+            return {
+                subtotal: itemSubtotal,
+                tax: itemTax,
+                total: itemSubtotal + itemTax
+            };
+        }
 
-// Update bill summary
-function updateSummary() {
-    subtotal = 0;
-    taxTotal = 0;
-    grandTotal = 0;
-    
-    items.forEach(item => {
-        subtotal += item.subtotal;
-        taxTotal += item.tax;
-    });
-    
-    grandTotal = subtotal + taxTotal;
-    
-    document.getElementById('subtotal-amount').textContent = '$' + subtotal.toFixed(2);
-    document.getElementById('tax-amount').textContent = '$' + taxTotal.toFixed(2);
-    document.getElementById('total-amount').textContent = '$' + grandTotal.toFixed(2);
-}
-
-// Add or update item in the bill
-function addOrUpdateItem() {
-    const nameInput = document.getElementById('item-name');
-    const descriptionInput = document.getElementById('item-description');
-    const quantityInput = document.getElementById('item-quantity');
-    const priceInput = document.getElementById('item-price');
-    const taxInput = document.getElementById('item-tax');
-    const warrantyInput = document.getElementById('item-warranty');
-    const serialInput = document.getElementById('item-serial');
-    
-    // Validate required fields
-    if (!nameInput.value || !quantityInput.value || !priceInput.value) {
-        alert('Please fill in all required fields.');
-        return;
-    }
-    
-    const item = {
-        name: nameInput.value,
-        description: descriptionInput.value,
-        quantity: parseInt(quantityInput.value),
-        price: parseFloat(priceInput.value),
-        taxRate: parseFloat(taxInput.value),
-        warranty: parseInt(warrantyInput.value),
-        serial: serialInput.value
-    };
-    
-    // Calculate totals
-    const totals = calculateItemTotal(item.price, item.quantity, item.taxRate);
-    item.subtotal = totals.subtotal;
-    item.tax = totals.tax;
-    item.total = totals.total;
-    
-    if (editingItemIndex === -1) {
-        // Add new item
-        items.push(item);
-    } else {
-        // Update existing item
-        items[editingItemIndex] = item;
-        editingItemIndex = -1;
-        
-        // Reset UI buttons
-        document.getElementById('add-item').style.display = 'inline-block';
-        document.getElementById('update-item').style.display = 'none';
-        document.getElementById('cancel-edit').style.display = 'none';
-        document.getElementById('item-form-title').textContent = 'Add Item';
-    }
-    
-    // Update the table and summary
-    updateItemsTable();
-    updateSummary();
-    
-    // Reset form
-    document.getElementById('item-name').value = '';
-    document.getElementById('item-description').value = '';
-    document.getElementById('item-quantity').value = '1';
-    document.getElementById('item-price').value = '';
-    document.getElementById('item-tax').value = document.getElementById('default-tax').value;
-    document.getElementById('item-warranty').value = '0';
-    document.getElementById('item-serial').value = '';
-    document.getElementById('edit-item-index').value = '-1';
-}
-
-// Update items table
-function updateItemsTable() {
-    const tableBody = document.getElementById('items-body');
-    tableBody.innerHTML = '';
-    
-    items.forEach((item, index) => {
-        const row = document.createElement('tr');
-        
-        const nameCell = document.createElement('td');
-        nameCell.textContent = item.name;
-        
-        const descCell = document.createElement('td');
-        descCell.textContent = item.description.length > 30 ? 
-            item.description.substring(0, 30) + '...' : 
-            item.description;
-        
-        const quantityCell = document.createElement('td');
-        quantityCell.textContent = item.quantity;
-        
-        const priceCell = document.createElement('td');
-        priceCell.textContent = '$' + item.price.toFixed(2);
-        
-        const taxCell = document.createElement('td');
-        taxCell.textContent = item.taxRate + '%';
-        
-        const totalCell = document.createElement('td');
-        totalCell.textContent = '$' + item.total.toFixed(2);
-        
-        const actionsCell = document.createElement('td');
-        const actionsDiv = document.createElement('div');
-        actionsDiv.className = 'item-actions';
-        
-        const editButton = document.createElement('button');
-        editButton.className = 'edit-btn';
-        editButton.textContent = 'Edit';
-        editButton.addEventListener('click', function() {
-            editItem(index);
-        });
-        
-        const removeButton = document.createElement('button');
-        removeButton.className = 'remove-btn';
-        removeButton.textContent = 'Remove';
-        removeButton.addEventListener('click', function() {
-            removeItem(index);
-        });
-        
-        actionsDiv.appendChild(editButton);
-        actionsDiv.appendChild(removeButton);
-        actionsCell.appendChild(actionsDiv);
-        
-        row.appendChild(nameCell);
-        row.appendChild(descCell);
-        row.appendChild(quantityCell);
-        row.appendChild(priceCell);
-        row.appendChild(taxCell);
-        row.appendChild(totalCell);
-        row.appendChild(actionsCell);
-        
-        tableBody.appendChild(row);
-    });
-}
-
-// Edit item
-function editItem(index) {
-    const item = items[index];
-    
-    document.getElementById('item-name').value = item.name;
-    document.getElementById('item-description').value = item.description;
-    document.getElementById('item-quantity').value = item.quantity;
-    document.getElementById('item-price').value = item.price;
-    document.getElementById('item-tax').value = item.taxRate;
-    document.getElementById('item-warranty').value = item.warranty;
-    document.getElementById('item-serial').value = item.serial;
-    document.getElementById('edit-item-index').value = index;
-    
-    // Update UI buttons
-    document.getElementById('add-item').style.display = 'none';
-    document.getElementById('update-item').style.display = 'inline-block';
-    document.getElementById('cancel-edit').style.display = 'inline-block';
-    document.getElementById('item-form-title').textContent = 'Edit Item';
-    
-    editingItemIndex = index;
-}
-
-// Remove item
-function removeItem(index) {
-    if (confirm('Are you sure you want to remove this item?')) {
-        items.splice(index, 1);
-        updateItemsTable();
-        updateSummary();
-    }
-}
-
-// Generate bill
-function generateBill() {
-    // Validate inputs
-    const customerName = document.getElementById('customer-name').value;
-    const billNumber = document.getElementById('bill-number').value;
-    
-    if (!customerName || !billNumber) {
-        alert('Please enter customer name and bill number.');
-        return;
-    }
-    
-    if (items.length === 0) {
-        alert('Please add at least one item to the bill.');
-        return;
-    }
-    
-    // Set bill details
-    document.getElementById('bill-no').textContent = billNumber;
-    document.getElementById('bill-date').textContent = setCurrentDate();
-    document.getElementById('bill-payment').textContent = document.getElementById('payment-method').value;
-    
-    // Set customer details
-    document.getElementById('bill-customer-name').textContent = customerName;
-    document.getElementById('bill-customer-phone').textContent = document.getElementById('customer-phone').value || 'N/A';
-    document.getElementById('bill-customer-email').textContent = document.getElementById('customer-email').value || 'N/A';
-    document.getElementById('bill-customer-address').textContent = document.getElementById('customer-address').value || 'N/A';
-    
-    // Set company details
-    document.getElementById('bill-company-name').textContent = document.getElementById('company-name').value;
-    const companyAddress = `${document.getElementById('company-street').value}, ${document.getElementById('company-city').value}<br>
-        Phone: ${document.getElementById('company-phone').value}<br>
-        Email: ${document.getElementById('company-email').value}<br>
-        Website: ${document.getElementById('company-website').value}`;
-    document.getElementById('company-address').innerHTML = companyAddress;
-    
-    // Set terms and conditions
-    document.getElementById('bill-terms').innerHTML = document.getElementById('terms-conditions').value.replace(/\n/g, '<br>');
-    
-    // Populate items table
-    const billItemsBody = document.getElementById('bill-items-body');
-    billItemsBody.innerHTML = '';
-    
-    items.forEach((item, index) => {
-        const row = document.createElement('tr');
-        
-        const noCell = document.createElement('td');
-        noCell.textContent = index + 1;
-        
-        const descCell = document.createElement('td');
-        descCell.innerHTML = `<strong>${item.name}</strong><br>${item.description}`;
-        
-        const serialCell = document.createElement('td');
-        serialCell.textContent = item.serial || 'N/A';
-        
-        const warrantyCell = document.createElement('td');
-        warrantyCell.textContent = item.warranty > 0 ? `${item.warranty} months` : 'None';
-        
-        const qtyCell = document.createElement('td');
-        qtyCell.textContent = item.quantity;
-        
-        const priceCell = document.createElement('td');
-        priceCell.textContent = '$' + item.price.toFixed(2);
-        
-        const taxCell = document.createElement('td');
-        taxCell.textContent = item.taxRate + '%';
-        
-        const amountCell = document.createElement('td');
-        amountCell.textContent = '$' + item.total.toFixed(2);
-        
-        row.appendChild(noCell);
-        row.appendChild(descCell);
-        row.appendChild(serialCell);
-        row.appendChild(warrantyCell);
-        row.appendChild(qtyCell);
-        row.appendChild(priceCell);
-        row.appendChild(taxCell);
-        row.appendChild(amountCell);
-        
-        billItemsBody.appendChild(row);
-    });
-    
-    // Set summary amounts
-    document.getElementById('bill-subtotal').textContent = '$' + subtotal.toFixed(2);
-    document.getElementById('bill-tax').textContent = '$' + taxTotal.toFixed(2);
-    document.getElementById('bill-total').textContent = '$' + grandTotal.toFixed(2);
-    
-    // Show print area
-    document.getElementById('print-area').style.display = 'block';
-}
-
-// Reset bill
-function resetBill() {
-    if (confirm('Are you sure you want to reset the bill? All items will be removed.')) {
-        items = [];
-        subtotal = 0;
-        taxTotal = 0;
-        grandTotal = 0;
-        
-        updateItemsTable();
-        updateSummary();
-        
-        document.getElementById('customer-name').value = '';
-        document.getElementById('customer-phone').value = '';
-        document.getElementById('customer-email').value = '';
-        document.getElementById('customer-address').value = '';
-        document.getElementById('bill-number').value = '';
-        
-        document.getElementById('print-area').style.display = 'none';
-    }
-}
-
-// Initialize the app when DOM is fully loaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Add CSV import feature to settings tab
-    const settingsTab = document.getElementById('settings-tab');
-    if (settingsTab) {
-        const csvImport = addCSVImportFeature();
-        settingsTab.appendChild(csvImport);
-        setupCSVImportListeners();
-    }
-    
-    // Set up tab navigation
-    document.querySelectorAll('.tab').forEach(tab => {
-        tab.addEventListener('click', function() {
-            // Hide all tab contents
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.style.display = 'none';
+        // Update bill summary
+        function updateSummary() {
+            subtotal = 0;
+            taxTotal = 0;
+            grandTotal = 0;
+            
+            items.forEach(item => {
+                subtotal += item.subtotal;
+                taxTotal += item.tax;
             });
             
-            // Remove active class from all tabs
-            document.querySelectorAll('.tab').forEach(t => {
-                t.classList.remove('active');
-            });
+            grandTotal = subtotal + taxTotal;
             
-            // Show selected tab content and mark tab as active
-            const tabId = this.getAttribute('data-tab');
-            document.getElementById(tabId + '-tab').style.display = 'block';
-            this.classList.add('active');
-        });
-    });
-    
-    // Set default tax rate on item form
-    document.getElementById('item-tax').value = document.getElementById('default-tax').value;
-    
-    // Set up navigation buttons
-    document.getElementById('next-to-items').addEventListener('click', function() {
-        document.querySelector('.tab[data-tab="items"]').click();
-    });
-    
-    // Set up item form submit
-    document.getElementById('add-item').addEventListener('click', addOrUpdateItem);
-    document.getElementById('update-item').addEventListener('click', addOrUpdateItem);
-    
-    // Set up cancel edit button
-    document.getElementById('cancel-edit').addEventListener('click', function() {
-        // Reset form
-        document.getElementById('item-name').value = '';
-        document.getElementById('item-description').value = '';
-        document.getElementById('item-quantity').value = '1';
-        document.getElementById('item-price').value = '';
-        document.getElementById('item-tax').value = document.getElementById('default-tax').value;
-        document.getElementById('item-warranty').value = '0';
-        document.getElementById('item-serial').value = '';
-        document.getElementById('edit-item-index').value = '-1';
-        
-        // Reset UI buttons
-        document.getElementById('add-item').style.display = 'inline-block';
-        document.getElementById('update-item').style.display = 'none';
-        document.getElementById('cancel-edit').style.display = 'none';
-        document.getElementById('item-form-title').textContent = 'Add Item';
-        
-        editingItemIndex = -1;
-    });
-    
-    // Set up bill generation and reset
-    document.getElementById('generate-bill').addEventListener('click', generateBill);
-    document.getElementById('reset-bill').addEventListener('click', resetBill);
-    
-    // Set up print functionality
-    document.getElementById('print-bill').addEventListener('click', function() {
-        window.print();
-    });
-    
-    // Save settings
-    document.getElementById('save-settings').addEventListener('click', function() {
-        alert('Settings saved successfully!');
-    });
-    
-    // Setup inventory item selection dropdown
-    document.getElementById('item-selection').addEventListener('change', function() {
-        const selectedIndex = parseInt(this.value);
-        if (selectedIndex >= 0) {
-            const item = inventoryItems[selectedIndex];
+            document.getElementById('subtotal-amount').textContent = '$' + subtotal.toFixed(2);
+            document.getElementById('tax-amount').textContent = '$' + taxTotal.toFixed(2);
+            document.getElementById('total-amount').textContent = '$' + grandTotal.toFixed(2);
+        }
+
+        // Add or update item in the bill
+        function addOrUpdateItem() {
+            const nameInput = document.getElementById('item-name');
+            const descriptionInput = document.getElementById('item-description');
+            const quantityInput = document.getElementById('item-quantity');
+            const priceInput = document.getElementById('item-price');
+            const taxInput = document.getElementById('item-tax');
+            const warrantyInput = document.getElementById('item-warranty');
+            const serialInput = document.getElementById('item-serial');
+            
+            // Validate required fields
+            if (!nameInput.value || !quantityInput.value || !priceInput.value) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+            
+            const item = {
+                name: nameInput.value,
+                description: descriptionInput.value,
+                quantity: parseInt(quantityInput.value),
+                price: parseFloat(priceInput.value),
+                taxRate: parseFloat(taxInput.value),
+                warranty: parseInt(warrantyInput.value),
+                serial: serialInput.value
+            };
+            
+            // Calculate totals
+            const totals = calculateItemTotal(item.price, item.quantity, item.taxRate);
+            item.subtotal = totals.subtotal;
+            item.tax = totals.tax;
+            item.total = totals.total;
+            
+            if (editingItemIndex === -1) {
+                // Add new item
+                items.push(item);
+            } else {
+                // Update existing item
+                items[editingItemIndex] = item;
+                editingItemIndex = -1;
+                
+                // Reset UI buttons
+                document.getElementById('add-item').style.display = 'inline-block';
+                document.getElementById('update-item').style.display = 'none';
+                document.getElementById('cancel-edit').style.display = 'none';
+                document.getElementById('item-form-title').textContent = 'Add Item';
+            }
+            
+            // Update the table and summary
+            updateItemsTable();
+            updateSummary();
+            
+            // Reset form
+            document.getElementById('item-name').value = '';
+            document.getElementById('item-description').value = '';
+            document.getElementById('item-quantity').value = '1';
+            document.getElementById('item-price').value = '';
+            document.getElementById('item-tax').value = document.getElementById('default-tax').value;
+            document.getElementById('item-warranty').value = '0';
+            document.getElementById('item-serial').value = '';
+            document.getElementById('edit-item-index').value = '-1';
+        }
+
+        // Update items table
+        function updateItemsTable() {
+            const tableBody = document.getElementById('items-body');
+            tableBody.innerHTML = '';
+            
+            items.forEach((item, index) => {
+                const row = document.createElement('tr');
+                
+                const nameCell = document.createElement('td');
+                nameCell.textContent = item.name;
+                
+                const descCell = document.createElement('td');
+                descCell.textContent = item.description.length > 30 ? 
+                    item.description.substring(0, 30) + '...' : 
+                    item.description;
+                
+                const quantityCell = document.createElement('td');
+                quantityCell.textContent = item.quantity;
+                
+                const priceCell = document.createElement('td');
+                priceCell.textContent = '$' + item.price.toFixed(2);
+                
+                const taxCell = document.createElement('td');
+                taxCell.textContent = item.taxRate + '%';
+                
+                const totalCell = document.createElement('td');
+                totalCell.textContent = '$' + item.total.toFixed(2);
+                
+                const actionsCell = document.createElement('td');
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'item-actions';
+                
+                const editButton = document.createElement('button');
+                editButton.className = 'edit-btn';
+                editButton.textContent = 'Edit';
+                editButton.addEventListener('click', function() {
+                    editItem(index);
+                });
+                
+                const removeButton = document.createElement('button');
+                removeButton.className = 'remove-btn';
+                removeButton.textContent = 'Remove';
+                removeButton.addEventListener('click', function() {
+                    removeItem(index);
+                });
+                
+                actionsDiv.appendChild(editButton);
+                actionsDiv.appendChild(removeButton);
+                actionsCell.appendChild(actionsDiv);
+                
+                row.appendChild(nameCell);
+                row.appendChild(descCell);
+                row.appendChild(quantityCell);
+                row.appendChild(priceCell);
+                row.appendChild(taxCell);
+                row.appendChild(totalCell);
+                row.appendChild(actionsCell);
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Edit item
+        function editItem(index) {
+            const item = items[index];
+            
             document.getElementById('item-name').value = item.name;
             document.getElementById('item-description').value = item.description;
+            document.getElementById('item-quantity').value = item.quantity;
             document.getElementById('item-price').value = item.price;
             document.getElementById('item-tax').value = item.taxRate;
             document.getElementById('item-warranty').value = item.warranty;
+            document.getElementById('item-serial').value = item.serial;
+            document.getElementById('edit-item-index').value = index;
+            
+            // Update UI buttons
+            document.getElementById('add-item').style.display = 'none';
+            document.getElementById('update-item').style.display = 'inline-block';
+            document.getElementById('cancel-edit').style.display = 'inline-block';
+            document.getElementById('item-form-title').textContent = 'Edit Item';
+            
+            editingItemIndex = index;
         }
-    });
-    
-    // Initialize current date
-    setCurrentDate();
 
-    // Add some sample inventory items
-    inventoryItems = [
-        {
-            name: 'Laptop Computer',
-            description: '15-inch laptop with 16GB RAM and 512GB SSD',
-            price: 1299.99,
-            taxRate: 7.5,
-            warranty: 12
-        },
-        {
-            name: 'Office Chair',
-            description: 'Ergonomic office chair with adjustable height',
-            price: 249.99,
-            taxRate: 7.5,
-            warranty: 24
-        },
-        {
-            name: 'Wireless Mouse',
-            description: 'Bluetooth wireless mouse with rechargeable battery',
-            price: 39.99,
-            taxRate: 7.5,
-            warranty: 6
+        // Remove item
+        function removeItem(index) {
+            if (confirm('Are you sure you want to remove this item?')) {
+                items.splice(index, 1);
+                updateItemsTable();
+                updateSummary();
+            }
         }
-    ];
-    
-    // Update UI with inventory items
-    updateInventoryTable();
-    updateItemSelectionDropdown();
-});
-    </script>
+
+        // Generate bill
+        function generateBill() {
+            // Validate inputs
+            const customerName = document.getElementById('customer-name').value;
+            const billNumber = document.getElementById('bill-number').value;
+            
+            if (!customerName || !billNumber) {
+                alert('Please enter customer name and bill number.');
+                return;
+            }
+            
+            if (items.length === 0) {
+                alert('Please add at least one item to the bill.');
+                return;
+            }
+            
+            // Set bill details
+            document.getElementById('bill-no').textContent = billNumber;
+            document.getElementById('bill-date').textContent = setCurrentDate();
+            document.getElementById('bill-payment').textContent = document.getElementById('payment-method').value;
+            
+            // Set customer details
+            document.getElementById('bill-customer-name').textContent = customerName;
+            document.getElementById('bill-customer-phone').textContent = document.getElementById('customer-phone').value || 'N/A';
+            document.getElementById('bill-customer-email').textContent = document.getElementById('customer-email').value || 'N/A';
+            document.getElementById('bill-customer-address').textContent = document.getElementById('customer-address').value || 'N/A';
+            
+            // Set company details
+            document.getElementById('bill-company-name').textContent = document.getElementById('company-name').value;
+            const companyAddress = `${document.getElementById('company-street').value}, ${document.getElementById('company-city').value}<br>
+                Phone: ${document.getElementById('company-phone').value}<br>
+                Email: ${document.getElementById('company-email').value}<br>
+                Website: ${document.getElementById('company-website').value}`;
+            document.getElementById('company-address').innerHTML = companyAddress;
+            
+            // Set terms and conditions
+            document.getElementById('bill-terms').innerHTML = document.getElementById('terms-conditions').value.replace(/\n/g, '<br>');
+            
+            // Populate items table
+            const billItemsBody = document.getElementById('bill-items-body');
+            billItemsBody.innerHTML = '';
+            
+            items.forEach((item, index) => {
+                const row = document.createElement('tr');
+                
+                const noCell = document.createElement('td');
+                noCell.textContent = index + 1;
+                
+                const descCell = document.createElement('td');
+                descCell.innerHTML = `<strong>${item.name}</strong><br>${item.description}`;
+                
+                const serialCell = document.createElement('td');
+                serialCell.textContent = item.serial || 'N/A';
+                
+                const warrantyCell = document.createElement('td');
+                warrantyCell.textContent = item.warranty > 0 ? `${item.warranty} months` : 'None';
+                
+                const qtyCell = document.createElement('td');
+                qtyCell.textContent = item.quantity;
+                
+                const priceCell = document.createElement('td');
+                priceCell.textContent = '$' + item.price.toFixed(2);
+                
+                const taxCell = document.createElement('td');
+                taxCell.textContent = item.taxRate + '%';
+                
+                const amountCell = document.createElement('td');
+                amountCell.textContent = '$' + item.total.toFixed(2);
+                
+                row.appendChild(noCell);
+                row.appendChild(descCell);
+                row.appendChild(serialCell);
+                row.appendChild(warrantyCell);
+                row.appendChild(qtyCell);
+                row.appendChild(priceCell);
+                row.appendChild(taxCell);
+                row.appendChild(amountCell);
+                
+                billItemsBody.appendChild(row);
+            });
+            
+            // Set summary amounts
+            document.getElementById('bill-subtotal').textContent = '$' + subtotal.toFixed(2);
+            document.getElementById('bill-tax').textContent = '$' + taxTotal.toFixed(2);
+            document.getElementById('bill-total').textContent = '$' + grandTotal.toFixed(2);
+            
+            // Show print area
+            document.getElementById('print-area').style.display = 'block';
+        }
+
+        // Reset bill
+        function resetBill() {
+            if (confirm('Are you sure you want to reset the bill? All items will be removed.')) {
+                items = [];
+                subtotal = 0;
+                taxTotal = 0;
+                grandTotal = 0;
+                
+                updateItemsTable();
+                updateSummary();
+                
+                document.getElementById('customer-name').value = '';
+                document.getElementById('customer-phone').value = '';
+                document.getElementById('customer-email').value = '';
+                document.getElementById('customer-address').value = '';
+                document.getElementById('bill-number').value = '';
+                
+                document.getElementById('print-area').style.display = 'none';
+            }
+        }
+
+        // Initialize the app when DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add CSV import feature to settings tab
+            const settingsTab = document.getElementById('settings-tab');
+            if (settingsTab) {
+                const csvImport = addCSVImportFeature();
+                settingsTab.appendChild(csvImport);
+                setupCSVImportListeners();
+            }
+            
+            // Set up tab navigation
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Hide all tab contents
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.style.display = 'none';
+                    });
+                    
+                    // Remove active class from all tabs
+                    document.querySelectorAll('.tab').forEach(t => {
+                        t.classList.remove('active');
+                    });
+                    
+                    // Show selected tab content and mark tab as active
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(tabId + '-tab').style.display = 'block';
+                    this.classList.add('active');
+                });
+            });
+            
+            // Set default tax rate on item form
+            document.getElementById('item-tax').value = document.getElementById('default-tax').value;
+            
+            // Set up navigation buttons
+            document.getElementById('next-to-items').addEventListener('click', function() {
+                document.querySelector('.tab[data-tab="items"]').click();
+            });
+            
+            // Set up item form submit
+            document.getElementById('add-item').addEventListener('click', addOrUpdateItem);
+            document.getElementById('update-item').addEventListener('click', addOrUpdateItem);
+            
+            // Set up cancel edit button
+            document.getElementById('cancel-edit').addEventListener('click', function() {
+                // Reset form
+                document.getElementById('item-name').value = '';
+                document.getElementById('item-description').value = '';
+                document.getElementById('item-quantity').value = '1';
+                document.getElementById('item-price').value = '';
+                document.getElementById('item-tax').value = document.getElementById('default-tax').value;
+                document.getElementById('item-warranty').value = '0';
+                document.getElementById('item-serial').value = '';
+                document.getElementById('edit-item-index').value = '-1';
+                
+                // Reset UI buttons
+                document.getElementById('add-item').style.display = 'inline-block';
+                document.getElementById('update-item').style.display = 'none';
+                document.getElementById('cancel-edit').style.display = 'none';
+                document.getElementById('item-form-title').textContent = 'Add Item';
+                
+                editingItemIndex = -1;
+            });
+            
+            // Set up bill generation and reset
+            document.getElementById('generate-bill').addEventListener('click', generateBill);
+            document.getElementById('reset-bill').addEventListener('click', resetBill);
+            
+            // Set up print functionality
+            document.getElementById('print-bill').addEventListener('click', function() {
+                window.print();
+            });
+            
+            // Save settings
+            document.getElementById('save-settings').addEventListener('click', function() {
+                alert('Settings saved successfully!');
+            });
+            
+            // Setup inventory item selection dropdown
+            document.getElementById('item-selection').addEventListener('change', function() {
+                const selectedIndex = parseInt(this.value);
+                if (selectedIndex >= 0) {
+                    const item = inventoryItems[selectedIndex];
+                    document.getElementById('item-name').value = item.name;
+                    document.getElementById('item-description').value = item.description;
+                    document.getElementById('item-price').value = item.price;
+                    document.getElementById('item-tax').value = item.taxRate;
+                    document.getElementById('item-warranty').value = item.warranty;
+                }
+            });
+            
+            // Initialize current date
+            setCurrentDate();
+
+            // Add some sample inventory items (fallback)
+            inventoryItems = [
+                {
+                    name: 'Laptop Computer',
+                    description: '15-inch laptop with 16GB RAM and 512GB SSD',
+                    price: 1299.99,
+                    taxRate: 7.5,
+                    warranty: 12
+                },
+                {
+                    name: 'Office Chair',
+                    description: 'Ergonomic office chair with adjustable height',
+                    price: 249.99,
+                    taxRate: 7.5,
+                    warranty: 24
+                },
+                {
+                    name: 'Wireless Mouse',
+                    description: 'Bluetooth wireless mouse with rechargeable battery',
+                    price: 39.99,
+                    taxRate: 7.5,
+                    warranty: 6
+                }
+            ];
+            
+            // Try to load inventory from GitHub (will override sample items if successful)
+            loadInventoryFromGitHub();
+            
+            // Update UI with inventory items
+            updateInventoryTable();
+            updateItemSelectionDropdown();
+        });
+</script>
 </body>
 </html>
