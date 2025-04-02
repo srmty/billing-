@@ -867,20 +867,16 @@
                 parsedItems = [];
             });
         }
-
-        // Calculate total for an item
-        function calculateItemTotal(price, quantity, taxRate) {
-            const itemSubtotal = price * quantity;
-            const itemTax = itemSubtotal * (taxRate / 100);
-            return {
-                subtotal: itemSubtotal,
-                tax: itemTax,
-                total: itemSubtotal + item
-                subtotal: itemSubtotal,
-                tax: itemTax,
-                total: itemSubtotal + itemTax
-            };
-        }
+// Calculate total for an item
+function calculateItemTotal(price, quantity, taxRate) {
+    const itemSubtotal = price * quantity;
+    const itemTax = itemSubtotal * (taxRate / 100);
+    return {
+        subtotal: itemSubtotal,
+        tax: itemTax,
+        total: itemSubtotal + itemTax
+    };
+}
 
         // Update the totals display
         function updateTotals() {
