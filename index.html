@@ -7,11 +7,10 @@
     <style>
         /* General Styles */
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: Arial, sans-serif;
             line-height: 1.6;
             margin: 0;
             padding: 0;
-            background-color: #f5f5f5;
             color: #333;
         }
         
@@ -22,33 +21,20 @@
             padding: 20px;
         }
         
-        /* Header Styles */
-        header {
-            background-color: #0072CE;
-            color: white;
-            padding: 15px 0;
-            margin-bottom: 30px;
-        }
-        
-        header h1 {
-            margin: 0;
-            padding: 0 20px;
-        }
-        
-        /* Tab Navigation */
-        .tabs {
+        /* Navigation */
+        .nav-tabs {
             display: flex;
+            border-bottom: 1px solid #ccc;
             margin-bottom: 20px;
-            border-bottom: 1px solid #ddd;
         }
         
         .tab {
             padding: 10px 20px;
+            background-color: #f4f4f4;
             cursor: pointer;
-            background-color: #f1f1f1;
-            border: 1px solid #ddd;
-            border-bottom: none;
             margin-right: 5px;
+            border: 1px solid #ccc;
+            border-bottom: none;
             border-radius: 5px 5px 0 0;
         }
         
@@ -56,16 +42,6 @@
             background-color: #fff;
             border-bottom: 1px solid #fff;
             margin-bottom: -1px;
-            font-weight: bold;
-        }
-        
-        /* Tab Content */
-        .tab-content {
-            background-color: #fff;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-top: none;
-            display: none;
         }
         
         /* Form Styles */
@@ -76,7 +52,7 @@
         label {
             display: block;
             margin-bottom: 5px;
-            font-weight: 600;
+            font-weight: bold;
         }
         
         input, textarea, select {
@@ -84,35 +60,20 @@
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            font-size: 14px;
+            box-sizing: border-box;
         }
         
-        textarea {
-            height: 100px;
-            resize: vertical;
-        }
-        
-        button {
-            padding: 8px 15px;
-            background-color: #0072CE;
+        .btn {
+            padding: 10px 15px;
+            background-color: #4CAF50;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            transition: background-color 0.3s;
         }
         
-        button:hover {
-            background-color: #005bb5;
-        }
-        
-        .form-row {
-            display: flex;
-            gap: 15px;
-        }
-        
-        .form-col {
-            flex: 1;
+        .btn:hover {
+            background-color: #45a049;
         }
         
         /* Table Styles */
@@ -124,113 +85,136 @@
         
         table th, table td {
             padding: 10px;
-            text-align: left;
             border: 1px solid #ddd;
+            text-align: left;
         }
         
         table th {
-            background-color: #f5f5f5;
-            font-weight: 600;
+            background-color: #f4f4f4;
         }
         
+        /* Item Actions */
         .item-actions {
             display: flex;
             gap: 5px;
         }
         
         .edit-btn {
-            background-color: #4caf50;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
         }
         
         .remove-btn {
             background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
         }
         
-        /* Summary Section */
-        .summary {
-            margin-top: 20px;
-            display: flex;
-            justify-content: flex-end;
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-top: none;
         }
         
-        .summary-table {
-            width: 300px;
-            margin-bottom: 20px;
+        /* Initially show first tab */
+        #customer-tab {
+            display: block;
         }
         
-        .summary-table td:first-child {
-            font-weight: 600;
-        }
-        
-        .summary-table td:last-child {
-            text-align: right;
-        }
-        
-        /* Print Area Styles */
+        /* Bill Print Styles */
         #print-area {
+            display: none; /* Initially hidden */
             background-color: white;
             padding: 20px;
-            margin-top: 30px;
+            max-width: 800px;
+            margin: 0 auto;
             border: 1px solid #ddd;
         }
         
         .bill-header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+            align-items: flex-start;
         }
         
-        .company-details, .bill-details {
+        .company-info {
             flex: 1;
         }
         
-        .company-details h2 {
-            color: #0072CE;
-            margin-top: 0;
-        }
-        
-        .bill-details {
+        .bill-info {
+            flex: 1;
             text-align: right;
         }
         
-        .bill-details strong {
-            margin-right: 10px;
+        .bill-title {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #2196F3;
         }
         
-        .customer-details {
-            margin-bottom: 30px;
-            padding: 10px;
-            background-color: #f9f9f9;
-            border-radius: 4px;
+        .customer-section {
+            margin-bottom: 20px;
+        }
+        
+        .bill-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        .bill-table th, .bill-table td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        
+        .bill-table th {
+            background-color: #f4f4f4;
+        }
+        
+        .bill-summary {
+            width: 40%;
+            margin-left: auto;
+            border-collapse: collapse;
+        }
+        
+        .bill-summary td {
+            padding: 5px;
+            border: none;
+        }
+        
+        .bill-summary td:last-child {
+            text-align: right;
+            font-weight: bold;
         }
         
         .bill-footer {
             margin-top: 30px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
         }
         
-        .bill-footer h4 {
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 5px;
-        }
-        
-        .action-buttons {
-            margin-top: 20px;
-            display: flex;
-            gap: 10px;
+        /* Align right for numbers */
+        .text-right {
+            text-align: right;
         }
         
         /* CSV Import Styles */
         .csv-import-container {
-            margin-bottom: 20px;
+            margin-top: 20px;
             padding: 15px;
-            background-color: #f0f7ff;
-            border-radius: 5px;
-            border: 1px solid #cce0ff;
-        }
-        
-        .csv-import-container h3 {
-            margin-top: 0;
-            color: #0066cc;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
         
         .csv-format-info {
@@ -241,94 +225,60 @@
         
         .csv-input-group {
             display: flex;
+            gap: 10px;
             margin-bottom: 15px;
-        }
-        
-        .csv-input-group input[type="file"] {
-            flex-grow: 1;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px 0 0 4px;
         }
         
         .csv-upload-btn {
-            padding: 8px 15px;
-            background-color: #0066cc;
+            background-color: #2196F3;
             color: white;
             border: none;
-            border-radius: 0 4px 4px 0;
+            padding: 8px 15px;
+            border-radius: 4px;
             cursor: pointer;
-        }
-        
-        .csv-upload-btn:hover {
-            background-color: #0052a3;
         }
         
         .csv-preview {
-            margin-top: 15px;
+            padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            padding: 10px;
-            background-color: white;
-        }
-        
-        .csv-preview h4 {
-            margin-top: 0;
-            color: #333;
-        }
-        
-        .preview-content {
-            max-height: 200px;
-            overflow-y: auto;
-            margin-bottom: 15px;
-            font-size: 0.9em;
+            margin-top: 15px;
         }
         
         .preview-item {
-            padding: 8px;
+            padding: 5px 0;
             border-bottom: 1px solid #eee;
-        }
-        
-        .preview-item:last-child {
-            border-bottom: none;
-        }
-        
-        .confirm-import-btn, .cancel-import-btn {
-            padding: 8px 15px;
-            margin-right: 10px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
         }
         
         .confirm-import-btn {
             background-color: #4CAF50;
             color: white;
-        }
-        
-        .confirm-import-btn:hover {
-            background-color: #45a049;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+            margin-right: 10px;
         }
         
         .cancel-import-btn {
             background-color: #f44336;
             color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
         }
         
-        .cancel-import-btn:hover {
-            background-color: #d32f2f;
-        }
-        
-        /* For print media */
+        /* Print specific styles */
         @media print {
             body * {
                 visibility: hidden;
             }
-            
             #print-area, #print-area * {
                 visibility: visible;
             }
-            
             #print-area {
                 position: absolute;
                 left: 0;
@@ -336,295 +286,238 @@
                 width: 100%;
                 border: none;
             }
-            
-            .action-buttons {
+            .no-print {
                 display: none;
             }
         }
     </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1>Billing System with Inventory</h1>
-        </div>
-    </header>
-    
     <div class="container">
-        <!-- Tab Navigation -->
-        <div class="tabs">
-            <div class="tab active" data-tab="customer">Customer Details</div>
-            <div class="tab" data-tab="items">Add Items</div>
+        <h1>Billing System with Inventory</h1>
+        
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+            <div class="tab active" data-tab="customer">Customer</div>
+            <div class="tab" data-tab="items">Items</div>
             <div class="tab" data-tab="inventory">Inventory</div>
             <div class="tab" data-tab="settings">Settings</div>
         </div>
         
-        <!-- Customer Details Tab -->
-        <div id="customer-tab" class="tab-content" style="display: block;">
+        <!-- Customer Tab -->
+        <div id="customer-tab" class="tab-content">
             <h2>Customer Information</h2>
-            <div class="form-row">
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="customer-name">Customer Name *</label>
-                        <input type="text" id="customer-name" placeholder="Enter customer name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="customer-phone">Phone Number</label>
-                        <input type="tel" id="customer-phone" placeholder="Enter phone number">
-                    </div>
-                </div>
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="customer-email">Email Address</label>
-                        <input type="email" id="customer-email" placeholder="Enter email address">
-                    </div>
-                    <div class="form-group">
-                        <label for="customer-address">Address</label>
-                        <textarea id="customer-address" placeholder="Enter customer address"></textarea>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="bill-number">Bill Number *</label>
-                        <input type="text" id="bill-number" placeholder="Enter bill number" required>
-                    </div>
-                </div>
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="payment-method">Payment Method</label>
-                        <select id="payment-method">
-                            <option value="Cash">Cash</option>
-                            <option value="Credit Card">Credit Card</option>
-                            <option value="Debit Card">Debit Card</option>
-                            <option value="Bank Transfer">Bank Transfer</option>
-                            <option value="Check">Check</option>
-                            <option value="PayPal">PayPal</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            
             <div class="form-group">
-                <button id="next-to-items" class="next-btn">Next: Add Items</button>
+                <label for="customer-name">Customer Name *</label>
+                <input type="text" id="customer-name" required>
             </div>
+            <div class="form-group">
+                <label for="customer-phone">Phone Number</label>
+                <input type="tel" id="customer-phone">
+            </div>
+            <div class="form-group">
+                <label for="customer-email">Email</label>
+                <input type="email" id="customer-email">
+            </div>
+            <div class="form-group">
+                <label for="customer-address">Address</label>
+                <textarea id="customer-address" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="bill-number">Bill Number *</label>
+                <input type="text" id="bill-number" required>
+            </div>
+            <div class="form-group">
+                <label for="payment-method">Payment Method</label>
+                <select id="payment-method">
+                    <option value="Cash">Cash</option>
+                    <option value="Credit Card">Credit Card</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="Check">Check</option>
+                </select>
+            </div>
+            <button id="next-to-items" class="btn">Next: Add Items</button>
         </div>
         
         <!-- Items Tab -->
         <div id="items-tab" class="tab-content">
-            <h2 id="item-form-title">Add Item</h2>
-            
-            <div class="form-group">
-                <label for="item-selection">Select from Inventory:</label>
-                <select id="item-selection" class="form-control">
-                    <option value="-1">-- Select Item --</option>
-                </select>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="item-name">Item Name *</label>
-                        <input type="text" id="item-name" placeholder="Enter item name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="item-description">Description</label>
-                        <textarea id="item-description" placeholder="Enter item description"></textarea>
-                    </div>
-                </div>
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="item-quantity">Quantity *</label>
-                        <input type="number" id="item-quantity" min="1" value="1" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="item-price">Price *</label>
-                        <input type="number" id="item-price" min="0" step="0.01" placeholder="0.00" required>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="item-tax">Tax Rate (%)</label>
-                        <input type="number" id="item-tax" min="0" step="0.1" value="7.5">
-                    </div>
-                </div>
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="item-warranty">Warranty (months)</label>
-                        <input type="number" id="item-warranty" min="0" value="0">
-                    </div>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="item-serial">Serial Number</label>
-                <input type="text" id="item-serial" placeholder="Enter serial number">
-            </div>
-            
-            <input type="hidden" id="edit-item-index" value="-1">
-            
-            <div class="form-group">
-                <button id="add-item">Add Item</button>
-                <button id="update-item" style="display: none;">Update Item</button>
-                <button id="cancel-edit" style="display: none;">Cancel</button>
-            </div>
-            
-            <div class="items-list">
-                <h3>Added Items</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Description</th>
-                            <th>Quantity</th>
-                            <th>Price</th>
-                            <th>Tax</th>
-                            <th>Total</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="items-body">
-                        <!-- Items will be added here dynamically -->
-                    </tbody>
-                </table>
-                
-                <div class="summary">
-                    <table class="summary-table">
-                        <tr>
-                            <td>Subtotal:</td>
-                            <td id="subtotal-amount">0.00</td>
-                        </tr>
-                        <tr>
-                            <td>Tax:</td>
-                            <td id="tax-amount">0.00</td>
-                        </tr>
-                        <tr>
-                            <td>Total:</td>
-                            <td id="total-amount">0.00</td>
-                        </tr>
-                    </table>
-                </div>
-                
+            <div class="item-form">
+                <h2 id="item-form-title">Add Item</h2>
                 <div class="form-group">
-                    <button id="generate-bill">Generate Bill</button>
-                    <button id="reset-bill">Reset Bill</button>
+                    <label for="item-selection">Select from Inventory</label>
+                    <select id="item-selection">
+                        <option value="-1">-- Select Item --</option>
+                    </select>
                 </div>
+                <div class="form-group">
+                    <label for="item-name">Item Name *</label>
+                    <input type="text" id="item-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="item-description">Description</label>
+                    <textarea id="item-description" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="item-quantity">Quantity *</label>
+                    <input type="number" id="item-quantity" value="1" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="item-price">Price *</label>
+                    <input type="number" id="item-price" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="item-tax">Tax Rate (%)</label>
+                    <input type="number" id="item-tax" step="0.1" value="7.5">
+                </div>
+                <div class="form-group">
+                    <label for="item-warranty">Warranty (months)</label>
+                    <input type="number" id="item-warranty" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="item-serial">Serial Number</label>
+                    <input type="text" id="item-serial">
+                </div>
+                <input type="hidden" id="edit-item-index" value="-1">
+                <button id="add-item" class="btn">Add Item</button>
+                <button id="update-item" class="btn" style="display: none;">Update Item</button>
+                <button id="cancel-edit" class="btn" style="display: none; background-color: #f44336;">Cancel</button>
+            </div>
+            
+            <h2>Items in Bill</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Tax</th>
+                        <th>Total</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="items-body">
+                    <!-- Items will be added here -->
+                </tbody>
+            </table>
+            
+            <div class="bill-summary">
+                <table style="width: 40%; margin-left: auto;">
+                    <tr>
+                        <td>Subtotal:</td>
+                        <td id="subtotal-amount" class="text-right">$0.00</td>
+                    </tr>
+                    <tr>
+                        <td>Tax:</td>
+                        <td id="tax-amount" class="text-right">$0.00</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Total:</strong></td>
+                        <td id="total-amount" class="text-right"><strong>$0.00</strong></td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <button id="generate-bill" class="btn">Generate Bill</button>
+                <button id="reset-bill" class="btn" style="background-color: #f44336;">Reset</button>
             </div>
         </div>
         
         <!-- Inventory Tab -->
         <div id="inventory-tab" class="tab-content">
-            <h2>Inventory Management</h2>
-            
-            <div class="inventory-list">
-                <h3>Current Inventory</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Description</th>
-                            <th>Price</th>
-                            <th>Tax Rate</th>
-                            <th>Warranty</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="inventory-body">
-                        <!-- Inventory items will be added here dynamically -->
-                    </tbody>
-                </table>
-            </div>
+            <h2>Inventory Items</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Price</th>
+                        <th>Tax Rate</th>
+                        <th>Warranty</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="inventory-body">
+                    <!-- Inventory items will be added here -->
+                </tbody>
+            </table>
         </div>
         
         <!-- Settings Tab -->
         <div id="settings-tab" class="tab-content">
-            <h2>Company Settings</h2>
-            
-            <div class="form-row">
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="company-name">Company Name</label>
-                        <input type="text" id="company-name" placeholder="Enter company name" value="Tech Solutions Inc.">
-                    </div>
-                    <div class="form-group">
-                        <label for="company-street">Street Address</label>
-                        <input type="text" id="company-street" placeholder="Enter street address" value="123 Tech Street">
-                    </div>
-                    <div class="form-group">
-                        <label for="company-city">City, State, ZIP</label>
-                        <input type="text" id="company-city" placeholder="Enter city, state, zip" value="Silicon Valley, CA 94043">
-                    </div>
-                </div>
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="company-phone">Phone Number</label>
-                        <input type="tel" id="company-phone" placeholder="Enter phone number" value="(555) 123-4567">
-                    </div>
-                    <div class="form-group">
-                        <label for="company-email">Email Address</label>
-                        <input type="email" id="company-email" placeholder="Enter email address" value="info@techsolutions.com">
-                    </div>
-                    <div class="form-group">
-                        <label for="company-website">Website</label>
-                        <input type="url" id="company-website" placeholder="Enter website URL" value="www.techsolutions.com">
-                    </div>
-                </div>
+            <h2>Company Information</h2>
+            <div class="form-group">
+                <label for="company-name">Company Name</label>
+                <input type="text" id="company-name" value="Tech Solutions Inc.">
+            </div>
+            <div class="form-group">
+                <label for="company-street">Street Address</label>
+                <input type="text" id="company-street" value="123 Tech Street, Silicon Valley">
+            </div>
+            <div class="form-group">
+                <label for="company-city">City, State, ZIP</label>
+                <input type="text" id="company-city" value="CA 94043">
+            </div>
+            <div class="form-group">
+                <label for="company-phone">Phone</label>
+                <input type="tel" id="company-phone" value="(555) 123-4567">
+            </div>
+            <div class="form-group">
+                <label for="company-email">Email</label>
+                <input type="email" id="company-email" value="info@techsolutions.com">
+            </div>
+            <div class="form-group">
+                <label for="company-website">Website</label>
+                <input type="url" id="company-website" value="www.techsolutions.com">
             </div>
             
+            <h2>Default Settings</h2>
             <div class="form-group">
                 <label for="default-tax">Default Tax Rate (%)</label>
-                <input type="number" id="default-tax" min="0" step="0.1" value="7.5">
+                <input type="number" id="default-tax" value="7.5" step="0.1">
             </div>
-            
             <div class="form-group">
                 <label for="terms-conditions">Terms & Conditions</label>
-                <textarea id="terms-conditions">1. Payment is due within 30 days.
+                <textarea id="terms-conditions" rows="5">1. Payment is due within 30 days.
 2. Warranty is only valid with the original receipt.
 3. Returns accepted within 14 days of purchase.
 4. All prices are subject to change without notice.</textarea>
             </div>
             
-            <div class="form-group">
-                <button id="save-settings">Save Settings</button>
-            </div>
-            
-            <!-- CSV Import will be added here dynamically -->
+            <button id="save-settings" class="btn">Save Settings</button>
+            <!-- CSV Import will be added here -->
         </div>
         
         <!-- Print Area -->
         <div id="print-area" style="display: none;">
             <div class="bill-header">
-                <div class="company-details">
+                <div class="company-info">
                     <h2 id="bill-company-name">Tech Solutions Inc.</h2>
-                    <p id="company-address">
+                    <div id="company-address">
                         123 Tech Street, Silicon Valley, CA 94043<br>
                         Phone: (555) 123-4567<br>
                         Email: info@techsolutions.com<br>
                         Website: www.techsolutions.com
-                    </p>
+                    </div>
                 </div>
-                <div class="bill-details">
-                    <h2>INVOICE</h2>
-                    <p><strong>Invoice #:</strong> <span id="bill-no"></span></p>
-                    <p><strong>Date:</strong> <span id="bill-date" id="current-date"></span></p>
-                    <p><strong>Payment Method:</strong> <span id="bill-payment"></span></p>
+                <div class="bill-info">
+                    <div class="bill-title">INVOICE</div>
+                    <div><strong>Invoice #:</strong> <span id="bill-no"></span></div>
+                    <div><strong>Date:</strong> <span id="bill-date"></span></div>
+                    <div><strong>Payment Method:</strong> <span id="bill-payment"></span></div>
                 </div>
             </div>
             
-            <div class="customer-details">
+            <div class="customer-section">
                 <h3>Bill To:</h3>
-                <p><strong>Name:</strong> <span id="bill-customer-name"></span></p>
-                <p><strong>Phone:</strong> <span id="bill-customer-phone"></span></p>
-                <p><strong>Email:</strong> <span id="bill-customer-email"></span></p>
-                <p><strong>Address:</strong> <span id="bill-customer-address"></span></p>
+                <div><strong>Name:</strong> <span id="bill-customer-name"></span></div>
+                <div><strong>Phone:</strong> <span id="bill-customer-phone"></span></div>
+                <div><strong>Email:</strong> <span id="bill-customer-email"></span></div>
+                <div><strong>Address:</strong> <span id="bill-customer-address"></span></div>
             </div>
             
-            <table>
+            <table class="bill-table">
                 <thead>
                     <tr>
                         <th>No.</th>
@@ -638,45 +531,38 @@
                     </tr>
                 </thead>
                 <tbody id="bill-items-body">
-                    <!-- Bill items will be added here dynamically -->
+                    <!-- Bill items will be added here -->
                 </tbody>
-                <tfoot>
-                    <tr>
-                        <td colspan="6"></td>
-                        <td><strong>Subtotal:</strong></td>
-                        <td id="bill-subtotal">0.00</td>
-                    </tr>
-                    <tr>
-                        <td colspan="6"></td>
-                        <td><strong>Tax:</strong></td>
-                        <td id="bill-tax">0.00</td>
-                    </tr>
-                    <tr>
-                        <td colspan="6"></td>
-                        <td><strong>Total:</strong></td>
-                        <td id="bill-total">0.00</td>
-                    </tr>
-                </tfoot>
+            </table>
+            
+            <table class="bill-summary">
+                <tr>
+                    <td>Subtotal:</td>
+                    <td id="bill-subtotal"></td>
+                </tr>
+                <tr>
+                    <td>Tax:</td>
+                    <td id="bill-tax"></td>
+                </tr>
+                <tr>
+                    <td><strong>Total:</strong></td>
+                    <td id="bill-total"></td>
+                </tr>
             </table>
             
             <div class="bill-footer">
-                <h4>Terms & Conditions</h4>
-                <p id="bill-terms">
-                    1. Payment is due within 30 days.<br>
-                    2. Warranty is only valid with the original receipt.<br>
-                    3. Returns accepted within 14 days of purchase.<br>
-                    4. All prices are subject to change without notice.
-                </p>
+                <h3>Terms & Conditions</h3>
+                <div id="bill-terms"></div>
             </div>
             
-            <div class="action-buttons">
-                <button id="print-bill">Print Bill</button>
-                <button id="save-pdf">Save as PDF</button>
+            <div class="no-print" style="margin-top: 20px; text-align: center;">
+                <button id="print-bill" class="btn">Print Bill</button>
             </div>
         </div>
+        
+        <div id="current-date" style="margin-top: 20px; text-align: right; font-size: 0.8em;"></div>
     </div>
-    
-    
+
     <script>
         // Define the inventory items array globally
         let inventoryItems = [];
@@ -775,7 +661,7 @@
             }
         }
 
-        // Function to add a CSV import button and interface
+        // Function to add a CSV import feature
         function addCSVImportFeature() {
             // Create the import container
             const importContainer = document.createElement('div');
@@ -839,9 +725,11 @@
                 
                 const priceCell = document.createElement('td');
                 priceCell.textContent = '$' + item.price.toFixed(2);
+                priceCell.className = 'text-right';
                 
                 const taxCell = document.createElement('td');
                 taxCell.textContent = item.taxRate + '%';
+                taxCell.className = 'text-right';
                 
                 const warrantyCell = document.createElement('td');
                 warrantyCell.textContent = item.warranty > 0 ? 
@@ -987,12 +875,16 @@
             return {
                 subtotal: itemSubtotal,
                 tax: itemTax,
+                total: itemSubtotal + item
+                subtotal: itemSubtotal,
+                tax: itemTax,
                 total: itemSubtotal + itemTax
             };
         }
 
-        // Update bill summary
-        function updateSummary() {
+        // Update the totals display
+        function updateTotals() {
+            // Calculate totals from items array
             subtotal = 0;
             taxTotal = 0;
             grandTotal = 0;
@@ -1004,75 +896,137 @@
             
             grandTotal = subtotal + taxTotal;
             
+            // Update display
             document.getElementById('subtotal-amount').textContent = '$' + subtotal.toFixed(2);
             document.getElementById('tax-amount').textContent = '$' + taxTotal.toFixed(2);
             document.getElementById('total-amount').textContent = '$' + grandTotal.toFixed(2);
         }
 
-        // Add or update item in the bill
-        function addOrUpdateItem() {
+        // Add item to the bill
+        function addItem() {
             const nameInput = document.getElementById('item-name');
-            const descriptionInput = document.getElementById('item-description');
-            const quantityInput = document.getElementById('item-quantity');
+            const descInput = document.getElementById('item-description');
+            const qtyInput = document.getElementById('item-quantity');
             const priceInput = document.getElementById('item-price');
             const taxInput = document.getElementById('item-tax');
             const warrantyInput = document.getElementById('item-warranty');
             const serialInput = document.getElementById('item-serial');
             
             // Validate required fields
-            if (!nameInput.value || !quantityInput.value || !priceInput.value) {
-                alert('Please fill in all required fields.');
+            if (!nameInput.value || !qtyInput.value || !priceInput.value) {
+                alert('Please fill in all required fields (Name, Quantity, and Price)');
                 return;
             }
             
-            const item = {
-                name: nameInput.value,
-                description: descriptionInput.value,
-                quantity: parseInt(quantityInput.value),
-                price: parseFloat(priceInput.value),
-                taxRate: parseFloat(taxInput.value),
-                warranty: parseInt(warrantyInput.value),
-                serial: serialInput.value
-            };
+            const name = nameInput.value;
+            const description = descInput.value;
+            const quantity = parseInt(qtyInput.value);
+            const price = parseFloat(priceInput.value);
+            const taxRate = parseFloat(taxInput.value);
+            const warranty = parseInt(warrantyInput.value);
+            const serial = serialInput.value;
             
             // Calculate totals
-            const totals = calculateItemTotal(item.price, item.quantity, item.taxRate);
-            item.subtotal = totals.subtotal;
-            item.tax = totals.tax;
-            item.total = totals.total;
+            const { subtotal, tax, total } = calculateItemTotal(price, quantity, taxRate);
             
-            if (editingItemIndex === -1) {
-                // Add new item
-                items.push(item);
-            } else {
+            // Create new item object
+            const newItem = {
+                name,
+                description,
+                quantity,
+                price,
+                taxRate,
+                warranty,
+                serial,
+                subtotal,
+                tax,
+                total
+            };
+            
+            // Add to items array
+            if (editingItemIndex >= 0) {
                 // Update existing item
-                items[editingItemIndex] = item;
+                items[editingItemIndex] = newItem;
                 editingItemIndex = -1;
                 
-                // Reset UI buttons
+                // Reset UI
                 document.getElementById('add-item').style.display = 'inline-block';
                 document.getElementById('update-item').style.display = 'none';
                 document.getElementById('cancel-edit').style.display = 'none';
                 document.getElementById('item-form-title').textContent = 'Add Item';
+            } else {
+                // Add new item
+                items.push(newItem);
             }
             
-            // Update the table and summary
-            updateItemsTable();
-            updateSummary();
-            
-            // Reset form
-            document.getElementById('item-name').value = '';
-            document.getElementById('item-description').value = '';
-            document.getElementById('item-quantity').value = '1';
-            document.getElementById('item-price').value = '';
-            document.getElementById('item-tax').value = document.getElementById('default-tax').value;
-            document.getElementById('item-warranty').value = '0';
-            document.getElementById('item-serial').value = '';
+            // Clear form
+            nameInput.value = '';
+            descInput.value = '';
+            qtyInput.value = '1';
+            priceInput.value = '';
+            taxInput.value = document.getElementById('default-tax').value;
+            warrantyInput.value = '0';
+            serialInput.value = '';
             document.getElementById('edit-item-index').value = '-1';
+            
+            // Update the item list and totals
+            updateItemsList();
+            updateTotals();
         }
 
-        // Update items table
-        function updateItemsTable() {
+        // Edit an item
+        function editItem(index) {
+            const item = items[index];
+            
+            // Populate form fields
+            document.getElementById('item-name').value = item.name;
+            document.getElementById('item-description').value = item.description;
+            document.getElementById('item-quantity').value = item.quantity;
+            document.getElementById('item-price').value = item.price;
+            document.getElementById('item-tax').value = item.taxRate;
+            document.getElementById('item-warranty').value = item.warranty;
+            document.getElementById('item-serial').value = item.serial;
+            document.getElementById('edit-item-index').value = index;
+            
+            // Update UI
+            document.getElementById('add-item').style.display = 'none';
+            document.getElementById('update-item').style.display = 'inline-block';
+            document.getElementById('cancel-edit').style.display = 'inline-block';
+            document.getElementById('item-form-title').textContent = 'Edit Item';
+            
+            editingItemIndex = index;
+        }
+
+        // Remove an item
+        function removeItem(index) {
+            if (confirm('Are you sure you want to remove this item?')) {
+                items.splice(index, 1);
+                updateItemsList();
+                updateTotals();
+                
+                // If we were editing this item, reset the form
+                if (editingItemIndex === index) {
+                    document.getElementById('add-item').style.display = 'inline-block';
+                    document.getElementById('update-item').style.display = 'none';
+                    document.getElementById('cancel-edit').style.display = 'none';
+                    document.getElementById('item-form-title').textContent = 'Add Item';
+                    
+                    document.getElementById('item-name').value = '';
+                    document.getElementById('item-description').value = '';
+                    document.getElementById('item-quantity').value = '1';
+                    document.getElementById('item-price').value = '';
+                    document.getElementById('item-tax').value = document.getElementById('default-tax').value;
+                    document.getElementById('item-warranty').value = '0';
+                    document.getElementById('item-serial').value = '';
+                    document.getElementById('edit-item-index').value = '-1';
+                    
+                    editingItemIndex = -1;
+                }
+            }
+        }
+
+        // Update the items list in the UI
+        function updateItemsList() {
             const tableBody = document.getElementById('items-body');
             tableBody.innerHTML = '';
             
@@ -1083,21 +1037,23 @@
                 nameCell.textContent = item.name;
                 
                 const descCell = document.createElement('td');
-                descCell.textContent = item.description.length > 30 ? 
-                    item.description.substring(0, 30) + '...' : 
+                descCell.textContent = item.description.length > 20 ? 
+                    item.description.substring(0, 20) + '...' : 
                     item.description;
                 
-                const quantityCell = document.createElement('td');
-                quantityCell.textContent = item.quantity;
+                const qtyCell = document.createElement('td');
+                qtyCell.textContent = item.quantity;
                 
                 const priceCell = document.createElement('td');
                 priceCell.textContent = '$' + item.price.toFixed(2);
+                priceCell.className = 'text-right';
                 
                 const taxCell = document.createElement('td');
                 taxCell.textContent = item.taxRate + '%';
                 
                 const totalCell = document.createElement('td');
                 totalCell.textContent = '$' + item.total.toFixed(2);
+                totalCell.className = 'text-right';
                 
                 const actionsCell = document.createElement('td');
                 const actionsDiv = document.createElement('div');
@@ -1106,16 +1062,12 @@
                 const editButton = document.createElement('button');
                 editButton.className = 'edit-btn';
                 editButton.textContent = 'Edit';
-                editButton.addEventListener('click', function() {
-                    editItem(index);
-                });
+                editButton.addEventListener('click', () => editItem(index));
                 
                 const removeButton = document.createElement('button');
                 removeButton.className = 'remove-btn';
                 removeButton.textContent = 'Remove';
-                removeButton.addEventListener('click', function() {
-                    removeItem(index);
-                });
+                removeButton.addEventListener('click', () => removeItem(index));
                 
                 actionsDiv.appendChild(editButton);
                 actionsDiv.appendChild(removeButton);
@@ -1123,7 +1075,7 @@
                 
                 row.appendChild(nameCell);
                 row.appendChild(descCell);
-                row.appendChild(quantityCell);
+                row.appendChild(qtyCell);
                 row.appendChild(priceCell);
                 row.appendChild(taxCell);
                 row.appendChild(totalCell);
@@ -1133,45 +1085,19 @@
             });
         }
 
-        // Edit item
-        function editItem(index) {
-            const item = items[index];
-            
-            document.getElementById('item-name').value = item.name;
-            document.getElementById('item-description').value = item.description;
-            document.getElementById('item-quantity').value = item.quantity;
-            document.getElementById('item-price').value = item.price;
-            document.getElementById('item-tax').value = item.taxRate;
-            document.getElementById('item-warranty').value = item.warranty;
-            document.getElementById('item-serial').value = item.serial;
-            document.getElementById('edit-item-index').value = index;
-            
-            // Update UI buttons
-            document.getElementById('add-item').style.display = 'none';
-            document.getElementById('update-item').style.display = 'inline-block';
-            document.getElementById('cancel-edit').style.display = 'inline-block';
-            document.getElementById('item-form-title').textContent = 'Edit Item';
-            
-            editingItemIndex = index;
-        }
-
-        // Remove item
-        function removeItem(index) {
-            if (confirm('Are you sure you want to remove this item?')) {
-                items.splice(index, 1);
-                updateItemsTable();
-                updateSummary();
-            }
-        }
-
-        // Generate bill
+        // Generate the bill
         function generateBill() {
-            // Validate inputs
+            // Validate required fields
             const customerName = document.getElementById('customer-name').value;
             const billNumber = document.getElementById('bill-number').value;
             
-            if (!customerName || !billNumber) {
-                alert('Please enter customer name and bill number.');
+            if (!customerName) {
+                alert('Please enter customer name.');
+                return;
+            }
+            
+            if (!billNumber) {
+                alert('Please enter bill number.');
                 return;
             }
             
@@ -1180,60 +1106,60 @@
                 return;
             }
             
-            // Set bill details
+            // Fill bill information
+            document.getElementById('bill-company-name').textContent = document.getElementById('company-name').value;
+            document.getElementById('company-address').innerHTML = 
+                document.getElementById('company-street').value + '<br>' +
+                document.getElementById('company-city').value + '<br>' +
+                'Phone: ' + document.getElementById('company-phone').value + '<br>' +
+                'Email: ' + document.getElementById('company-email').value + '<br>' +
+                'Website: ' + document.getElementById('company-website').value;
+            
             document.getElementById('bill-no').textContent = billNumber;
             document.getElementById('bill-date').textContent = setCurrentDate();
             document.getElementById('bill-payment').textContent = document.getElementById('payment-method').value;
             
-            // Set customer details
             document.getElementById('bill-customer-name').textContent = customerName;
-            document.getElementById('bill-customer-phone').textContent = document.getElementById('customer-phone').value || 'N/A';
-            document.getElementById('bill-customer-email').textContent = document.getElementById('customer-email').value || 'N/A';
-            document.getElementById('bill-customer-address').textContent = document.getElementById('customer-address').value || 'N/A';
+            document.getElementById('bill-customer-phone').textContent = document.getElementById('customer-phone').value;
+            document.getElementById('bill-customer-email').textContent = document.getElementById('customer-email').value;
+            document.getElementById('bill-customer-address').textContent = document.getElementById('customer-address').value;
             
-            // Set company details
-            document.getElementById('bill-company-name').textContent = document.getElementById('company-name').value;
-            const companyAddress = `${document.getElementById('company-street').value}, ${document.getElementById('company-city').value}<br>
-                Phone: ${document.getElementById('company-phone').value}<br>
-                Email: ${document.getElementById('company-email').value}<br>
-                Website: ${document.getElementById('company-website').value}`;
-            document.getElementById('company-address').innerHTML = companyAddress;
-            
-            // Set terms and conditions
-            document.getElementById('bill-terms').innerHTML = document.getElementById('terms-conditions').value.replace(/\n/g, '<br>');
-            
-            // Populate items table
+            // Fill bill items
             const billItemsBody = document.getElementById('bill-items-body');
             billItemsBody.innerHTML = '';
             
             items.forEach((item, index) => {
                 const row = document.createElement('tr');
                 
-                const noCell = document.createElement('td');
-                noCell.textContent = index + 1;
+                const numCell = document.createElement('td');
+                numCell.textContent = index + 1;
                 
                 const descCell = document.createElement('td');
                 descCell.innerHTML = `<strong>${item.name}</strong><br>${item.description}`;
                 
                 const serialCell = document.createElement('td');
-                serialCell.textContent = item.serial || 'N/A';
+                serialCell.textContent = item.serial || '-';
                 
                 const warrantyCell = document.createElement('td');
-                warrantyCell.textContent = item.warranty > 0 ? `${item.warranty} months` : 'None';
+                warrantyCell.textContent = item.warranty > 0 ? item.warranty + ' months' : 'None';
                 
                 const qtyCell = document.createElement('td');
                 qtyCell.textContent = item.quantity;
+                qtyCell.className = 'text-right';
                 
                 const priceCell = document.createElement('td');
                 priceCell.textContent = '$' + item.price.toFixed(2);
+                priceCell.className = 'text-right';
                 
                 const taxCell = document.createElement('td');
                 taxCell.textContent = item.taxRate + '%';
+                taxCell.className = 'text-right';
                 
                 const amountCell = document.createElement('td');
                 amountCell.textContent = '$' + item.total.toFixed(2);
+                amountCell.className = 'text-right';
                 
-                row.appendChild(noCell);
+                row.appendChild(numCell);
                 row.appendChild(descCell);
                 row.appendChild(serialCell);
                 row.appendChild(warrantyCell);
@@ -1245,81 +1171,42 @@
                 billItemsBody.appendChild(row);
             });
             
-            // Set summary amounts
+            // Fill bill totals
             document.getElementById('bill-subtotal').textContent = '$' + subtotal.toFixed(2);
             document.getElementById('bill-tax').textContent = '$' + taxTotal.toFixed(2);
             document.getElementById('bill-total').textContent = '$' + grandTotal.toFixed(2);
             
+            // Set terms and conditions
+            document.getElementById('bill-terms').innerHTML = document.getElementById('terms-conditions').value.replace(/\n/g, '<br>');
+            
             // Show print area
             document.getElementById('print-area').style.display = 'block';
+            
+            // Scroll to print area
+            document.getElementById('print-area').scrollIntoView({ behavior: 'smooth' });
         }
 
-        // Reset bill
-        function resetBill() {
-            if (confirm('Are you sure you want to reset the bill? All items will be removed.')) {
-                items = [];
-                subtotal = 0;
-                taxTotal = 0;
-                grandTotal = 0;
-                
-                updateItemsTable();
-                updateSummary();
-                
+        // Print the bill
+        function printBill() {
+            window.print();
+        }
+
+        // Reset the form
+        function resetForm() {
+            if (confirm('Are you sure you want to reset the form? All entered data will be lost.')) {
                 document.getElementById('customer-name').value = '';
                 document.getElementById('customer-phone').value = '';
                 document.getElementById('customer-email').value = '';
                 document.getElementById('customer-address').value = '';
                 document.getElementById('bill-number').value = '';
                 
+                items = [];
+                updateItemsList();
+                updateTotals();
+                
                 document.getElementById('print-area').style.display = 'none';
-            }
-        }
-
-        // Initialize the app when DOM is fully loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add CSV import feature to settings tab
-            const settingsTab = document.getElementById('settings-tab');
-            if (settingsTab) {
-                const csvImport = addCSVImportFeature();
-                settingsTab.appendChild(csvImport);
-                setupCSVImportListeners();
-            }
-            
-            // Set up tab navigation
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', function() {
-                    // Hide all tab contents
-                    document.querySelectorAll('.tab-content').forEach(content => {
-                        content.style.display = 'none';
-                    });
-                    
-                    // Remove active class from all tabs
-                    document.querySelectorAll('.tab').forEach(t => {
-                        t.classList.remove('active');
-                    });
-                    
-                    // Show selected tab content and mark tab as active
-                    const tabId = this.getAttribute('data-tab');
-                    document.getElementById(tabId + '-tab').style.display = 'block';
-                    this.classList.add('active');
-                });
-            });
-            
-            // Set default tax rate on item form
-            document.getElementById('item-tax').value = document.getElementById('default-tax').value;
-            
-            // Set up navigation buttons
-            document.getElementById('next-to-items').addEventListener('click', function() {
-                document.querySelector('.tab[data-tab="items"]').click();
-            });
-            
-            // Set up item form submit
-            document.getElementById('add-item').addEventListener('click', addOrUpdateItem);
-            document.getElementById('update-item').addEventListener('click', addOrUpdateItem);
-            
-            // Set up cancel edit button
-            document.getElementById('cancel-edit').addEventListener('click', function() {
-                // Reset form
+                
+                // Reset the item form
                 document.getElementById('item-name').value = '';
                 document.getElementById('item-description').value = '';
                 document.getElementById('item-quantity').value = '1';
@@ -1329,77 +1216,167 @@
                 document.getElementById('item-serial').value = '';
                 document.getElementById('edit-item-index').value = '-1';
                 
-                // Reset UI buttons
                 document.getElementById('add-item').style.display = 'inline-block';
                 document.getElementById('update-item').style.display = 'none';
                 document.getElementById('cancel-edit').style.display = 'none';
                 document.getElementById('item-form-title').textContent = 'Add Item';
                 
                 editingItemIndex = -1;
-            });
-            
-            // Set up bill generation and reset
-            document.getElementById('generate-bill').addEventListener('click', generateBill);
-            document.getElementById('reset-bill').addEventListener('click', resetBill);
-            
-            // Set up print functionality
-            document.getElementById('print-bill').addEventListener('click', function() {
-                window.print();
-            });
-            
-            // Save settings
-            document.getElementById('save-settings').addEventListener('click', function() {
-                alert('Settings saved successfully!');
-            });
-            
-            // Setup inventory item selection dropdown
-            document.getElementById('item-selection').addEventListener('change', function() {
-                const selectedIndex = parseInt(this.value);
-                if (selectedIndex >= 0) {
-                    const item = inventoryItems[selectedIndex];
-                    document.getElementById('item-name').value = item.name;
-                    document.getElementById('item-description').value = item.description;
-                    document.getElementById('item-price').value = item.price;
-                    document.getElementById('item-tax').value = item.taxRate;
-                    document.getElementById('item-warranty').value = item.warranty;
-                }
-            });
-            
-            // Initialize current date
-            setCurrentDate();
+                
+                // Switch to customer tab
+                document.querySelector('.tab[data-tab="customer"]').click();
+            }
+        }
 
-            // Add some sample inventory items (fallback)
+        // Save settings
+        function saveSettings() {
+            alert('Settings saved successfully!');
+        }
+
+        // Tab switching functionality
+        function setupTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active from all tabs
+                    tabs.forEach(t => t.classList.remove('active'));
+                    
+                    // Hide all contents
+                    contents.forEach(content => content.style.display = 'none');
+                    
+                    // Activate clicked tab
+                    this.classList.add('active');
+                    
+                    // Show corresponding content
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(tabId + '-tab').style.display = 'block';
+                });
+            });
+        }
+
+        // When item is selected from dropdown
+        function handleItemSelection() {
+            const select = document.getElementById('item-selection');
+            const selectedIndex = parseInt(select.value);
+            
+            if (selectedIndex >= 0) {
+                const selectedItem = inventoryItems[selectedIndex];
+                
+                document.getElementById('item-name').value = selectedItem.name;
+                document.getElementById('item-description').value = selectedItem.description;
+                document.getElementById('item-price').value = selectedItem.price;
+                document.getElementById('item-tax').value = selectedItem.taxRate;
+                document.getElementById('item-warranty').value = selectedItem.warranty;
+                
+                // Reset the dropdown
+                select.value = -1;
+            }
+        }
+
+        // Initialize the app
+        function initApp() {
+            // Set current date
+            setCurrentDate();
+            
+            // Setup tabs
+            setupTabs();
+            
+            // Set up event listeners
+            document.getElementById('next-to-items').addEventListener('click', function() {
+                document.querySelector('.tab[data-tab="items"]').click();
+            });
+            
+            document.getElementById('add-item').addEventListener('click', addItem);
+            document.getElementById('update-item').addEventListener('click', addItem);
+            document.getElementById('cancel-edit').addEventListener('click', function() {
+                // Reset item form
+                document.getElementById('item-name').value = '';
+                document.getElementById('item-description').value = '';
+                document.getElementById('item-quantity').value = '1';
+                document.getElementById('item-price').value = '';
+                document.getElementById('item-tax').value = document.getElementById('default-tax').value;
+                document.getElementById('item-warranty').value = '0';
+                document.getElementById('item-serial').value = '';
+                document.getElementById('edit-item-index').value = '-1';
+                editingItemIndex = -1;
+                
+                // Reset UI
+                document.getElementById('add-item').style.display = 'inline-block';
+                document.getElementById('update-item').style.display = 'none';
+                document.getElementById('cancel-edit').style.display = 'none';
+                document.getElementById('item-form-title').textContent = 'Add Item';
+            });
+            
+            document.getElementById('generate-bill').addEventListener('click', generateBill);
+            document.getElementById('print-bill').addEventListener('click', printBill);
+            document.getElementById('reset-bill').addEventListener('click', resetForm);
+            document.getElementById('save-settings').addEventListener('click', saveSettings);
+            
+            document.getElementById('item-selection').addEventListener('change', handleItemSelection);
+            
+            // Set default tax rate from settings
+            document.getElementById('item-tax').value = document.getElementById('default-tax').value;
+            
+            // Add CSV import container to settings tab
+            const settingsTab = document.getElementById('settings-tab');
+            const csvImportContainer = addCSVImportFeature();
+            settingsTab.appendChild(csvImportContainer);
+            
+            // Setup CSV import listeners
+            setupCSVImportListeners();
+            
+            // Load sample inventory data
+            // Sample inventory items
             inventoryItems = [
                 {
-                    name: 'Laptop Computer',
-                    description: '15-inch laptop with 16GB RAM and 512GB SSD',
-                    price: 1299.99,
+                    name: 'Laptop',
+                    description: 'High-performance laptop with 16GB RAM and 512GB SSD',
+                    price: 999.99,
                     taxRate: 7.5,
                     warranty: 12
                 },
                 {
-                    name: 'Office Chair',
-                    description: 'Ergonomic office chair with adjustable height',
-                    price: 249.99,
+                    name: 'Monitor',
+                    description: '27-inch 4K monitor',
+                    price: 349.99,
                     taxRate: 7.5,
                     warranty: 24
                 },
                 {
-                    name: 'Wireless Mouse',
-                    description: 'Bluetooth wireless mouse with rechargeable battery',
-                    price: 39.99,
+                    name: 'Keyboard',
+                    description: 'Mechanical gaming keyboard',
+                    price: 129.99,
+                    taxRate: 7.5,
+                    warranty: 12
+                },
+                {
+                    name: 'Mouse',
+                    description: 'Wireless optical mouse',
+                    price: 49.99,
                     taxRate: 7.5,
                     warranty: 6
+                },
+                {
+                    name: 'Headphones',
+                    description: 'Noise-cancelling Bluetooth headphones',
+                    price: 199.99,
+                    taxRate: 7.5,
+                    warranty: 12
                 }
             ];
             
-            // Try to load inventory from GitHub (will override sample items if successful)
-            loadInventoryFromGitHub();
-            
-            // Update UI with inventory items
+            // Update inventory table and dropdown
             updateInventoryTable();
             updateItemSelectionDropdown();
-        });
-</script>
+            
+            // Attempt to load inventory from GitHub (commented out for now)
+            // loadInventoryFromGitHub();
+        }
+
+        // Initialize when the DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
 </body>
 </html>
