@@ -644,8 +644,6 @@ document.getElementById('add-item').addEventListener('click', function() {
     // Clear item inputs
     clearItemForm();
     
-    // Switch back to customer tab
-    tabs[0].click();
 });
 
 // Update item button (for editing)
@@ -693,8 +691,7 @@ document.getElementById('update-item').addEventListener('click', function() {
     clearItemForm();
     toggleItemFormMode('add');
     
-    // Switch back to customer tab
-    tabs[0].click();
+
 });
 
 // Cancel edit button
