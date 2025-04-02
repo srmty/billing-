@@ -289,24 +289,55 @@
             color: #666;
             margin-top: 5px;
         }
-        /* Fixed print styles */
-        @media print {
-            body * {
-                visibility: hidden;
-            }
-            .print-preview, .print-preview * {
-                visibility: visible;
-            }
-            .print-preview {
-                display: block !important;
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                margin: 0;
-                padding: 15px;
-            }
-        }
+/* Add these updated print styles to your existing CSS */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    .print-preview, .print-preview * {
+        visibility: visible;
+    }
+    .print-preview {
+        display: block !important;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 90%; /* Reduce width to prevent right side cutoff */
+        max-width: 800px; /* Limit maximum width */
+        margin: 0 auto !important; /* Center the invoice */
+        padding: 15px 25px 15px 15px; /* Add more padding on the right side */
+    }
+    
+    /* Adjust table sizing for print */
+    #bill-items {
+        width: 95%;
+        table-layout: fixed;
+        font-size: 0.9em; /* Slightly reduce font size */
+    }
+    
+    /* Make header more compact */
+    .bill-header {
+        margin-bottom: 10px;
+    }
+    
+    /* Optimize column widths */
+    #bill-items th:nth-child(1), #bill-items td:nth-child(1) { width: 5%; } /* S.No */
+    #bill-items th:nth-child(2), #bill-items td:nth-child(2) { width: 25%; } /* Item Description */
+    #bill-items th:nth-child(3), #bill-items td:nth-child(3) { width: 15%; } /* Serial/Model */
+    #bill-items th:nth-child(4), #bill-items td:nth-child(4) { width: 10%; } /* Warranty */
+    #bill-items th:nth-child(5), #bill-items td:nth-child(5) { width: 8%; } /* Qty */
+    #bill-items th:nth-child(6), #bill-items td:nth-child(6) { width: 12%; } /* Unit Price */
+    #bill-items th:nth-child(7), #bill-items td:nth-child(7) { width: 10%; } /* Tax */
+    #bill-items th:nth-child(8), #bill-items td:nth-child(8) { width: 15%; } /* Amount */
+    
+    /* Ensure text doesn't overflow cells */
+    #bill-items td {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: normal;
+        word-wrap: break-word;
+    }
+}
     </style>
 </head>
 <body>
